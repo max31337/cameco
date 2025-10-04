@@ -47,23 +47,34 @@ Apply Service and Repository layers in backend to keep controllers thin and busi
 
 Use role-based access control (RBAC) — recommend spatie/laravel-permission.
 
-2 — Tech stack (recommended)
+2 — Tech stack (current implementation)
 
-Backend: PHP 8.1+ (or 8.2), Laravel 10+
+✅ **Backend**: PHP 8.3, Laravel 11.x (latest)
 
-Auth/UI: Laravel Jetstream with Inertia + React stack
+✅ **Auth/UI**: Laravel Jetstream with Inertia + React stack (teams enabled)
 
-Frontend: React (functional components + hooks), Inertia.js, Tailwind CSS (or your modular CSS system)
+✅ **Frontend**: React 18 (functional components + hooks), Inertia.js, Tailwind CSS, Vite 7.x
 
-DB: MySQL / MariaDB (or PostgreSQL)
+✅ **Build**: Vite with React plugin, SSR support, legacy peer deps for compatibility
 
-Queues: Redis (or database) + Laravel Queue + Horizon (optional)
+🔄 **DB**: SQLite (default) → PostgreSQL (to be configured)
 
-Scheduler: Laravel Scheduler (cron) for payroll runs / remittances / nightly reconciliation
+🔄 **Queues**: Database (default) → Redis + Laravel Queue + Horizon (planned)
 
-Extras: spatie/laravel-permission, maatwebsite/excel (export), barryvdh/laravel-cors (if needed), Docker for local dev
+🔄 **Scheduler**: Laravel Scheduler for payroll runs / remittances / nightly reconciliation (planned)
 
-Testing: PHPUnit and Pest (optional)
+**Additional packages installed:**
+- @inertiajs/react, react, react-dom
+- @vitejs/plugin-react
+- @headlessui/react (for UI components)
+- ziggy-js (for client-side routing)
+
+**To be installed:**
+- spatie/laravel-permission (RBAC)
+- maatwebsite/excel (exports)
+- barryvdh/laravel-cors (if needed)
+
+**Testing**: PHPUnit (included), Pest (optional)
 
 3 — Architecture & project layout (example)
 /project-root
@@ -104,38 +115,72 @@ Testing: PHPUnit and Pest (optional)
 
 4 — Quick setup (local)
 
+✅ **COMPLETED** - Project initialized with Laravel 11 + Jetstream + Inertia + React
+
 Assumes Docker is optional; commands for local machine with PHP + Composer + Node installed.
 
-# 1. Clone
-git clone git@yourrepo:cameco.git
+# 1. Clone (DONE)
+# Project initialized directly in cameco folder
 cd cameco
 
-# 2. Install backend composer deps
+# 2. Install backend composer deps (DONE)
 composer install
 cp .env.example .env
 php artisan key:generate
 
-# 3. DB & migrations
+# 3. Install Jetstream + Inertia + React (DONE)
+composer require laravel/jetstream
+php artisan jetstream:install inertia --teams
+# Fixed Vue → React conversion:
+# - Removed Vue dependencies
+# - Installed @inertiajs/react, react, react-dom, @vitejs/plugin-react
+# - Updated vite.config.js for React
+# - Converted app.js → app.jsx
+# - Created React components (Dashboard.jsx, AuthenticatedLayout.jsx, etc.)
+npm install --legacy-peer-deps
+npm run build  # ✅ Build successful
+
+# 4. DB & migrations (NEXT)
 # configure DB in .env
 php artisan migrate --seed
 
-# 4. Install Jetstream + Inertia + React
-composer require laravel/jetstream
-php artisan jetstream:install inertia --teams   # or without --teams
-npm install
-npm run dev
+# 5. Additional packages (NEXT)
+# spatie/laravel-permission, maatwebsite/excel, etc.
 
-# 5. Bind interfaces
-php artisan vendor:publish --tag=repository-bindings # if you have a package else create service provider
+# 6. Service & Repository patterns (NEXT)
+# Create interfaces, implementations, and service provider bindings
 
-# 6. Serve
-php artisan serve
+# 7. Serve (RUNNING)
+php artisan serve     # ✅ http://127.0.0.1:8000
+npm run dev          # ✅ http://localhost:5174 (Vite hot reload)
 
-5 — Jetstream + React (Inertia): keep Laravel as primary backend
+5 — Jetstream + React (Inertia): keep Laravel as primary backend ✅ IMPLEMENTED
 
-Use Jetstream with the Inertia + React option. Inertia allows server-side routing and page rendering with Laravel controllers returning Inertia pages (Inertia::render('Pages/Dashboard', $props)), so Laravel remains the orchestrator (not a headless API).
+✅ **WORKING** - Laravel + Jetstream + Inertia + React setup complete!
 
-Authentication, session, CSRF, and server-side rendering (initial HTML) are handled by Laravel. React components are delivered by Inertia as pages/components. This satisfies "Laravel is not an API-only backend" while using React as componentized view layer.
+**What's implemented:**
+- Laravel serves React components (NOT SPA)
+- Server-side routing with `Inertia::render('PageName', $props)`
+- React components hydrated client-side
+- Authentication, sessions, CSRF handled by Laravel
+- SSR (Server-Side Rendering) configured
+- Teams functionality enabled
+
+**Current structure:**
+```
+resources/js/
+├── app.jsx                    # Main React entry point
+├── ssr.jsx                    # Server-side rendering
+├── Components/
+│   ├── ApplicationLogo.jsx
+│   ├── Dropdown.jsx
+│   ├── NavLink.jsx
+│   └── ResponsiveNavLink.jsx
+├── Layouts/
+│   └── AuthenticatedLayout.jsx
+└── Pages/
+    └── Dashboard.jsx          # React dashboard component
+```
 
 Example controller action:
 
@@ -243,32 +288,57 @@ public function register()
 
 Add this provider to config/app.php or auto-register via composer.json autoload discovery.
 
-7 — React + Inertia component conventions
+7 — React + Inertia component conventions ✅ IMPLEMENTED
 
-Store page components under resources/js/Pages/...
+✅ **Current structure implemented:**
+- Page components: `resources/js/Pages/` (Dashboard.jsx working)
+- Reusable UI: `resources/js/Components/` (ApplicationLogo, Dropdown, NavLink, etc.)
+- Layouts: `resources/js/Layouts/` (AuthenticatedLayout.jsx)
 
-Reusable UI components under resources/js/Components/...
+**Working example - Dashboard.jsx:**
+```jsx
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head } from '@inertiajs/react';
 
-Use Inertia props for server-provided data and client fetching for progressive enhancement.
+export default function Dashboard(props) {
+    return (
+        <AuthenticatedLayout
+            header={<h2>Dashboard</h2>}
+        >
+            <Head title="Dashboard" />
+            <div className="py-12">
+                {/* SyncingSteel System dashboard content */}
+            </div>
+        </AuthenticatedLayout>
+    );
+}
+```
 
-Keep components small and single-responsibility: EmployeeTable, EmployeeForm, AttendanceClock.
+**Conventions to follow:**
+- Use Inertia props for server-provided data
+- Keep components small: EmployeeTable, EmployeeForm, AttendanceClock
+- Use `@/` alias for imports from resources/js/
 
-Example Inertia page (resources/js/Pages/Hr/Employees/Index.jsx):
-
-import React from 'react';
-import { Inertia } from '@inertiajs/inertia';
-import Pagination from '@/Components/Pagination';
+**Next: HR/Employees/Index.jsx example:**
+```jsx
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head } from '@inertiajs/react';
 import EmployeeTable from '@/Components/EmployeeTable';
+import Pagination from '@/Components/Pagination';
 
 export default function Index({ employees }) {
   return (
-    <div>
-      <h1>Employees</h1>
-      <EmployeeTable data={employees.data} />
-      <Pagination meta={employees.meta} />
-    </div>
+    <AuthenticatedLayout>
+      <Head title="Employees" />
+      <div>
+        <h1>Employees</h1>
+        <EmployeeTable data={employees.data} />
+        <Pagination meta={employees.meta} />
+      </div>
+    </AuthenticatedLayout>
   );
 }
+```
 
 8 — HR Core module (data model & flows)
 
@@ -501,17 +571,34 @@ Triple i Consulting
 
 Regulatory note: statutory contribution rates, ceilings, and tax tables change — design the system to store the rate versions and include an admin workflow for approving rate changes. Always validate with the official agency circulars and consult your accountant before going live.
 
-19 — Next steps & roadmap (short)
+19 — Next steps & roadmap (current status)
 
-Implement HR Core (employee CRUD, RBAC) — MVP within 2-3 weeks (dev estimate).
+✅ **COMPLETED**: Laravel 11 + Jetstream + Inertia + React foundation
+- Authentication system working
+- React components serving from Laravel
+- Teams functionality enabled
+- Development environment running
 
-Implement Timekeeping (punch ingestion + nightly reconciliation).
+🔄 **IN PROGRESS**: Database & environment setup
+- Configure PostgreSQL connection
+- Run migrations for Jetstream tables
+- Set up environment variables
 
-Implement Payroll calculation engine (statutory modules pluggable).
+📋 **NEXT UP** (immediate priorities):
+1. **Database setup** - Configure Postgres, run migrations
+2. **Additional packages** - spatie/laravel-permission, maatwebsite/excel
+3. **Service & Repository patterns** - Create interfaces and implementations
+4. **HR Core module** - Employee CRUD, RBAC (MVP - 2-3 weeks)
 
-Add remittance exports & BIR reports.
+📅 **ROADMAP** (following phases):
+- Implement Timekeeping (punch ingestion + nightly reconciliation)
+- Implement Payroll calculation engine (statutory modules pluggable)
+- Add remittance exports & BIR reports
+- Add audit, approvals, payslip distribution, and backups
 
-Add audit, approvals, payslip distribution, and backups.
+**Current servers running:**
+- Laravel: http://127.0.0.1:8000 ✅
+- Vite: http://localhost:5174 ✅
 
 20 — Useful code & config snippets to copy
 
