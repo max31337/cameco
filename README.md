@@ -107,8 +107,8 @@ Testing: PHPUnit and Pest (optional)
 Assumes Docker is optional; commands for local machine with PHP + Composer + Node installed.
 
 # 1. Clone
-git clone git@yourrepo:syncingsteel.git
-cd syncingsteel
+git clone git@yourrepo:cameco.git
+cd cameco
 
 # 2. Install backend composer deps
 composer install
