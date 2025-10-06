@@ -24,7 +24,9 @@ if (!window.route) {
             'admin.employees': '/admin/employees',
             'admin.timekeeping': '/admin/timekeeping',
             'admin.payroll': '/admin/payroll',
-            'admin.reports': '/admin/reports'
+            'admin.reports': '/admin/reports',
+            'admin.visitors': '/admin/visitors',
+            'admin.performance': '/admin/performance'
         };
         const route = routes[name];
         if (!route) {

@@ -206,6 +206,12 @@ export default function AuthenticatedLayout({ header, children }) {
                         <ResponsiveNavLink href={route('admin.reports')} active={url === '/admin/reports'}>
                             Reports
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('admin.visitors')} active={url === '/admin/visitors'}>
+                            Visitors
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('admin.performance')} active={url === '/admin/performance'}>
+                            Performance
+                        </ResponsiveNavLink>
                     </div>
 
                     {/* Responsive Settings Options */}
