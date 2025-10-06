@@ -14,7 +14,8 @@ window.route = (name, params) => {
         'register': '/register',
         'dashboard': '/dashboard',
         'logout': '/logout',
-        'profile.show': '/user/profile'
+        'profile.show': '/user/profile',
+        'admin.profile.complete': '/admin/profile/complete'
     };
     return routes[name] || '/';
 };
