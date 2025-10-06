@@ -217,26 +217,49 @@ graph TD
     HREmployeeActions --> ViewAllEmployees[View All Employees]
     HREmployeeActions --> AddNewEmployee[Add New Employee]
     HREmployeeActions --> UpdateEmployee[Update Employee Info]
-    HREmployeeActions --> ManageDocuments[Manage Employee Documents]
+    HREmployeeActions --> DeleteEmployee[Delete/Archive Employee]
+    HREmployeeActions --> ManageDocuments[Generate/Print/Send Documents]
     
-    AddNewEmployee --> HREmployeeForm[Employee Information Form]
-    HREmployeeForm --> HRPersonalInfo[Enter Personal Details]
-    HRPersonalInfo --> HREmploymentDetails[Enter Employment Details]
-    HREmploymentDetails --> HRGovtIDs[Enter Government IDs]
-    HRGovtIDs --> HRFamilyInfo[Enter Family Information]
-    HRFamilyInfo --> HREmergencyContact[Enter Emergency Contacts]
-    HREmergencyContact --> SaveEmployeeRecord[Save Employee Record]
-    SaveEmployeeRecord --> AssignDepartment[Assign Department]
-    AssignDepartment --> SetSalaryInfo[Set Salary Information]
-    SetSalaryInfo --> GenerateEmployeeNumber[Generate Employee Number]
-    GenerateEmployeeNumber --> CreateContract[Generate Employment Contract]
-    CreateContract --> SetLeaveBalances[Set Initial Leave Balances]
-    SetLeaveBalances --> SendWelcome[Send Welcome Email]
-    SendWelcome --> HREmployeeEnd([Employee Onboarded])
+    %% Rolling Mills Management
+    ViewAllEmployees --> FilterRollingMills[Filter: Rolling Mills Department]
+    FilterRollingMills --> ViewRMEmployees[View Rolling Mills Employees]
+    AddNewEmployee --> AddRMEmployee{Add to Which Department?}
+    AddRMEmployee -->|Rolling Mills| AddRMForm[Fill Rolling Mills Employee Form]
+    AddRMEmployee -->|Other| HREmployeeForm[Fill Employee Form]
+    AddRMForm --> SaveRMEmployee[Save Rolling Mills Employee Record]
+    SaveRMEmployee --> RMEmployeeEnd([Rolling Mills Employee Added])
+    HREmployeeForm --> SaveEmployeeRecord[Save Employee Record]
+    SaveEmployeeRecord --> EmployeeEnd([Employee Added])
     
-    UpdateEmployee --> HREmployeeForm
-    ViewAllEmployees --> HREmployeeEnd
-    ManageDocuments --> HREmployeeEnd
+    UpdateEmployee --> UpdateRMEmployee{Update Which Department?}
+    UpdateRMEmployee -->|Rolling Mills| UpdateRMForm[Update Rolling Mills Employee Info]
+    UpdateRMEmployee -->|Other| UpdateEmployeeForm[Update Employee Info]
+    UpdateRMForm --> SaveRMUpdate[Save Changes]
+    SaveRMUpdate --> RMUpdateEnd([Rolling Mills Employee Updated])
+    UpdateEmployeeForm --> SaveUpdate[Save Changes]
+    SaveUpdate --> UpdateEnd([Employee Updated])
+    
+    DeleteEmployee --> DeleteRMEmployee{Delete From Which Department?}
+    DeleteRMEmployee -->|Rolling Mills| ConfirmDeleteRM[Confirm Delete]
+    DeleteRMEmployee -->|Other| ConfirmDelete[Confirm Delete]
+    ConfirmDeleteRM --> ArchiveRMEmployee[Archive Rolling Mills Employee]
+    ArchiveRMEmployee --> RMDeleteEnd([Rolling Mills Employee Archived])
+    ConfirmDelete --> ArchiveEmployee[Archive Employee]
+    ArchiveEmployee --> DeleteEnd([Employee Archived])
+    
+    ManageDocuments --> SelectDocType{Select Document Type}
+    SelectDocType --> ContractDoc[Employment Contract]
+    SelectDocType --> CertificateDoc[Certificate]
+    SelectDocType --> PayslipDoc[Payslip]
+    SelectDocType --> OtherDoc[Other Document]
+    ContractDoc --> PrintContract[Print/Send Contract]
+    CertificateDoc --> PrintCertificate[Print/Send Certificate]
+    PayslipDoc --> PrintPayslip[Print/Send Payslip]
+    OtherDoc --> PrintOtherDoc[Print/Send Document]
+    PrintContract --> DocEnd([Document Generated])
+    PrintCertificate --> DocEnd
+    PrintPayslip --> DocEnd
+    PrintOtherDoc --> DocEnd
     
     %% Leave Management
     HRLeave --> LeaveActions{Select Action}
