@@ -13,9 +13,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create admin user first
+        // Create admin user first (required for approval relationships)
         $this->call([
             AdminUserSeeder::class,
+        ]);
+
+        // Create test users for different approval states
+        $this->call([
+            ApprovedUserSeeder::class,
+            RejectedUserSeeder::class,
         ]);
 
         // User::factory(10)->withPersonalTeam()->create();

@@ -54,6 +54,38 @@ php artisan serve
 
 > 💡 You can now login using either username or email!
 
+## 👥 Test Users for Different Status Types
+
+### ✅ Approved Users (Status: Active)
+Use these accounts to test successful login flow:
+
+| Name | Username | Email | Password | Status |
+|------|----------|-------|----------|--------|
+| John Smith | `john.smith` | john.smith@cathay.com | `password` | ✅ Active |
+| Sarah Johnson | `sarah.johnson` | sarah.johnson@cathay.com | `password` | ✅ Active |
+| Mike Chen | `mike.chen` | mike.chen@cathay.com | `password` | ✅ Active |
+
+### ❌ Rejected Users (Status: Rejected)
+Use these accounts to test rejection error messages:
+
+| Name | Username | Email | Password | Rejection Reason |
+|------|----------|-------|----------|------------------|
+| Bob Wilson | `bob.wilson` | bob.wilson@external.com | `password` | External email address not allowed |
+| Alice Brown | `alice.brown` | alice.brown@cathay.com | `password` | Unable to verify employment status |
+| Tom Davis | `tom.davis` | tom.davis@contractor.com | `password` | Contractor accounts require special approval |
+
+### 🔄 Creating All Test Users
+To seed all test users at once:
+```bash
+# This will create admin + approved + rejected users
+php artisan db:seed
+
+# Or run specific seeders:
+php artisan db:seed --class=AdminUserSeeder
+php artisan db:seed --class=ApprovedUserSeeder  
+php artisan db:seed --class=RejectedUserSeeder
+```
+
 ## 🧪 Testing User Registration & Approval Flow
 
 ### Step 1: Register a New User
