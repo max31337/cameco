@@ -48,20 +48,32 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Dashboard
                                 </Link>
                                 <Link 
-                                    href="#" 
-                                    className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-blue-200 hover:text-white hover:border-blue-300 transition-all duration-200"
+                                    href={route('admin.employees')} 
+                                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
+                                        url === '/admin/employees' 
+                                            ? 'border-white text-white' 
+                                            : 'border-transparent text-blue-200 hover:text-white hover:border-blue-300'
+                                    }`}
                                 >
                                     Employees
                                 </Link>
                                 <Link 
-                                    href="#" 
-                                    className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-blue-200 hover:text-white hover:border-blue-300 transition-all duration-200"
+                                    href={route('admin.payroll')} 
+                                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
+                                        url === '/admin/payroll' 
+                                            ? 'border-white text-white' 
+                                            : 'border-transparent text-blue-200 hover:text-white hover:border-blue-300'
+                                    }`}
                                 >
                                     Payroll
                                 </Link>
                                 <Link 
-                                    href="#" 
-                                    className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-blue-200 hover:text-white hover:border-blue-300 transition-all duration-200"
+                                    href={route('admin.reports')} 
+                                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
+                                        url === '/admin/reports' 
+                                            ? 'border-white text-white' 
+                                            : 'border-transparent text-blue-200 hover:text-white hover:border-blue-300'
+                                    }`}
                                 >
                                     Reports
                                 </Link>
@@ -151,6 +163,15 @@ export default function AuthenticatedLayout({ header, children }) {
                     <div className="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink href={route('dashboard')} active={url === '/dashboard'}>
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('admin.employees')} active={url === '/admin/employees'}>
+                            Employees
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('admin.payroll')} active={url === '/admin/payroll'}>
+                            Payroll
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('admin.reports')} active={url === '/admin/reports'}>
+                            Reports
                         </ResponsiveNavLink>
                     </div>
 

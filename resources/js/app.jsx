@@ -20,7 +20,10 @@ if (!window.route) {
             'admin.profile.complete': '/admin/profile/complete',
             'admin.profile.store': '/admin/profile/store',
             'admin.profile.skip': '/admin/profile/skip',
-            'admin.profile.save-progress': '/admin/profile/save-progress'
+            'admin.profile.save-progress': '/admin/profile/save-progress',
+            'admin.employees': '/admin/employees',
+            'admin.payroll': '/admin/payroll',
+            'admin.reports': '/admin/reports'
         };
         const route = routes[name];
         if (!route) {

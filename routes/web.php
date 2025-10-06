@@ -39,4 +39,17 @@ Route::middleware([
     'admin.has.employee', // Redirect admins without employee records
 ])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Admin Pages
+    Route::get('/admin/employees', function () {
+        return Inertia::render('Admin/Employees');
+    })->name('admin.employees');
+    
+    Route::get('/admin/payroll', function () {
+        return Inertia::render('Admin/Payroll');
+    })->name('admin.payroll');
+    
+    Route::get('/admin/reports', function () {
+        return Inertia::render('Admin/Reports');
+    })->name('admin.reports');
 });
