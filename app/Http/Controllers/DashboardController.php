@@ -74,7 +74,7 @@ class DashboardController extends Controller
 
         // User has employee record - calculate completion based on filled fields
         $employee = $user->employee;
-        $totalFields = 17; // Total number of important fields that exist in database
+        $totalFields = 16; // Total number of important fields (15 required + 1 optional with 0.5 weight = 15.5, scaled to 16 for percentage)
         $filledFields = 0;
 
         // Check required fields (using Employee model field names that exist in database)
@@ -92,10 +92,11 @@ class DashboardController extends Controller
         }
 
         // Check optional fields (with lower weight) (using Employee model field names that exist in database)
-        $optionalFields = ['middlename', 'place_of_birth'];
+        // Note: place_of_birth removed as it's not in the profile completion form
+        $optionalFields = ['middlename'];
         foreach ($optionalFields as $field) {
             if (!empty($employee->$field)) {
-                $filledFields += 0.5;
+                $filledFields += 1; // Changed from 0.5 to 1 to make calculation simpler
             }
         }
 
