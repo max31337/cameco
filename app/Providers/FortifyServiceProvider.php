@@ -35,6 +35,11 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
 
+        // Custom login response to handle admin profile completion
+        Fortify::loginView(function () {
+            return \Inertia\Inertia::render('Auth/Login');
+        });
+
         // Custom authentication to support username OR email
         Fortify::authenticateUsing(function (Request $request) {
             $user = \App\Models\User::where('email', $request->email)

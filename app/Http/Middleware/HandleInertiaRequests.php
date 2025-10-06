@@ -38,6 +38,9 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'status' => $request->user()->status,
+                    'isAdmin' => $request->user()->isAdmin(),
+                    'hasEmployeeRecord' => $request->user()->hasEmployeeRecord(),
+                    'hasSkippedProfile' => $request->user()->hasSkippedProfileCompletion(),
                 ] : null,
             ],
             'ziggy' => fn () => [
