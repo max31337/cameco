@@ -1,9 +1,10 @@
 <?php
 
 // Reset user data for testing
-require_once __DIR__ . '/vendor/autoload.php';
+// Load Composer autoload and bootstrap Laravel from project root
+require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
-$app = require_once __DIR__ . '/bootstrap/app.php';
+$app = require_once dirname(__DIR__, 2) . '/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use App\Models\User;

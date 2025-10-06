@@ -3,8 +3,10 @@
 require_once 'vendor/autoload.php';
 
 // Bootstrap Laravel
-$app = require_once 'bootstrap/app.php';
-$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
+// Load Composer autoload and bootstrap Laravel from project root
+require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+$app = require_once dirname(__DIR__, 2) . '/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use App\Models\User;
 use App\Models\Employee;
