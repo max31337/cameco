@@ -226,7 +226,7 @@ class AdminProfileController extends Controller
             'position' => 'required|string|max:255',
             'department_id' => 'required|exists:departments,id',
             'hire_date' => 'required|date',
-            'employment_type' => ['required', Rule::in(['full-time', 'part-time', 'contract', 'intern'])],
+            'employment_type' => ['required', Rule::in(['regular', 'contractual', 'probationary', 'consultant'])],
             'work_schedule' => ['required', Rule::in(['day-shift', 'night-shift', 'rotating', 'flexible'])],
             'basic_salary' => 'required|numeric|min:0',
             'hourly_rate' => 'nullable|numeric|min:0',
@@ -259,6 +259,8 @@ class AdminProfileController extends Controller
                 'pag_ibig_number' => 'pagibig_no',
                 'email' => 'email_personal',
                 'supervisor_id' => 'immediate_supervisor_id',
+                'emergency_contact_phone' => 'emergency_contact_number',
+                'emergency_contact_address' => 'emergency_contact_address',
             ];
 
             $mappedData = [];
@@ -317,6 +319,13 @@ class AdminProfileController extends Controller
             return response()->json(['error' => 'Access denied'], 403);
         }
 
+        // Reset the "skipped" flag if user is now actively completing their profile
+        if ($user->profile_completion_skipped) {
+            $user->profile_completion_skipped = false;
+            $user->save();
+            \Log::info('Reset profile_completion_skipped flag', ['user_id' => $user->id]);
+        }
+
         // Reload the user relationship to ensure we have the latest employee record
         $user->load('employee');
         
@@ -351,18 +360,28 @@ class AdminProfileController extends Controller
             'pag_ibig_number' => 'pagibig_no',
             'email' => 'email_personal',
             'supervisor_id' => 'immediate_supervisor_id',
+            'emergency_contact_phone' => 'emergency_contact_number',
         ];
 
         // Remove empty values and map field names
         $dataToUpdate = [];
+        $skippedFields = [];
         foreach ($submittedData as $field => $value) {
             if ($value !== null && $value !== '') {
                 $mappedField = isset($fieldMap[$field]) ? $fieldMap[$field] : $field;
                 if (in_array($mappedField, $employee->getFillable())) {
                     $dataToUpdate[$mappedField] = $value;
+                } else {
+                    $skippedFields[] = $field . ' (mapped to: ' . $mappedField . ')';
                 }
             }
         }
+
+        \Log::info('Field mapping results', [
+            'fields_to_update' => array_keys($dataToUpdate),
+            'skipped_fields' => $skippedFields,
+            'employee_fillable' => $employee->getFillable()
+        ]);
 
         // Update employee with the new data
         foreach ($dataToUpdate as $field => $value) {
