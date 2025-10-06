@@ -105,7 +105,7 @@ class AdminProfileController extends Controller
 
         // Step 1 fields (Personal Information)
         $step1Fields = [
-            'firstname', 'lastname', 'date_of_birth', 
+            'firstname', 'lastname', 'date_of_birth', 'place_of_birth',
             'gender', 'civil_status'
         ];
 
@@ -207,6 +207,7 @@ class AdminProfileController extends Controller
             'last_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'date_of_birth' => 'required|date|before:today',
+            'place_of_birth' => 'required|string|max:255',
             'gender' => ['required', Rule::in(['male', 'female', 'other'])],
             'civil_status' => ['required', Rule::in(['single', 'married', 'divorced', 'widowed', 'separated'])],
             'nationality' => 'required|string|max:100',
