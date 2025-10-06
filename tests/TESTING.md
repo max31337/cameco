@@ -227,6 +227,35 @@ Route::middleware([
 - **Register:** http://127.0.0.1:8000/register
 - **Dashboard:** http://127.0.0.1:8000/dashboard (requires active user)
 
+## 🧪 Custom Tests
+
+In addition to the standard Laravel tests, this project includes custom test scripts for debugging and validating specific functionality. These are located in `tests/Custom/`:
+
+### Profile Completion System Tests
+
+- **`test_step_skip_workflow.php`** - Tests the complete user workflow for profile completion
+- **`test_step_navigation.php`** - Tests automatic step navigation based on completion progress  
+- **`test_save_progress.php`** - Tests incremental form data saving
+- **`test_admin_onboarding.php`** - Tests admin onboarding service and calculations
+
+### Utility Scripts
+
+- **`cleanup_db.php`** - Database cleanup utility for testing
+- **`debug_step_calc.php`** - Debug script for step calculation logic
+
+### Running Custom Tests
+
+```bash
+# Run individual test scripts
+php tests/Custom/test_step_skip_workflow.php
+php tests/Custom/cleanup_db.php
+
+# View test documentation
+cat tests/Custom/README.md
+```
+
+**⚠️ Note:** Custom tests modify database data. Use with caution in production.
+
 ---
 
 **Last Updated:** October 6, 2025  
