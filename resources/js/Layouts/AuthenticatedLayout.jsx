@@ -58,6 +58,16 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Employees
                                 </Link>
                                 <Link 
+                                    href={route('admin.timekeeping')} 
+                                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
+                                        url === '/admin/timekeeping' 
+                                            ? 'border-white text-white' 
+                                            : 'border-transparent text-blue-200 hover:text-white hover:border-blue-300'
+                                    }`}
+                                >
+                                    Timekeeping
+                                </Link>
+                                <Link 
                                     href={route('admin.payroll')} 
                                     className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
                                         url === '/admin/payroll' 
@@ -76,6 +86,26 @@ export default function AuthenticatedLayout({ header, children }) {
                                     }`}
                                 >
                                     Reports
+                                </Link>
+                                <Link 
+                                    href={route('admin.visitors')} 
+                                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
+                                        url === '/admin/visitors' 
+                                            ? 'border-white text-white' 
+                                            : 'border-transparent text-blue-200 hover:text-white hover:border-blue-300'
+                                    }`}
+                                >
+                                    Visitors
+                                </Link>
+                                <Link 
+                                    href={route('admin.performance')} 
+                                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
+                                        url === '/admin/performance' 
+                                            ? 'border-white text-white' 
+                                            : 'border-transparent text-blue-200 hover:text-white hover:border-blue-300'
+                                    }`}
+                                >
+                                    Performance
                                 </Link>
                             </div>
                         </div>
@@ -166,6 +196,9 @@ export default function AuthenticatedLayout({ header, children }) {
                         </ResponsiveNavLink>
                         <ResponsiveNavLink href={route('admin.employees')} active={url === '/admin/employees'}>
                             Employees
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('admin.timekeeping')} active={url === '/admin/timekeeping'}>
+                            Timekeeping
                         </ResponsiveNavLink>
                         <ResponsiveNavLink href={route('admin.payroll')} active={url === '/admin/payroll'}>
                             Payroll

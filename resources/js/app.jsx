@@ -22,6 +22,7 @@ if (!window.route) {
             'admin.profile.skip': '/admin/profile/skip',
             'admin.profile.save-progress': '/admin/profile/save-progress',
             'admin.employees': '/admin/employees',
+            'admin.timekeeping': '/admin/timekeeping',
             'admin.payroll': '/admin/payroll',
             'admin.reports': '/admin/reports'
         };

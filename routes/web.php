@@ -45,6 +45,10 @@ Route::middleware([
         return Inertia::render('Admin/Employees');
     })->name('admin.employees');
     
+    Route::get('/admin/timekeeping', function () {
+        return Inertia::render('Admin/Timekeeping');
+    })->name('admin.timekeeping');
+    
     Route::get('/admin/payroll', function () {
         return Inertia::render('Admin/Payroll');
     })->name('admin.payroll');
@@ -52,4 +56,12 @@ Route::middleware([
     Route::get('/admin/reports', function () {
         return Inertia::render('Admin/Reports');
     })->name('admin.reports');
+    
+    Route::get('/admin/visitors', function () {
+        return Inertia::render('Admin/Visitors');
+    })->name('admin.visitors');
+    
+    Route::get('/admin/performance', function () {
+        return Inertia::render('Admin/Performance');
+    })->name('admin.performance');
 });
