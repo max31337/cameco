@@ -154,6 +154,20 @@ php artisan migrate --seed
 php artisan serve     # ✅ http://127.0.0.1:8000
 npm run dev          # ✅ http://localhost:5174 (Vite hot reload)
 
+## 🧪 Testing Instructions
+
+For comprehensive testing guides, user credentials, and test scenarios:
+
+**📖 See: [`tests/TESTING.md`](tests/TESTING.md)**
+
+The testing guide includes:
+- Complete setup instructions
+- Pre-configured test users (admin, approved, rejected, pending)
+- User approval workflow testing
+- Login/registration flow validation
+- Database seeding commands
+- Expected behaviors and error messages
+
 5 — Jetstream + React (Inertia): keep Laravel as primary backend ✅ IMPLEMENTED
 
 ✅ **WORKING** - Laravel + Jetstream + Inertia + React setup complete!
