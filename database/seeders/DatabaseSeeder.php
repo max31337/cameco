@@ -13,6 +13,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create departments first (required for employee relationships)
+        $this->call([
+            DepartmentSeeder::class,
+        ]);
+
         // Create admin user first (required for approval relationships)
         $this->call([
             AdminUserSeeder::class,
