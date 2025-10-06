@@ -317,16 +317,22 @@ class AdminProfileController extends Controller
             return response()->json(['error' => 'Access denied'], 403);
         }
 
-        // If user already has an employee record, update it; otherwise create partial record
-        if ($user->hasEmployeeRecord()) {
+        // Reload the user relationship to ensure we have the latest employee record
+        $user->load('employee');
+        
+        // If user already has an employee record, update it; otherwise create new one
+        if ($user->employee) {
             $employee = $user->employee;
+            \Log::info('Updating existing employee', ['employee_id' => $employee->id]);
         } else {
-            // Create or get existing partial employee record
-            $employee = $user->employee ?? new \App\Models\Employee([
-                'user_id' => $user->id,
-                'created_by' => $user->id,
-                'updated_by' => $user->id,
-            ]);
+            // Create new employee record
+            $employee = new \App\Models\Employee();
+            $employee->user_id = $user->id;
+            $employee->created_by = $user->id;
+            $employee->updated_by = $user->id;
+            // Set default status
+            $employee->status = 'active';
+            \Log::info('Creating new employee record', ['user_id' => $user->id]);
         }
 
         // Get the submitted data and only update non-empty fields
@@ -362,18 +368,44 @@ class AdminProfileController extends Controller
         foreach ($dataToUpdate as $field => $value) {
             $employee->$field = $value;
         }
+        
+        // Set updated_by for existing records
+        if ($employee->exists) {
+            $employee->updated_by = $user->id;
+        }
 
         // Save the employee record
-        $employee->save();
-        \Log::info('Employee saved', ['employee_id' => $employee->id, 'user_id' => $user->id]);
+        try {
+            $employee->save();
+            \Log::info('Employee saved successfully', [
+                'employee_id' => $employee->id, 
+                'user_id' => $user->id,
+                'is_new' => !$employee->wasRecentlyCreated,
+                'updated_fields' => array_keys($dataToUpdate)
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to save employee', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+                'data' => $dataToUpdate
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to save employee: ' . $e->getMessage()
+            ], 500);
+        }
 
-        // Update user's employee_id and department_id if not set
-        if (!$user->employee_id) {
+        // Update user's employee_id if this is a new employee
+        if (!$user->employee_id && $employee->id) {
             $user->employee_id = $employee->id;
+            \Log::info('Linking employee to user', ['user_id' => $user->id, 'employee_id' => $employee->id]);
         }
-        if (!$user->department_id && $employee->department_id) {
-            $user->department_id = $employee->department_id;
+        
+        // Update user's department_id if provided
+        if (isset($dataToUpdate['department_id']) && $dataToUpdate['department_id']) {
+            $user->department_id = $dataToUpdate['department_id'];
         }
+        
         $user->save();
         \Log::info('User updated', ['user_id' => $user->id, 'employee_id' => $user->employee_id]);
 

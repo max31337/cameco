@@ -7,18 +7,29 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-// Create a simple route helper for now
-window.route = (name, params) => {
-    const routes = {
-        'login': '/login',
-        'register': '/register',
-        'dashboard': '/dashboard',
-        'logout': '/logout',
-        'profile.show': '/user/profile',
-        'admin.profile.complete': '/admin/profile/complete'
+// Use Ziggy's route helper if available, otherwise create a fallback
+if (!window.route) {
+    console.warn('Ziggy route helper not found, using fallback route helper');
+    window.route = (name, params) => {
+        const routes = {
+            'login': '/login',
+            'register': '/register',
+            'dashboard': '/dashboard',
+            'logout': '/logout',
+            'profile.show': '/user/profile',
+            'admin.profile.complete': '/admin/profile/complete',
+            'admin.profile.store': '/admin/profile/store',
+            'admin.profile.skip': '/admin/profile/skip',
+            'admin.profile.save-progress': '/admin/profile/save-progress'
+        };
+        const route = routes[name];
+        if (!route) {
+            console.error(`Route "${name}" not found in fallback route helper`);
+            return '/';
+        }
+        return route;
     };
-    return routes[name] || '/';
-};
+}
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

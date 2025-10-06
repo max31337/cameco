@@ -16,4 +16,12 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: '127.0.0.1', // Force IPv4 instead of IPv6
+        port: 5174,
+        strictPort: true, // Don't try other ports if 5174 is in use
+        hmr: {
+            host: '127.0.0.1',
+        },
+    },
 });
