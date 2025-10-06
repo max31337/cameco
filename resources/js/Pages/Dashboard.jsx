@@ -46,11 +46,12 @@ export default function Dashboard({ needsProfileCompletion, profileCompletionUrl
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* Profile Status Section */}
-                    <div className="mb-8">
-                        {profileCompletion?.status === 'complete' ? (
-                            /* Profile Completed - Show Profile Info */
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    {/* Profile Status Section - Only show if profile is not 100% complete */}
+                    {profileCompletion?.percentage < 100 && (
+                        <div className="mb-8">
+                            {profileCompletion?.status === 'complete' ? (
+                                /* Profile Completed - Show Profile Info */
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="bg-gradient-to-r from-green-500 to-green-600 px-8 py-6 text-white">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center">
@@ -335,7 +336,9 @@ export default function Dashboard({ needsProfileCompletion, profileCompletionUrl
                                 </div>
                             </div>
                         )}
-                    </div>
+                        </div>
+                    )}
+
                     {/* Statistics Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         {/* Total Employees */}

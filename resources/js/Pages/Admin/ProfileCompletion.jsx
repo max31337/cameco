@@ -20,6 +20,7 @@ export default function ProfileCompletion({ user, progress, departments, initial
             last_name: employee?.lastname || '',
             middle_name: employee?.middlename || '',
             date_of_birth: employee?.date_of_birth || '',
+            place_of_birth: employee?.place_of_birth || '',
             gender: employee?.gender || '',
             civil_status: employee?.civil_status || '',
             nationality: employee?.nationality || 'Filipino',
@@ -39,7 +40,7 @@ export default function ProfileCompletion({ user, progress, departments, initial
             position: employee?.position || '',
             department_id: employee?.department_id || '',
             hire_date: employee?.date_employed || new Date().toISOString().split('T')[0],
-            employment_type: employee?.employment_type || 'full-time',
+            employment_type: employee?.employment_type || 'regular',
             work_schedule: employee?.work_schedule || 'day-shift',
             basic_salary: employee?.basic_salary || '',
             hourly_rate: employee?.hourly_rate || '',
@@ -61,8 +62,15 @@ export default function ProfileCompletion({ user, progress, departments, initial
 
     const { data, setData, post, processing, errors, reset } = useForm(getInitialFormData());
 
-    const submit = (e) => {
+    const submit = async (e) => {
         e.preventDefault();
+        
+        // Save Step 4 progress before final submission
+        console.log('Final submission - saving Step 4 data first...');
+        await saveProgress();
+        
+        // Then submit the complete profile
+        console.log('Submitting complete profile...');
         post(route('admin.profile.store'));
     };
 
@@ -81,6 +89,7 @@ export default function ProfileCompletion({ user, progress, departments, initial
                         last_name: data.last_name,
                         middle_name: data.middle_name,
                         date_of_birth: data.date_of_birth,
+                        place_of_birth: data.place_of_birth,
                         gender: data.gender,
                         civil_status: data.civil_status,
                         nationality: data.nationality,
@@ -109,14 +118,14 @@ export default function ProfileCompletion({ user, progress, departments, initial
                         basic_salary: data.basic_salary,
                         hourly_rate: data.hourly_rate,
                         supervisor_id: data.supervisor_id,
+                    };
+                    break;
+                case 4: // Additional Information (Government IDs + Emergency Contact)
+                    currentStepData = {
                         sss_number: data.sss_number,
                         philhealth_number: data.philhealth_number,
                         tin_number: data.tin_number,
                         pag_ibig_number: data.pag_ibig_number,
-                    };
-                    break;
-                case 4: // Additional Information
-                    currentStepData = {
                         emergency_contact_name: data.emergency_contact_name,
                         emergency_contact_relationship: data.emergency_contact_relationship,
                         emergency_contact_phone: data.emergency_contact_phone,
@@ -200,7 +209,7 @@ export default function ProfileCompletion({ user, progress, departments, initial
     const isStepValid = () => {
         switch(currentStep) {
             case 1:
-                return data.first_name && data.last_name && data.date_of_birth && data.gender && data.civil_status;
+                return data.first_name && data.last_name && data.date_of_birth && data.place_of_birth && data.gender && data.civil_status;
             case 2:
                 return data.email && data.phone_number && data.address && data.city && data.state && data.postal_code;
             case 3:
@@ -305,6 +314,20 @@ export default function ProfileCompletion({ user, progress, departments, initial
                                                 required
                                             />
                                             <InputError message={errors.date_of_birth} className="mt-2" />
+                                        </div>
+
+                                        <div>
+                                            <InputLabel htmlFor="place_of_birth" value="Place of Birth *" />
+                                            <TextInput
+                                                id="place_of_birth"
+                                                type="text"
+                                                className="mt-1 block w-full"
+                                                value={data.place_of_birth}
+                                                onChange={(e) => setData('place_of_birth', e.target.value)}
+                                                placeholder="Enter place of birth"
+                                                required
+                                            />
+                                            <InputError message={errors.place_of_birth} className="mt-2" />
                                         </div>
 
                                         <div>
@@ -537,10 +560,10 @@ export default function ProfileCompletion({ user, progress, departments, initial
                                                 onChange={(e) => setData('employment_type', e.target.value)}
                                                 required
                                             >
-                                                <option value="full-time">Full-time</option>
-                                                <option value="part-time">Part-time</option>
-                                                <option value="contract">Contract</option>
-                                                <option value="intern">Intern</option>
+                                                <option value="regular">Regular</option>
+                                                <option value="contractual">Contractual</option>
+                                                <option value="probationary">Probationary</option>
+                                                <option value="consultant">Consultant</option>
                                             </select>
                                             <InputError message={errors.employment_type} className="mt-2" />
                                         </div>
