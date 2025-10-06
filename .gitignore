@@ -23,3 +23,10 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# AI planning and local artifacts
+.github/
+.aiplans/
+!.aiplans/template.md
+!.aiplans/archive/.gitkeep
+scripts/

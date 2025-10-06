@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 
-export default function Welcome({ canLogin, canRegister, laravelVersion, phpVersion }) {
+export default function Welcome({ auth, canLogin, canRegister, laravelVersion, phpVersion }) {
     return (
         <>
             <Head title="Welcome - SyncingSteel System" />
@@ -53,7 +53,21 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                                     </div>
                                 </div>
 
-                                {canLogin && (
+                                {auth?.user ? (
+                                    <div className="flex items-center gap-4 pt-4">
+                                        <Link href={route('dashboard')}>
+                                            <button className="bg-white text-[#0056A4] hover:bg-gray-100 font-semibold py-4 px-8 rounded-lg transition-colors duration-200 shadow-lg flex items-center gap-2">
+                                                <span>Go to Dashboard</span>
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                </svg>
+                                            </button>
+                                        </Link>
+                                        <div className="text-white text-sm">
+                                            <p className="font-medium">Welcome back, {auth.user.name}!</p>
+                                        </div>
+                                    </div>
+                                ) : canLogin && (
                                     <div className="flex items-center gap-4 pt-4">
                                         <Link href={route('login')}>
                                             <button className="bg-white text-[#0056A4] hover:bg-gray-100 font-semibold py-4 px-8 rounded-lg transition-colors duration-200 shadow-lg">

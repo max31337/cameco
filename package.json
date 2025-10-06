@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build && vite build --ssr",
-        "dev": "vite"
+        "dev": "vite",
+        "sync:aiplans": "pwsh ./scripts/sync-aiplans.ps1"
     },
     "devDependencies": {
         "@headlessui/react": "^2.2.9",

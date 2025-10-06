@@ -1,13 +1,13 @@
-SyncingSteel System — README
+CAMECO System — README
 
 Internal Information Management System for Cathay Metal Corporation
 (HR → Timekeeping → Payroll — Laravel Jetstream + React (Inertia) — Service & Repository architecture)
 
 Proposal Title (short)
-SyncingSteel System — Internal Information Management System for Cathay Metal Corporation
+Internal Information Management System for Cathay Metal Corporation
 
 Rationale & Objectives — (trimmed, keep full proposal in /docs/proposal.md)
-Replace manual time cards and paper HR operations with a secure web system. Provide: digital timekeeping (biometric-ready), centralized HR data, leave/workflow, automated payroll integrated with attendance, employee self-service portal, and role-based access controls.
+Replace manual time cards and paper HR operations with a secure web system. Provide: digital timekeeping (RFID-based ID cards), centralized HR data, leave/workflow, automated payroll integrated with attendance, employee self-service portal, and role-based access controls.
 
 Table of contents
 
@@ -379,7 +379,9 @@ HR dashboards with headcount, active vs inactive, leaves.
 
 Goals
 
-Device-agnostic: accept clock-ins from biometric device, web kiosk, or mobile.
+RFID-based attendance: employees use ID cards with RFID chips to clock in/out at designated stations.
+
+Device-agnostic: accept clock-ins from RFID readers, web kiosk, or mobile app.
 
 Store raw punches (device timestamp) and computed attendance (daily summary).
 
@@ -387,15 +389,19 @@ Allow reconciliation and overrides with audit trail.
 
 Tables
 
-attendance_punches — id, employee_id, device_id, punch_type (in/out/break), recorded_at, source, meta, created_by
+employee_rfid_cards — id, employee_id, rfid_number (unique), issued_date, status (active/inactive/lost), created_at
+
+attendance_punches — id, employee_id, rfid_number, device_id, punch_type (in/out/break), recorded_at, source, meta, created_by
 
 attendances — id, employee_id, date, time_in, time_out, worked_hours, overtime_hours, status (approved/pending), created_at
 
 Flow
 
-Device/web sends punch to endpoint: POST /attendance/punch (accepts biometric id / employee id)
+Employee taps RFID card at station.
 
-Save raw punch with source and signature.
+RFID reader sends punch to endpoint: POST /attendance/punch (includes rfid_number, device_id, timestamp).
+
+System validates RFID, maps to employee_id, and saves raw punch with source and signature.
 
 Nightly job (scheduler) groups punches to compute attendances record: calculate worked hours, detect anomalies (missing in/out), compute overtime using company policy.
 
@@ -404,6 +410,15 @@ HR reviews anomalies and approves.
 Example punch endpoint
 
 Route::post('/attendance/punch', [AttendanceController::class, 'store']);
+
+// Expected payload:
+{
+    "rfid_number": "A123456789",
+    "device_id": "STATION-01",
+    "punch_type": "in",
+    "timestamp": "2025-10-06 08:00:00",
+    "signature": "hmac_hash_for_security"
+}
 
 10 — Payroll module — calculation flow & PH statutory hooks
 Payroll computation steps (recommended)
@@ -515,13 +530,17 @@ Use FormRequest for validation.
 
 Keep tax and contribution logic in dedicated classes (e.g., Statutory\SSSCalculator) so they are independently testable. Version these implementations.
 
-For biometric integration: define a simple webhook contract — devices POST to /attendance/punch with HMAC signature; validate signature and save. Keep device drivers pluggable.
+For RFID integration: define a simple webhook contract — RFID readers POST to /attendance/punch with HMAC signature; validate signature, verify RFID is active, and save. Keep device drivers pluggable and support multiple RFID reader manufacturers.
+
+RFID card management: implement card issuance workflow, track lost/stolen cards, support card replacement, and maintain audit log of all card-related actions.
 
 For payroll rollback: mark payroll runs with status and reversible actions (void payroll, issue correction run).
 
 16 — Suggested DB migrations (summary)
 
 employees, positions, departments
+
+employee_rfid_cards — track RFID card issuance and status
 
 attendance_punches, attendances
 
@@ -532,6 +551,10 @@ tax_rate_versions, statutory_configurations — keep history of rates used
 17 — Example developer checklist (for HR → payroll go-live)
 
  Employee master data migrated & verified
+
+ RFID cards issued to all employees and mapped in system
+
+ RFID readers installed and tested at all clock-in stations
 
  Attendance device integration & reconciliation tested for 2 weeks
 
