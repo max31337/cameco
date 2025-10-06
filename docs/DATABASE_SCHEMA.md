@@ -32,6 +32,8 @@ CREATE TABLE users (
     department_id BIGINT UNSIGNED NULL,
     employee_number VARCHAR(50) UNIQUE NULL,
     status ENUM('pending', 'active', 'inactive', 'suspended') DEFAULT 'pending',
+
+    profile_completion_skipped BOOLEAN NOT NULL DEFAULT FALSE,
     
     -- Two-factor authentication (Jetstream)
     two_factor_secret TEXT NULL,
