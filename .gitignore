@@ -26,7 +26,6 @@ Thumbs.db
 
 # AI planning and local artifacts
 .github/issues/
-.aiplans/
 !.aiplans/template.md
 !.aiplans/archive/.gitkeep
 scripts/
