@@ -109,17 +109,15 @@ class AdminProfileController extends Controller
             'gender', 'civil_status'
         ];
 
+
         // Check if step 1 is complete
         $step1Complete = true;
         foreach ($step1Fields as $field) {
-            // For required fields, check if they are not null and not empty
             if (is_null($employee->$field) || $employee->$field === '') {
                 $step1Complete = false;
                 break;
             }
         }
-
-        // If step 1 is not complete, start from step 1
         if (!$step1Complete) {
             return 1;
         }
@@ -128,8 +126,6 @@ class AdminProfileController extends Controller
         $step2Fields = [
             'email_personal', 'contact_number', 'address'
         ];
-
-        // Check if step 2 is complete
         $step2Complete = true;
         foreach ($step2Fields as $field) {
             if (is_null($employee->$field) || $employee->$field === '') {
@@ -137,19 +133,14 @@ class AdminProfileController extends Controller
                 break;
             }
         }
-
-        // If step 2 is not complete, start from step 2
         if (!$step2Complete) {
             return 2;
         }
 
         // Step 3 fields (Employment Information)
         $step3Fields = [
-            'position', 'department_id', 'date_employed', 
-            'employment_type'
+            'position', 'department_id', 'date_employed', 'employment_type'
         ];
-
-        // Check if step 3 is complete
         $step3Complete = true;
         foreach ($step3Fields as $field) {
             if (is_null($employee->$field) || $employee->$field === '') {
@@ -157,8 +148,6 @@ class AdminProfileController extends Controller
                 break;
             }
         }
-
-        // If step 3 is not complete, start from step 3
         if (!$step3Complete) {
             return 3;
         }
@@ -166,11 +155,8 @@ class AdminProfileController extends Controller
         // Step 4 fields (Government IDs and Emergency Contact)
         $step4Fields = [
             'sss_no', 'philhealth_no', 'tin_no', 'pagibig_no',
-            'emergency_contact_name', 'emergency_contact_relationship', 
-            'emergency_contact_number'
+            'emergency_contact_name', 'emergency_contact_relationship', 'emergency_contact_number'
         ];
-
-        // Check if step 4 is complete
         $step4Complete = true;
         foreach ($step4Fields as $field) {
             if (is_null($employee->$field) || $employee->$field === '') {
@@ -178,8 +164,6 @@ class AdminProfileController extends Controller
                 break;
             }
         }
-
-        // If step 4 is not complete, start from step 4
         if (!$step4Complete) {
             return 4;
         }
@@ -189,19 +173,45 @@ class AdminProfileController extends Controller
     }
 
     /**
+     * Load onboarding draft for the current user
+     */
+    public function loadDraft()
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin()) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+        $draft = \App\Models\EmployeeDraft::where('user_id', $user->id)->first();
+        if (!$draft) {
+            return response()->json(['draft' => null]);
+        }
+        return response()->json([
+            'draft' => $draft->data,
+            'step_completed' => $draft->step_completed,
+        ]);
+    }
+
+
+    /**
      * Process the admin profile completion form
      */
     public function store(Request $request)
     {
         $user = auth()->user();
-        
-        // Check if user needs onboarding
-        if (!$this->onboardingService->requiresOnboarding($user)) {
-            return redirect()->route('dashboard')->with('success', 'Profile already completed!');
+        if (!$user->isAdmin()) {
+            return redirect()->route('dashboard')->with('error', 'Access denied.');
         }
 
-        // Validate the employee data
-        $validated = $request->validate([
+        // Load draft for this user
+        $draft = \App\Models\EmployeeDraft::where('user_id', $user->id)->first();
+        if (!$draft) {
+            return back()->withErrors(['error' => 'No onboarding draft found.'])->withInput();
+        }
+
+        $data = $draft->data;
+
+        // Validate the employee data (final step)
+        $validator = \Validator::make($data, [
             // Personal Information
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -212,7 +222,6 @@ class AdminProfileController extends Controller
             'civil_status' => ['required', Rule::in(['single', 'married', 'divorced', 'widowed', 'separated'])],
             'nationality' => 'required|string|max:100',
             'religion' => 'nullable|string|max:100',
-            
             // Contact Information
             'email' => 'required|email|max:255',
             'phone_number' => 'required|string|max:20',
@@ -222,7 +231,6 @@ class AdminProfileController extends Controller
             'state' => 'required|string|max:100',
             'postal_code' => 'required|string|max:20',
             'country' => 'required|string|max:100',
-            
             // Employment Information
             'position' => 'required|string|max:255',
             'department_id' => 'required|exists:departments,id',
@@ -232,13 +240,11 @@ class AdminProfileController extends Controller
             'basic_salary' => 'required|numeric|min:0',
             'hourly_rate' => 'nullable|numeric|min:0',
             'supervisor_id' => 'nullable|exists:employees,id',
-            
             // Government IDs
             'sss_number' => 'nullable|string|max:50',
             'philhealth_number' => 'nullable|string|max:50',
             'tin_number' => 'nullable|string|max:50',
             'pag_ibig_number' => 'nullable|string|max:50',
-            
             // Emergency Contact
             'emergency_contact_name' => 'required|string|max:255',
             'emergency_contact_relationship' => 'required|string|max:100',
@@ -246,36 +252,42 @@ class AdminProfileController extends Controller
             'emergency_contact_address' => 'nullable|string|max:500',
         ]);
 
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
+
+        // Map form field names to Employee model field names for final submission
+        $fieldMap = [
+            'first_name' => 'firstname',
+            'last_name' => 'lastname',
+            'middle_name' => 'middlename',
+            'phone_number' => 'contact_number',
+            'hire_date' => 'date_employed',
+            'sss_number' => 'sss_no',
+            'philhealth_number' => 'philhealth_no',
+            'tin_number' => 'tin_no',
+            'pag_ibig_number' => 'pagibig_no',
+            'email' => 'email_personal',
+            'supervisor_id' => 'immediate_supervisor_id',
+            'emergency_contact_phone' => 'emergency_contact_number',
+            'emergency_contact_address' => 'emergency_contact_address',
+        ];
+
+        $mappedData = [];
+        foreach ($validated as $field => $value) {
+            $mappedField = isset($fieldMap[$field]) ? $fieldMap[$field] : $field;
+            $mappedData[$mappedField] = $value;
+        }
+
         try {
-            // Map form field names to Employee model field names for final submission
-            $fieldMap = [
-                'first_name' => 'firstname',
-                'last_name' => 'lastname',
-                'middle_name' => 'middlename',
-                'phone_number' => 'contact_number',
-                'hire_date' => 'date_employed',
-                'sss_number' => 'sss_no',
-                'philhealth_number' => 'philhealth_no',
-                'tin_number' => 'tin_no',
-                'pag_ibig_number' => 'pagibig_no',
-                'email' => 'email_personal',
-                'supervisor_id' => 'immediate_supervisor_id',
-                'emergency_contact_phone' => 'emergency_contact_number',
-                'emergency_contact_address' => 'emergency_contact_address',
-            ];
-
-            $mappedData = [];
-            foreach ($validated as $field => $value) {
-                $mappedField = isset($fieldMap[$field]) ? $fieldMap[$field] : $field;
-                $mappedData[$mappedField] = $value;
-            }
-
             // Create employee record for admin with mapped data
             $employee = $this->onboardingService->createEmployeeForAdmin($user, $mappedData);
-            
-            return redirect()->route('dashboard')->with('success', 
+            // Delete the draft after successful onboarding
+            $draft->delete();
+            return redirect()->route('dashboard')->with('success',
                 'Profile completed successfully! Welcome to the SyncingSteel System.');
-                
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to complete profile: ' . $e->getMessage()])->withInput();
         }
@@ -305,18 +317,8 @@ class AdminProfileController extends Controller
      */
     public function saveProgress(Request $request)
     {
-        // Debug logging
-        \Log::info('SaveProgress called', [
-            'user_id' => auth()->id(),
-            'request_data' => $request->all(),
-            'timestamp' => now()
-        ]);
-
         $user = auth()->user();
-        
-        // Check if user is admin
         if (!$user->isAdmin()) {
-            \Log::error('SaveProgress access denied', ['user_id' => $user->id]);
             return response()->json(['error' => 'Access denied'], 403);
         }
 
@@ -324,114 +326,21 @@ class AdminProfileController extends Controller
         if ($user->profile_completion_skipped) {
             $user->profile_completion_skipped = false;
             $user->save();
-            \Log::info('Reset profile_completion_skipped flag', ['user_id' => $user->id]);
         }
 
-        // Reload the user relationship to ensure we have the latest employee record
-        $user->load('employee');
-        
-        // If user already has an employee record, update it; otherwise create new one
-        if ($user->employee) {
-            $employee = $user->employee;
-            \Log::info('Updating existing employee', ['employee_id' => $employee->id]);
-        } else {
-            // Create new employee record
-            $employee = new \App\Models\Employee();
-            $employee->user_id = $user->id;
-            $employee->created_by = $user->id;
-            $employee->updated_by = $user->id;
-            // Set default status
-            $employee->status = 'active';
-            \Log::info('Creating new employee record', ['user_id' => $user->id]);
-        }
+        $data = $request->all();
+        $step = $request->input('step_completed', 1);
 
-        // Get the submitted data and only update non-empty fields
-        $submittedData = $request->all();
-        
-        // Map form field names to Employee model field names
-        $fieldMap = [
-            'first_name' => 'firstname',
-            'last_name' => 'lastname',
-            'middle_name' => 'middlename',
-            'phone_number' => 'contact_number',
-            'hire_date' => 'date_employed',
-            'sss_number' => 'sss_no',
-            'philhealth_number' => 'philhealth_no',
-            'tin_number' => 'tin_no',
-            'pag_ibig_number' => 'pagibig_no',
-            'email' => 'email_personal',
-            'supervisor_id' => 'immediate_supervisor_id',
-            'emergency_contact_phone' => 'emergency_contact_number',
-        ];
-
-        // Remove empty values and map field names
-        $dataToUpdate = [];
-        $skippedFields = [];
-        foreach ($submittedData as $field => $value) {
-            if ($value !== null && $value !== '') {
-                $mappedField = isset($fieldMap[$field]) ? $fieldMap[$field] : $field;
-                if (in_array($mappedField, $employee->getFillable())) {
-                    $dataToUpdate[$mappedField] = $value;
-                } else {
-                    $skippedFields[] = $field . ' (mapped to: ' . $mappedField . ')';
-                }
-            }
-        }
-
-        \Log::info('Field mapping results', [
-            'fields_to_update' => array_keys($dataToUpdate),
-            'skipped_fields' => $skippedFields,
-            'employee_fillable' => $employee->getFillable()
-        ]);
-
-        // Update employee with the new data
-        foreach ($dataToUpdate as $field => $value) {
-            $employee->$field = $value;
-        }
-        
-        // Set updated_by for existing records
-        if ($employee->exists) {
-            $employee->updated_by = $user->id;
-        }
-
-        // Save the employee record
-        try {
-            $employee->save();
-            \Log::info('Employee saved successfully', [
-                'employee_id' => $employee->id, 
-                'user_id' => $user->id,
-                'is_new' => !$employee->wasRecentlyCreated,
-                'updated_fields' => array_keys($dataToUpdate)
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Failed to save employee', [
-                'error' => $e->getMessage(),
-                'user_id' => $user->id,
-                'data' => $dataToUpdate
-            ]);
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to save employee: ' . $e->getMessage()
-            ], 500);
-        }
-
-        // Update user's employee_id if this is a new employee
-        if (!$user->employee_id && $employee->id) {
-            $user->employee_id = $employee->id;
-            \Log::info('Linking employee to user', ['user_id' => $user->id, 'employee_id' => $employee->id]);
-        }
-        
-        // Update user's department_id if provided
-        if (isset($dataToUpdate['department_id']) && $dataToUpdate['department_id']) {
-            $user->department_id = $dataToUpdate['department_id'];
-        }
-        
-        $user->save();
-        \Log::info('User updated', ['user_id' => $user->id, 'employee_id' => $user->employee_id]);
+        // Find or create draft for this user
+        $draft = \App\Models\EmployeeDraft::firstOrNew(['user_id' => $user->id]);
+        $draft->data = $data;
+        $draft->step_completed = $step;
+        $draft->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Progress saved successfully'
+            'message' => 'Draft progress saved',
+            'draft_id' => $draft->id,
         ]);
     }
 }

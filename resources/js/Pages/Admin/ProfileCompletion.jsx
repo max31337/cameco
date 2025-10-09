@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import ProfileCompletionLayout from '@/Layouts/ProfileCompletionLayout';
 import InputError from '@/Components/InputError';
@@ -9,6 +9,7 @@ import TextInput from '@/Components/TextInput';
 export default function ProfileCompletion({ user, progress, departments, initialStep = 1 }) {
     const [currentStep, setCurrentStep] = useState(initialStep);
     const totalSteps = 4;
+    const [draftLoaded, setDraftLoaded] = useState(false);
 
     // Helper function to get initial form data
     const getInitialFormData = () => {
@@ -51,6 +52,7 @@ export default function ProfileCompletion({ user, progress, departments, initial
             philhealth_number: employee?.philhealth_no || '',
             tin_number: employee?.tin_no || '',
             pag_ibig_number: employee?.pagibig_no || '',
+            gsis_number: employee?.gsis_no || '',
             
             // Emergency Contact
             emergency_contact_name: employee?.emergency_contact_name || '',
@@ -61,6 +63,35 @@ export default function ProfileCompletion({ user, progress, departments, initial
     };
 
     const { data, setData, post, processing, errors, reset } = useForm(getInitialFormData());
+
+    // Load draft on mount
+    useEffect(() => {
+        async function fetchDraft() {
+            try {
+                const response = await fetch('/admin/profile/load-draft', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                if (!response.ok) return;
+                const result = await response.json();
+                if (result.draft) {
+                    // Overwrite form data with draft
+                    Object.entries(result.draft).forEach(([key, value]) => {
+                        setData(key, value ?? '');
+                    });
+                    if (result.step_completed) setCurrentStep(result.step_completed);
+                }
+            } catch (e) {
+                // Ignore errors
+            } finally {
+                setDraftLoaded(true);
+            }
+        }
+        fetchDraft();
+        // eslint-disable-next-line
+    }, []);
 
     const submit = async (e) => {
         e.preventDefault();
@@ -75,68 +106,8 @@ export default function ProfileCompletion({ user, progress, departments, initial
     };
 
     const saveProgress = async () => {
-        console.log('SaveProgress called - Current Step:', currentStep);
-        console.log('Current form data:', data);
-        
         try {
-            // Get current step data based on the step
-            let currentStepData = {};
-            
-            switch(currentStep) {
-                case 1: // Personal Information
-                    currentStepData = {
-                        first_name: data.first_name,
-                        last_name: data.last_name,
-                        middle_name: data.middle_name,
-                        date_of_birth: data.date_of_birth,
-                        place_of_birth: data.place_of_birth,
-                        gender: data.gender,
-                        civil_status: data.civil_status,
-                        nationality: data.nationality,
-                        religion: data.religion,
-                    };
-                    break;
-                case 2: // Contact Information
-                    currentStepData = {
-                        email: data.email,
-                        phone_number: data.phone_number,
-                        mobile_number: data.mobile_number,
-                        address: data.address,
-                        city: data.city,
-                        state: data.state,
-                        postal_code: data.postal_code,
-                        country: data.country,
-                    };
-                    break;
-                case 3: // Employment Information
-                    currentStepData = {
-                        position: data.position,
-                        department_id: data.department_id,
-                        hire_date: data.hire_date,
-                        employment_type: data.employment_type,
-                        work_schedule: data.work_schedule,
-                        basic_salary: data.basic_salary,
-                        hourly_rate: data.hourly_rate,
-                        supervisor_id: data.supervisor_id,
-                    };
-                    break;
-                case 4: // Additional Information (Government IDs + Emergency Contact)
-                    currentStepData = {
-                        sss_number: data.sss_number,
-                        philhealth_number: data.philhealth_number,
-                        tin_number: data.tin_number,
-                        pag_ibig_number: data.pag_ibig_number,
-                        emergency_contact_name: data.emergency_contact_name,
-                        emergency_contact_relationship: data.emergency_contact_relationship,
-                        emergency_contact_phone: data.emergency_contact_phone,
-                        emergency_contact_address: data.emergency_contact_address,
-                    };
-                    break;
-            }
-
-            console.log('Sending data to save-progress:', currentStepData);
-            
-            // Send the data to save progress using fetch
+            const payload = { ...data, step_completed: currentStep };
             const response = await fetch('/admin/profile/save-progress', {
                 method: 'POST',
                 headers: {
@@ -145,17 +116,14 @@ export default function ProfileCompletion({ user, progress, departments, initial
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify(currentStepData)
+                body: JSON.stringify(payload)
             });
-            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
-            const result = await response.json();
-            console.log('Progress saved successfully:', result);
+            await response.json();
         } catch (error) {
-            console.error('Failed to save progress:', error);
+            // Optionally show error to user
         }
     };
 
@@ -672,6 +640,18 @@ export default function ProfileCompletion({ user, progress, departments, initial
                                                     placeholder="xxxx-xxxx-xxxx"
                                                 />
                                                 <InputError message={errors.pag_ibig_number} className="mt-2" />
+                                            </div>
+
+                                            <div>
+                                                <InputLabel htmlFor="gsis_number" value="GSIS Number" />
+                                                <TextInput
+                                                    id="gsis_number"
+                                                    className="mt-1 block w-full"
+                                                    value={data.gsis_number}
+                                                    onChange={(e) => setData('gsis_number', e.target.value)}
+                                                    placeholder="xxxx-xxxx-xxxx"
+                                                />
+                                                <InputError message={errors.gsis_number} className="mt-2" />
                                             </div>
                                         </div>
                                     </div>
