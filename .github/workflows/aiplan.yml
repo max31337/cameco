@@ -1,0 +1,18 @@
+name: Generate AI Plan Template
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create-plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create plan file
+        run: |
+          mkdir -p .aiplans
+          echo "# ISSUE-${{ github.event.issue.number }} - ${{ github.event.issue.title }}" > .aiplans/ISSUE-${{ github.event.issue.number }}.md
+          echo -e "\n## Summary\n${{ github.event.issue.body }}" >> .aiplans/ISSUE-${{ github.event.issue.number }}.md
+          echo -e "\n## Phased Plan\n| Phase | Description | Status |\n|-------|--------------|--------|\n| 1 | Planning | ☐ |" >> .aiplans/ISSUE-${{ github.event.issue.number }}.md

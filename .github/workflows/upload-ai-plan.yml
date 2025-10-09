@@ -1,0 +1,84 @@
+name: Upload AI Plan to GitHub Issue
+
+on:
+  pull_request:
+    types: [opened, synchronize, closed]
+
+jobs:
+  attach-plan:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+      pull-requests: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Extract issue number from branch
+        id: extract
+        run: |
+          # Extract issue number from branch name (e.g., feature/issue-42 -> 42)
+          BRANCH="${{ github.head_ref }}"
+          ISSUE=$(echo "$BRANCH" | grep -oE '[0-9]+' | head -1)
+          
+          if [ -z "$ISSUE" ]; then
+            echo "⚠️  No issue number found in branch name: $BRANCH"
+            echo "issue_found=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Found issue number: $ISSUE"
+            echo "issue_number=$ISSUE" >> $GITHUB_OUTPUT
+            echo "issue_found=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Post AI Plan to Issue
+        if: steps.extract.outputs.issue_found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE=${{ steps.extract.outputs.issue_number }}
+          PLAN_FILE=".aiplans/ISSUE-$ISSUE.md"
+          
+          if [ ! -f "$PLAN_FILE" ]; then
+            echo "⚠️  Plan file not found: $PLAN_FILE"
+            exit 0
+          fi
+          
+          # Check if PR is being closed/merged
+          if [ "${{ github.event.action }}" == "closed" ]; then
+            HEADER="## 🎯 AI Feature Plan - Completed"
+          else
+            HEADER="## 📋 AI Feature Plan - In Progress"
+          fi
+          
+          # Create comment body
+          COMMENT="$HEADER
+
+This plan was automatically generated and tracked during development.
+
+---
+
+$(cat "$PLAN_FILE")
+
+---
+
+_Auto-posted by GitHub Actions from \`.aiplans/ISSUE-$ISSUE.md\`_"
+          
+          # Post comment to issue
+          echo "$COMMENT" | gh issue comment $ISSUE --body-file -
+          
+          echo "✅ Posted plan to issue #$ISSUE"
+      
+      - name: Archive plan on merge
+        if: steps.extract.outputs.issue_found == 'true' && github.event.pull_request.merged == true
+        run: |
+          ISSUE=${{ steps.extract.outputs.issue_number }}
+          PLAN_FILE=".aiplans/ISSUE-$ISSUE.md"
+          ARCHIVE_DIR=".aiplans/archive"
+          
+          if [ -f "$PLAN_FILE" ]; then
+            mkdir -p "$ARCHIVE_DIR"
+            mv "$PLAN_FILE" "$ARCHIVE_DIR/ISSUE-$ISSUE-$(date +%Y%m%d).md"
+            echo "📦 Archived plan to $ARCHIVE_DIR"
+          fi
