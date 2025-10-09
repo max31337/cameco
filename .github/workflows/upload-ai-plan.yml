@@ -1,6 +1,9 @@
 name: Upload AI Plan to GitHub Issue
 
 on:
+  push:
+    paths:
+      - '.aiplans/**'
   pull_request:
     types: [opened, synchronize, closed]
 
