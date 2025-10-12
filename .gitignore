@@ -25,7 +25,7 @@ Homestead.yaml
 Thumbs.db
 
 # AI planning and local artifacts
-.github/
+.github/issues/
 !.aiplans/template.md
 !.aiplans/archive/.gitkeep
 scripts/
