@@ -39,6 +39,10 @@ Once the system is stable, it will be refactored into **MVCSR + Domain**, adding
 - **[HR Module Architecture](docs/HR_MODULE_ARCHITECTURE.md)** - Employee management (Priority module)
 - **[Timekeeping Module Architecture](docs/TIMEKEEPING_MODULE_ARCHITECTURE.md)** - Attendance tracking
 - **[Payroll Module Architecture](docs/PAYROLL_MODULE_ARCHITECTURE.md)** - Philippine tax compliance
+- **[Workforce Management Module](docs/WORKFORCE_MANAGEMENT_MODULE.md)** - Shift scheduling, rotations, and daily assignments
+- **[Applicant Tracking (ATS) Module](docs/ATS_MODULE.md)** - Candidate pipelines, interviews, and offers
+- **[Onboarding Module](docs/ONBOARDING_MODULE.md)** - Post-hire checklists, document collection, and account provisioning
+- **[Appraisal Module](docs/APPRAISAL_MODULE.md)** - Performance reviews, scoring, and rehire recommendations
 
 
 ---
