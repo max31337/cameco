@@ -15,6 +15,8 @@ The Timekeeping Module manages employee attendance, time tracking, and work sche
 4. **Schedule Management**: Shift schedules and overtime tracking
 5. **Reporting**: Comprehensive attendance analytics
 6. **Integration**: Seamless data flow to HR and Payroll modules
+7. **Workforce Integration**: Consume `workforce_schedules` and reflect rotation assignments
+8. **Appraisal Inputs**: Provide attendance quality metrics used by the Appraisal module for scoring and rehire recommendations
 
 ---
 

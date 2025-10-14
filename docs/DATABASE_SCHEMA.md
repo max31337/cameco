@@ -1,54 +1,47 @@
-# SyncingSteel System - Complete Database Schema
 
-## Overview
-This document provides the complete database schema for the SyncingSteel System, including all tables across the Foundation, HR, Timekeeping, and Payroll modules. The schema follows Laravel conventions with proper foreign keys, indexes, and constraints.
+# HRIS Database Schema — Single-Tenant (Scalable)
 
-## Schema Conventions
-- **Primary Keys**: `id` (auto-incrementing integer)
-- **Foreign Keys**: `{table}_id` format (e.g., `user_id`, `employee_id`)
-- **Timestamps**: `created_at`, `updated_at` (Laravel standard)
-- **Soft Deletes**: `deleted_at` where applicable
-- **Enum Values**: Defined as database enums for data integrity
-- **Decimal Precision**: Money fields use `decimal(10,2)`, rates use `decimal(8,4)`
+**Purpose:** Production-ready HRIS schema for a single small-to-medium manufacturing company (200–800 employees) with scalability, normalized design, rehire support, separate government IDs, device integration, RBAC, and auditability.  
+**Stack:** Laravel (MySQL/Postgres), React + Inertia.js frontend. Single-tenant (not SaaS) but designed to scale.
 
 ---
 
-## Foundation Tables (Authentication & Core)
+## Design Principles
 
-### users
-```sql
-CREATE TABLE users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    email_verified_at TIMESTAMP NULL,
-    password VARCHAR(255) NOT NULL,
-    remember_token VARCHAR(100) NULL,
-    current_team_id BIGINT UNSIGNED NULL,
-    profile_photo_path VARCHAR(2048) NULL,
-    
-    -- Enhanced fields
-    employee_id BIGINT UNSIGNED NULL,
-    department_id BIGINT UNSIGNED NULL,
-    employee_number VARCHAR(50) UNIQUE NULL,
-    status ENUM('pending', 'active', 'inactive', 'suspended') DEFAULT 'pending',
+- **Normalization (3NF)** for data integrity and maintainability.  
+- **Soft deletes** (`deleted_at`) for auditability using Laravel `SoftDeletes`.  
+- **IDs:** `BIGINT` auto-increment primary keys for simplicity and scale. (Switch to UUIDs later if needed.)  
+- **Foreign keys** with appropriate `ON DELETE` behavior (`CASCADE`, `SET NULL`, `RESTRICT`).  
+- **Rehire/versioning:** `employees` table contains one row per employment contract; same `profile_id` links multiple employments. `rehire_of`/`rehire_reference_id` links records.  
+- **Government IDs** separated into `government_ids` table (1:1 with `profiles`) to avoid repeated fields across employments if desired.  
+- **RBAC:** Roles and permissions tables (can use `spatie/laravel-permission`).  
+- **Audit & logging:** `activity_logs` and `audit_trails` for critical changes.  
+- **Hardware-ready:** `devices` and `time_logs` for biometric/RFID/camera integration.
 
-    profile_completion_skipped BOOLEAN NOT NULL DEFAULT FALSE,
-    
-    -- Two-factor authentication (Jetstream)
-    two_factor_secret TEXT NULL,
-    two_factor_recovery_codes TEXT NULL,
-    two_factor_confirmed_at TIMESTAMP NULL,
-    
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    
-    INDEX idx_users_employee_id (employee_id),
-    INDEX idx_users_department_id (department_id),
-    INDEX idx_users_status (status),
-    INDEX idx_users_employee_number (employee_number)
-);
-```
+
+## High-Level Entities
+
+- `users` — system authentication & accounts  
+- `profiles` — person identity (name, DOB, contact)  
+- `government_ids` — SSS/TIN/PhilHealth/Pag-IBIG etc. (linked to `profiles`)  
+- `employees` — employment instances/contracts (link to `profiles`)  
+- `departments`, `teams`, `team_members` — org structure  
+- `roles`, `permissions`, `role_user`, `permission_role` — RBAC  
+- `devices`, `time_logs`, `attendance`, `shifts`, `employee_shifts` — timekeeping integration  
+- `leave_requests`, `overtimes` — time-off / OT workflows  
+- `payroll_periods`, `payrolls`, `deductions` — payroll skeleton  
+- `assets`, `documents`, `notifications`, `activity_logs` — support modules
+ - `workforce_schedules`, `employee_rotations`, `shift_assignments` — Workforce Management
+ - `candidates`, `applications`, `interviews` — ATS/Recruitment
+ - `onboarding_tasks`, `onboarding_checklists` — Onboarding
+ - `appraisals`, `appraisal_scores`, `rehire_recommendations` — Appraisal & Rehire
+
+---
+
+# Schema (SQL-like definitions, Laravel-friendly)
+
+> Use this as spec to implement Laravel migrations (`foreignId()->constrained()` patterns).
+
 
 ### teams
 ```sql
@@ -80,41 +73,86 @@ CREATE TABLE team_user (
 );
 ```
 
-### team_invitations
-```sql
-CREATE TABLE team_invitations (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    team_id BIGINT UNSIGNED NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    role VARCHAR(255) NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    
-    UNIQUE KEY team_invitations_unique (team_id, email),
-    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
-);
-```
 
+## `employees`
+```
 ### personal_access_tokens
+profile_id BIGINT UNSIGNED NOT NULL    -- FK -> profiles.id (CASCADE)
+employee_code VARCHAR(50) UNIQUE NOT NULL
 ```sql
+position_id BIGINT UNSIGNED NULL       -- FK -> positions.id (SET NULL)
+team_id BIGINT UNSIGNED NULL           -- FK -> teams.id (SET NULL)
+employment_type ENUM('Regular','Contractual','Probationary','Intern','OJT') NOT NULL
+status ENUM('Active','Probationary','Resigned','Terminated','Retired','Archived') DEFAULT 'Active'
 CREATE TABLE personal_access_tokens (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+salary_rate DECIMAL(12,2) NULL
+salary_type ENUM('Hourly','Daily','Monthly') DEFAULT 'Monthly'
+sss_number VARCHAR(50) NULL
     tokenable_type VARCHAR(255) NOT NULL,
+philhealth_number VARCHAR(50) NULL
+pagibig_number VARCHAR(50) NULL
+biometric_id VARCHAR(100) NULL
+rfid_tag VARCHAR(100) NULL
+rehire_of BIGINT UNSIGNED NULL         -- FK -> employees.id (SET NULL) reference to previous employment
+notes TEXT NULL
+created_at TIMESTAMP
+updated_at TIMESTAMP
+deleted_at TIMESTAMP NULL
+```
+- One row per employment period. Keep gov IDs here if required for payroll snapshots. `rehire_of` chains previous employment.
+ - Add `rehire_of` and `rehire_recommendation` fields to support appraisal-driven rehire decisions.
+
+## `departments`
+```
     tokenable_id BIGINT UNSIGNED NOT NULL,
+name VARCHAR(100) UNIQUE NOT NULL
+code VARCHAR(50) NULL
     name VARCHAR(255) NOT NULL,
+head_employee_id BIGINT UNSIGNED NULL  -- FK -> employees.id (SET NULL)
+created_at TIMESTAMP
+updated_at TIMESTAMP
     token VARCHAR(64) UNIQUE NOT NULL,
+```
+
+## `teams`
+```
     abilities TEXT NULL,
     last_used_at TIMESTAMP NULL,
+name VARCHAR(100) NOT NULL
     expires_at TIMESTAMP NULL,
+team_lead_employee_id BIGINT UNSIGNED NULL  -- FK -> employees.id (SET NULL)
     created_at TIMESTAMP NULL,
+created_at TIMESTAMP
+updated_at TIMESTAMP
     updated_at TIMESTAMP NULL,
+UNIQUE (department_id, name)
+```
+
+## `team_members`
+```
     
+team_id BIGINT UNSIGNED NOT NULL  -- FK -> teams.id (CASCADE)
+employee_id BIGINT UNSIGNED NOT NULL -- FK -> employees.id (CASCADE)
+role_in_team VARCHAR(50) NULL
+joined_at DATE NULL
+left_at DATE NULL
+UNIQUE(team_id, employee_id)
+```
+- Many-to-many for employees ↔ teams, supports history.
+
+## `positions`
+```
     INDEX personal_access_tokens_tokenable (tokenable_type, tokenable_id)
 );
 ```
 
 ### sessions
+created_at TIMESTAMP
+updated_at TIMESTAMP
 ```sql
+```
+
 CREATE TABLE sessions (
     id VARCHAR(255) PRIMARY KEY,
     user_id BIGINT UNSIGNED NULL,
@@ -128,20 +166,15 @@ CREATE TABLE sessions (
 );
 ```
 
-### cache
-```sql
-CREATE TABLE cache (
-    `key` VARCHAR(255) PRIMARY KEY,
-    value MEDIUMTEXT NOT NULL,
-    expiration INT NOT NULL
-);
-```
 
-### cache_locks
-```sql
-CREATE TABLE cache_locks (
-    `key` VARCHAR(255) PRIMARY KEY,
+## `profiles`
+```
     owner VARCHAR(255) NOT NULL,
+user_id BIGINT UNSIGNED NULL     -- FK -> users.id (SET NULL)
+first_name VARCHAR(100) NOT NULL
+middle_name VARCHAR(100) NULL
+last_name VARCHAR(100) NOT NULL
+suffix VARCHAR(20) NULL
     expiration INT NOT NULL
 );
 ```
@@ -155,9 +188,24 @@ CREATE TABLE jobs (
     attempts TINYINT UNSIGNED NOT NULL,
     reserved_at INT UNSIGNED NULL,
     available_at INT UNSIGNED NOT NULL,
+```
+- Single person identity; do not store employment-specific IDs here (they go in `government_ids` or `employees`).
+
+## `government_ids`
+```
     created_at INT UNSIGNED NOT NULL,
+profile_id BIGINT UNSIGNED NOT NULL   -- FK -> profiles.id (CASCADE)
+sss_number VARCHAR(50) UNIQUE NULL
     
+philhealth_number VARCHAR(50) UNIQUE NULL
+pagibig_number VARCHAR(50) UNIQUE NULL
     INDEX jobs_queue (queue)
+issued_documents JSONB NULL            -- optional serialized IDs or docs
+created_at TIMESTAMP
+updated_at TIMESTAMP
+```
+- 1:1 with profiles. Useful to centralize gov IDs; copy to `employees` on hire if needed.
+
 );
 ```
 
@@ -194,69 +242,54 @@ CREATE TABLE failed_jobs (
 
 ## Roles & Permissions (Spatie Laravel Permission)
 
-### roles
-```sql
-CREATE TABLE roles (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    guard_name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    
-    UNIQUE KEY roles_name_guard_name_unique (name, guard_name)
-);
+
+## `roles`
+```
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+name VARCHAR(50) UNIQUE NOT NULL
+slug VARCHAR(50) UNIQUE NOT NULL
+description TEXT NULL
+hierarchy_level INT NOT NULL DEFAULT 5
+created_at TIMESTAMP
+updated_at TIMESTAMP
 ```
 
-### permissions
-```sql
-CREATE TABLE permissions (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    guard_name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    
-    UNIQUE KEY permissions_name_guard_name_unique (name, guard_name)
-);
+## `permissions`
+```
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+name VARCHAR(100) UNIQUE NOT NULL
+slug VARCHAR(100) UNIQUE NOT NULL
+description TEXT NULL
+created_at TIMESTAMP
+updated_at TIMESTAMP
 ```
 
-### model_has_permissions
-```sql
-CREATE TABLE model_has_permissions (
-    permission_id BIGINT UNSIGNED NOT NULL,
-    model_type VARCHAR(255) NOT NULL,
-    model_id BIGINT UNSIGNED NOT NULL,
-    
-    INDEX model_has_permissions_model_id_model_type (model_id, model_type),
-    PRIMARY KEY (permission_id, model_id, model_type),
-    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
-);
+## `role_permissions`
+```
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+role_id BIGINT UNSIGNED NOT NULL -- FK -> roles.id (CASCADE)
+permission_id BIGINT UNSIGNED NOT NULL -- FK -> permissions.id (CASCADE)
+UNIQUE(role_id, permission_id)
+created_at TIMESTAMP
 ```
 
-### model_has_roles
-```sql
-CREATE TABLE model_has_roles (
-    role_id BIGINT UNSIGNED NOT NULL,
-    model_type VARCHAR(255) NOT NULL,
-    model_id BIGINT UNSIGNED NOT NULL,
-    
-    INDEX model_has_roles_model_id_model_type (model_id, model_type),
-    PRIMARY KEY (role_id, model_id, model_type),
-    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
-);
+## `role_user` (pivot)
+```
+user_id BIGINT UNSIGNED NOT NULL -- FK -> users.id (CASCADE)
+role_id BIGINT UNSIGNED NOT NULL -- FK -> roles.id (CASCADE)
+PRIMARY KEY(user_id, role_id)
+assigned_at TIMESTAMP
 ```
 
-### role_has_permissions
-```sql
-CREATE TABLE role_has_permissions (
-    permission_id BIGINT UNSIGNED NOT NULL,
-    role_id BIGINT UNSIGNED NOT NULL,
-    
-    PRIMARY KEY (permission_id, role_id),
-    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
-);
+## `permissions_user` (optional direct grants)
 ```
+id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+user_id BIGINT UNSIGNED NOT NULL -- FK -> users.id (CASCADE)
+permission_id BIGINT UNSIGNED NOT NULL -- FK -> permissions.id (CASCADE)
+granted_at TIMESTAMP
+granted_by BIGINT UNSIGNED NULL -- FK -> users.id (SET NULL)
+```
+
 
 ---
 
@@ -281,6 +314,240 @@ CREATE TABLE departments (
     UNIQUE KEY departments_name_unique (name),
     UNIQUE KEY departments_code_unique (code)
 );
+
+## `devices`
+```
+CREATE TABLE devices (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    type ENUM('biometric','camera','rfid','door','other') DEFAULT 'biometric',
+    serial_number VARCHAR(150) UNIQUE NULL,
+    ip_address VARCHAR(50) NULL,
+    location VARCHAR(255) NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    meta JSONB NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+## `time_logs`
+```
+CREATE TABLE time_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    device_id BIGINT UNSIGNED NULL, -- FK -> devices.id (SET NULL)
+    employee_id BIGINT UNSIGNED NULL, -- FK -> employees.id (SET NULL)
+    log_type ENUM('IN','OUT','UNKNOWN') NOT NULL,
+    log_time TIMESTAMP NOT NULL,
+    captured_image_path VARCHAR(255) NULL,
+    raw_payload JSONB NULL,
+    is_manual BOOLEAN DEFAULT FALSE,
+    verified_by BIGINT UNSIGNED NULL, -- FK -> users.id (SET NULL)
+    created_at TIMESTAMP
+);
+```
+
+## `shifts`
+```
+CREATE TABLE shifts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    break_minutes INT DEFAULT 60,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+## `employee_shifts`
+```
+CREATE TABLE employee_shifts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id (CASCADE)
+    shift_id BIGINT UNSIGNED NOT NULL, -- FK -> shifts.id (CASCADE)
+    effective_from DATE NOT NULL,
+    effective_to DATE NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    UNIQUE(employee_id, shift_id, effective_from)
+);
+```
+
+
+## `leave_requests`
+```
+CREATE TABLE leave_requests (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id (CASCADE)
+    leave_type ENUM('Vacation','Sick','Emergency','Maternity','Paternity','Unpaid','Other') NOT NULL,
+    date_from DATE NOT NULL,
+    date_to DATE NOT NULL,
+    reason TEXT NULL,
+    status ENUM('Pending','Approved','Rejected','Cancelled') DEFAULT 'Pending',
+    approved_by BIGINT UNSIGNED NULL, -- FK -> users.id (SET NULL)
+    approved_at TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+## `overtimes`
+```
+CREATE TABLE overtimes (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id (CASCADE)
+    date DATE NOT NULL,
+    hours DECIMAL(4,2) NOT NULL,
+    reason TEXT NULL,
+    status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
+    approved_by BIGINT UNSIGNED NULL, -- FK -> users.id (SET NULL)
+    approved_at TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+## `payroll_periods`
+```
+CREATE TABLE payroll_periods (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    status ENUM('Open','Processing','Closed') DEFAULT 'Open',
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    UNIQUE(period_start, period_end)
+);
+```
+
+## `payrolls`
+```
+CREATE TABLE payrolls (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id (CASCADE)
+    payroll_period_id BIGINT UNSIGNED NOT NULL, -- FK -> payroll_periods.id (CASCADE)
+    gross_pay DECIMAL(12,2) NOT NULL,
+    net_pay DECIMAL(12,2) NOT NULL,
+    total_deductions DECIMAL(12,2) NOT NULL,
+    status ENUM('Pending','Processed','Released','On Hold') DEFAULT 'Pending',
+    released_at TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    UNIQUE(employee_id, payroll_period_id)
+);
+```
+
+## `deductions`
+```
+CREATE TABLE deductions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    payroll_id BIGINT UNSIGNED NOT NULL, -- FK -> payrolls.id (CASCADE)
+    type ENUM('Tax','SSS','PhilHealth','PagIBIG','Loan','Other') NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    description TEXT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+
+## `documents`
+```
+CREATE TABLE documents (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NULL, -- FK -> employees.id (SET NULL)
+    file_path VARCHAR(255) NOT NULL,
+    document_type VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    uploaded_by BIGINT UNSIGNED NULL, -- FK -> users.id (SET NULL)
+    uploaded_at TIMESTAMP,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+## `notifications`
+```
+CREATE TABLE notifications (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL, -- FK -> users.id (CASCADE)
+    type VARCHAR(100) NOT NULL,
+    data JSONB NOT NULL,
+    read_at TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+
+## Foreign Key Summary
+
+* All `*_id` columns reference their respective parent tables, with `ON DELETE CASCADE` for required relationships and `ON DELETE SET NULL` for optional ones.
+* All tables use `BIGINT UNSIGNED` for PKs and FKs.
+* All tables (except pure pivot tables) have `created_at`, `updated_at`, and most have `deleted_at` for soft deletes.
+* All tables use strict foreign key constraints.
+* All tables are designed for 3NF normalization and scalability.
+
+---
+
+## Roles Seed Set (Example)
+
+```php
+// database/seeders/RoleSeeder.php
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+
+$roles = [
+    'Super Admin',
+    'HR Manager',
+    'Payroll Officer',
+    'Department Head',
+    'Employee',
+];
+
+foreach ($roles as $role) {
+    Role::firstOrCreate(['name' => $role]);
+}
+```
+
+---
+
+## Seeder Snippet for Permissions (Example)
+
+```php
+// database/seeders/PermissionSeeder.php
+$permissions = [
+    'view employees',
+    'edit employees',
+    'delete employees',
+    'view payroll',
+    'process payroll',
+    'approve leave',
+    'manage devices',
+    // ...
+];
+
+foreach ($permissions as $permission) {
+    Permission::firstOrCreate(['name' => $permission]);
+}
+```
+
+---
+
+## Next Steps / Deliverables
+
+1. Review this schema with stakeholders and finalize any custom business rules.
+2. Generate Laravel migrations for all tables above, using `foreignId()->constrained()` and `softDeletes()` where appropriate.
+3. Implement seeders for roles, permissions, and initial data.
+4. Integrate Spatie/laravel-permission for RBAC.
+5. Set up audit logging and device integration as per schema.
+6. Validate with sample data and iterate as needed.
+
+
+
 
 -- Department Seeding Data:
 -- Office Departments:
@@ -420,41 +687,20 @@ CREATE TABLE employee_remarks (
 );
 ```
 
-### leave_requests
-```sql
-CREATE TABLE leave_requests (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    employee_id BIGINT UNSIGNED NOT NULL,
-    leave_type ENUM('VL', 'SL', 'EL', 'ML', 'PL', 'BL', 'SP', 'LWOP') NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    days_count DECIMAL(4,2) NOT NULL,
-    half_day BOOLEAN DEFAULT FALSE,
-    reason TEXT NOT NULL,
-    
-    -- Approval Workflow
-    status ENUM('draft', 'pending', 'approved', 'rejected', 'cancelled') DEFAULT 'draft',
-    submitted_at TIMESTAMP NULL,
-    approved_by BIGINT UNSIGNED NULL,
-    approved_at TIMESTAMP NULL,
-    rejection_reason TEXT NULL,
-    
-    -- Leave Balance Impact
-    deducted_days DECIMAL(4,2) NULL,
-    remaining_balance DECIMAL(4,2) NULL,
-    
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    
-    INDEX idx_leave_requests_employee_id (employee_id),
-    INDEX idx_leave_requests_leave_type (leave_type),
-    INDEX idx_leave_requests_status (status),
-    INDEX idx_leave_requests_start_date (start_date),
-    
-    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
-    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
-);
+
+## `users`
 ```
+```
+username VARCHAR(100) UNIQUE NULL
+email VARCHAR(191) UNIQUE NOT NULL
+password VARCHAR(255) NOT NULL
+is_active BOOLEAN DEFAULT TRUE
+created_at TIMESTAMP
+updated_at TIMESTAMP
+deleted_at TIMESTAMP NULL
+```
+- Authentication entity. Link to `profiles` via `profiles.user_id` if needed (one-to-one).
+
 
 ### leave_balances
 ```sql

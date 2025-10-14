@@ -25,7 +25,6 @@
 1. **Phase 1:** HR Module (Foundation) - *Priority Implementation*
 2. **Phase 2:** Timekeeping Module - *Planned*
 3. **Phase 3:** Payroll Module - *Planned*  
-4. **Phase 4:** Inventory Module - *Future*
 
 **Core Architectural Principles:**
 1. **Clean Architecture**: Service & Repository patterns for maintainable backend
@@ -149,6 +148,34 @@ Each module has its own detailed architectural plan and implementation guide:
 - Integration with HR employee data
 
 ### 💰 [Payroll Module](PAYROLL_MODULE_ARCHITECTURE.md) - **Planned**
+
+### 🧭 [Workforce Management Module](WORKFORCE_MANAGEMENT_MODULE.md) - **Planned**
+**Status:** Planning
+**Core Features:**
+- Schedule and rotation management
+- Daily assignments and attendance integrations
+- Workforce analytics and reporting
+
+### 🧩 [Applicant Tracking (ATS) Module](ATS_MODULE.md) - **Planned**
+**Status:** Planning
+**Core Features:**
+- Candidate pipelines and evaluation
+- Interview scheduling and feedback
+- Onboarding handoff to HR Core
+
+### 🚀 [Onboarding Module](ONBOARDING_MODULE.md) - **Planned**
+**Status:** Planning
+**Core Features:**
+- Automated onboarding checklists and tasks
+- Contract generation and sign-off
+- Account provisioning and initial training steps
+
+### 📊 [Appraisal Module](APPRAISAL_MODULE.md) - **Planned**
+**Status:** Planning
+**Core Features:**
+- Performance review cycles
+- Attendance & violation-based scoring
+- Rehire recommendation workflow
 **Status:** Architecture planning  
 **Timeline:** 6-8 weeks after Timekeeping  
 **Core Features:**

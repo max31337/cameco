@@ -44,6 +44,9 @@ graph TD
     HRDash --> HRModules[Access HR Modules]
     AcctDash --> AcctModules[Access Payroll Modules]
     StaffDash --> StaffModules[Access Self-Service]
+    HRModules --> ATS[Access ATS & Onboarding]
+    HRModules --> Workforce[Access Workforce Management]
+    HRModules --> Appraisal[Access Appraisal & Rehire]
     
     AdminModules --> Logout([Logout])
     HRModules --> Logout
@@ -205,6 +208,9 @@ graph TD
 ```mermaid
 graph TD
     HRLogin([HR Staff Login]) --> HRDash[HR Staff Dashboard]
+    HRDash --> ManageCandidates[Manage Candidates & Interviews]
+    HRDash --> RunOnboarding[Start Onboarding Tasks]
+    HRDash --> ManageWorkforce[Manage Schedules & Rotations]
     
     HRDash --> HREmployees[Employee Management]
     HRDash --> HRLeave[Leave Management]

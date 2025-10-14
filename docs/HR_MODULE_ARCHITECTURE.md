@@ -76,6 +76,7 @@ External User Registration → Admin Review → Remain Unlinked
 4. **Self-Service Portal**: Employee access to own records
 5. **HR Analytics**: Reporting and insights
 6. **Compliance**: Philippine labor law requirements
+7. **Onboarding & Offboarding**: Clear handoffs from ATS to HR Core and onboarding task automation
 
 ---
 
@@ -137,6 +138,10 @@ External User Registration → Admin Review → Remain Unlinked
 - updated_by (foreign key to users)
 - timestamps
 - soft deletes
+
+# Appraisal & Rehire fields
+- rehired_of (nullable FK -> employees.id)
+- rehire_recommendation (enum: eligible, not_recommended, review_required) DEFAULT 'review_required'
 ```
 
 #### employee_children

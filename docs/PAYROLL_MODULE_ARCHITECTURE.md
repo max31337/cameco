@@ -8,6 +8,8 @@ The Payroll Module handles salary calculations, deductions, benefits, and Philip
 - **Timekeeping Module**: Attendance data, overtime hours, work schedules
 - **Foundation**: User management, roles, permissions
 - 🔄 **Integrates with**: Philippine government systems (BIR, SSS, PhilHealth, Pag-IBIG)
+ - **Workforce Management**: For shift-based pay, rotation premiums
+ - **Appraisal Module**: For rehire flags and separation adjustments that affect final payouts
 
 ## Module Goals
 1. **Accurate Payroll Calculations**: Salary, overtime, deductions, benefits
@@ -174,6 +176,9 @@ The Payroll Module handles salary calculations, deductions, benefits, and Philip
 - calculated_at (timestamp)
 - is_finalized (boolean, default false)
 - created_at, updated_at
+
+# Notes
+- Payroll snapshots should include key appraisal and rehire flags to correctly finalize separation payouts and tax treatments.
 ```
 
 #### payroll_calculation_details
