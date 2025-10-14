@@ -67,6 +67,7 @@ graph TD
     HRModules --> Logout
     AcctModules --> Logout
     StaffModules --> Logout
+
 ---
 
 ## Superadmin Workflow
@@ -90,6 +91,7 @@ graph TD
     ViewLogs --> SuperadminDash
     Metrics --> SuperadminDash
     AllModules --> Logout([Logout])
+
 ```
 
 ---
@@ -118,6 +120,7 @@ graph TD
     Link --> UserManagementEnd([User Setup Complete])
     RejectUser --> UserManagementEnd
     ...existing code...
+
 ```
 ```
 
@@ -266,6 +269,7 @@ graph TD
     
     ViewReviews --> PerformanceEnd
     ScheduleReview --> PerformanceEnd
+
 ```
 
 ---
@@ -410,6 +414,7 @@ graph TD
     ExportHRReport --> ExportExcel1[Excel]
     ExportPDF1 --> HRReportEnd([Report Generated])
     ExportExcel1 --> HRReportEnd
+
 ```
 
 ---
@@ -546,6 +551,7 @@ graph TD
     ViewBonuses --> BenefitEnd
     ViewAllowances --> BenefitEnd
     ViewLoans --> BenefitEnd
+
 ```
 
 ---
@@ -661,6 +667,7 @@ graph TD
     UpdateRecord --> NotifyEmployeeUpdate[Notify Employee]
     RejectUpdate --> NotifyEmployeeUpdate
     NotifyEmployeeUpdate --> UpdateEnd([Update Processed])
+
 ```
 
 ---
@@ -710,6 +717,7 @@ graph TD
     NotifyEmployee2 --> UpdateCalendar[Update Department Calendar]
     NotifyEmployee3 --> LeaveEnd2([Leave Request Processed])
     UpdateCalendar --> LeaveEnd2
+
 ```
 
 ---
@@ -785,6 +793,7 @@ graph TD
     UpdateRecords --> ClosePeriod[Close Payroll Period]
     ClosePeriod --> ArchiveData[Archive Payroll Data]
     ArchiveData --> PayrollCompleted([Payroll Period Completed])
+
 ```
 
 ---
