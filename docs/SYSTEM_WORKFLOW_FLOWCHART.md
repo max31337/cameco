@@ -68,6 +68,8 @@ graph TD
     AcctModules --> Logout
     StaffModules --> Logout
 
+```
+
 ---
 
 ## Superadmin Workflow
@@ -121,7 +123,6 @@ graph TD
     RejectUser --> UserManagementEnd
     ...existing code...
 
-```
 ```
 
 ---
