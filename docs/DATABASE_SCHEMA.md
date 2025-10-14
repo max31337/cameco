@@ -31,9 +31,192 @@
 - `leave_requests`, `overtimes` — time-off / OT workflows  
 - `payroll_periods`, `payrolls`, `deductions` — payroll skeleton  
 - `assets`, `documents`, `notifications`, `activity_logs` — support modules
- - `workforce_schedules`, `employee_rotations`, `shift_assignments` — Workforce Management
- - `candidates`, `applications`, `interviews` — ATS/Recruitment
- - `onboarding_tasks`, `onboarding_checklists` — Onboarding
+ - `workforce_schedules`, `employee_rotations`, `shift_assignments`, `rotation_assignments` — Workforce Management
+ - `candidates`, `job_postings`, `applications`, `interviews`, `candidate_notes` — ATS/Recruitment
+ - `onboarding_checklists`, `onboarding_tasks`, `onboarding_documents` — Onboarding
+# Workforce Management Tables
+
+### workforce_schedules
+```sql
+CREATE TABLE workforce_schedules (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    effective_date DATE NOT NULL,
+    expires_at DATE NULL,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### shift_assignments
+```sql
+CREATE TABLE shift_assignments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    schedule_id BIGINT UNSIGNED NOT NULL, -- FK -> workforce_schedules.id
+    date DATE NOT NULL,
+    shift_start TIME NOT NULL,
+    shift_end TIME NOT NULL,
+    location VARCHAR(100) NULL,
+    is_overtime BOOLEAN DEFAULT FALSE,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### employee_rotations
+```sql
+CREATE TABLE employee_rotations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    pattern_json JSON NOT NULL,
+    description TEXT NULL,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### rotation_assignments
+```sql
+CREATE TABLE rotation_assignments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    rotation_id BIGINT UNSIGNED NOT NULL, -- FK -> employee_rotations.id
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+# ATS (Applicant Tracking System) Tables
+
+### candidates
+```sql
+CREATE TABLE candidates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    profile_id BIGINT UNSIGNED NULL, -- FK -> profiles.id
+    source ENUM('referral','job_board','walk_in','agency','internal','other'),
+    status ENUM('new','in_process','interviewed','offered','hired','rejected','withdrawn'),
+    applied_at TIMESTAMP,
+    notes TEXT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### job_postings
+```sql
+CREATE TABLE job_postings (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    department_id BIGINT UNSIGNED NULL, -- FK -> departments.id
+    description TEXT,
+    requirements TEXT,
+    status ENUM('open','closed','draft'),
+    posted_at TIMESTAMP,
+    closed_at TIMESTAMP NULL,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### applications
+```sql
+CREATE TABLE applications (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    candidate_id BIGINT UNSIGNED NOT NULL, -- FK -> candidates.id
+    job_id BIGINT UNSIGNED NOT NULL, -- FK -> job_postings.id
+    status ENUM('submitted','shortlisted','interviewed','offered','hired','rejected','withdrawn'),
+    score DECIMAL(5,2) NULL,
+    resume_path VARCHAR(255) NULL,
+    cover_letter TEXT NULL,
+    applied_at TIMESTAMP,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### interviews
+```sql
+CREATE TABLE interviews (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    application_id BIGINT UNSIGNED NOT NULL, -- FK -> applications.id
+    scheduled_at TIMESTAMP,
+    interviewer_id BIGINT UNSIGNED NULL, -- FK -> users.id
+    feedback TEXT NULL,
+    score DECIMAL(5,2) NULL,
+    status ENUM('scheduled','completed','cancelled','no_show'),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### candidate_notes
+```sql
+CREATE TABLE candidate_notes (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    candidate_id BIGINT UNSIGNED NOT NULL, -- FK -> candidates.id
+    note TEXT,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+# Onboarding Tables
+
+### onboarding_checklists
+```sql
+CREATE TABLE onboarding_checklists (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    tasks_json JSON NOT NULL,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### onboarding_tasks
+```sql
+CREATE TABLE onboarding_tasks (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    checklist_id BIGINT UNSIGNED NOT NULL, -- FK -> onboarding_checklists.id
+    task VARCHAR(255) NOT NULL,
+    status ENUM('pending','in_progress','completed','skipped'),
+    due_date DATE NULL,
+    completed_at TIMESTAMP NULL,
+    assigned_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### onboarding_documents
+```sql
+CREATE TABLE onboarding_documents (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    document_type VARCHAR(100) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    status ENUM('pending','submitted','verified','rejected'),
+    submitted_at TIMESTAMP NULL,
+    verified_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    verified_at TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
  - `appraisals`, `appraisal_scores`, `rehire_recommendations` — Appraisal & Rehire
 
 ---
@@ -1449,6 +1632,6 @@ CREATE TABLE activity_log (
 ---
 
 **Schema Version**: 1.0  
-**Last Updated**: October 6, 2025  
+**Last Updated**: October 14, 2025  
 **Total Tables**: 45 tables  
 **Estimated Storage**: ~50MB for 1000 employees with 2 years of data

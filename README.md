@@ -76,7 +76,7 @@ Once the system is stable, it will be refactored into **MVCSR + Domain**, adding
 | **Superadmin**               |   ✔️    |   ✔️    |     ✔️      |      ✔️        | ✔️  |    ✔️     |     ✔️      |
 | **Admin Officer**            |   ✔️    |   ✔️    |     ✔️      |      ✔️        | ✔️  |    ✔️     |     ❌      |
 | **HR Manager**               |   ✔️    |   ✔️    |     ✔️      |      ✔️        | ✔️  |    ✔️     |     ❌      |
-| **HR Staff**                 |   ✔️    |   ✔️    |     ✔️      |  Input Only    | ✔️  |    ✔️     |     ❌      |
+| **HR Staff**                 |   ✔️    |   ✔️    |     ✔️      |  Input Only     | ✔️  |    ✔️     |     ❌      |
 | **Payroll Officer/Accountant**|   ✔️    |   ✔️    |     ✔️      |      ❌        | ❌  |    ❌     |     ❌      |
 
 ---
@@ -244,5 +244,5 @@ composer require spatie/laravel-activitylog
 ---
 
 **🏢 Cathay Metal Corporation - Internal HRIS System**  
-**📅 Last Updated:** October 6, 2025
+**📅 Last Updated:** October 14, 2025
 

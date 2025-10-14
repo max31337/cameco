@@ -4,12 +4,14 @@
 This document provides detailed workflow flowcharts for all user roles in the SyncingSteel System, showing how different types of users interact with the system modules.
 
 ## User Roles
-1. **Admin** - System administrator with full access
-2. **HR Staff** - Human resources personnel managing employees
-3. **Accounting Staff** - Finance team managing payroll and finances
-4. **Office Staff** - Regular employees with self-service access
+1. **Superadmin** - Oversees all server, system, and deployment management. Full access to system settings, logs, metrics, and user/role management. Can invite Admin Officers and initialize system onboarding.
+2. **Admin Officer / Office Admin** - Handles HRIS configuration, onboarding, and high-level HR operations. Can manage all modules except system/server settings.
+3. **HR Staff** - Human resources personnel managing employees
+4. **Accounting Staff** - Finance team managing payroll and finances
+5. **Office Staff** - Regular employees with self-service access
 
 ---
+
 
 ## Complete System Workflow
 
@@ -35,23 +37,88 @@ graph TD
     CompleteProfile --> LinkEmployee[Link User to Employee]
     LinkEmployee --> RoleCheck
     
-    RoleCheck -->|Admin| AdminDash[Admin Dashboard]
+    RoleCheck -->|Superadmin| SuperadminDash[Superadmin Dashboard]
+    RoleCheck -->|Admin Officer| AdminDash[Admin Officer Dashboard]
     RoleCheck -->|HR Staff| HRDash[HR Staff Dashboard]
     RoleCheck -->|Accounting| AcctDash[Accounting Dashboard]
-    RoleCheck -->|Office Staff| StaffDash[Office Staff Dashboard]
-    
-    AdminDash --> AdminModules[Access All Modules]
+    RoleCheck -->|Office Staff| StaffDash[Employee Dashboard]
+
+    SuperadminDash --> SystemMgmt[System & Server Management]
+    SuperadminDash --> UserMgmt[User & Role Management]
+    SuperadminDash --> InviteAdmins[Invite Admin Officers]
+    SuperadminDash --> ViewLogs[View System Logs]
+    SuperadminDash --> Metrics[View Metrics]
+    SuperadminDash --> AllModules[Access All Modules]
+    AllModules --> Logout([Logout])
+    SystemMgmt --> Logout
+    UserMgmt --> Logout
+    InviteAdmins --> Logout
+    ViewLogs --> Logout
+    Metrics --> Logout
+
+    AdminDash --> AdminModules[Access All Modules Except System]
+    AdminModules --> Logout
     HRDash --> HRModules[Access HR Modules]
     AcctDash --> AcctModules[Access Payroll Modules]
     StaffDash --> StaffModules[Access Self-Service]
     HRModules --> ATS[Access ATS & Onboarding]
     HRModules --> Workforce[Access Workforce Management]
     HRModules --> Appraisal[Access Appraisal & Rehire]
-    
-    AdminModules --> Logout([Logout])
     HRModules --> Logout
     AcctModules --> Logout
     StaffModules --> Logout
+---
+
+## Superadmin Workflow
+
+```mermaid
+graph TD
+    SuperadminLogin([Superadmin Login]) --> SuperadminDash[Superadmin Dashboard]
+    SuperadminDash --> SystemMgmt[Manage System & Server Settings]
+    SuperadminDash --> UserMgmt[Manage Users & Roles]
+    SuperadminDash --> InviteAdmins[Invite Admin Officers]
+    SuperadminDash --> ViewLogs[View System Logs]
+    SuperadminDash --> Metrics[View System Metrics]
+    SuperadminDash --> AllModules[Access All Modules]
+    SystemMgmt --> ConfirmChanges{Confirm System Changes?}
+    ConfirmChanges -->|Yes| ApplyChanges[Apply Changes]
+    ConfirmChanges -->|No| CancelChanges[Cancel Changes]
+    ApplyChanges --> SuperadminDash
+    CancelChanges --> SuperadminDash
+    UserMgmt --> SuperadminDash
+    InviteAdmins --> SuperadminDash
+    ViewLogs --> SuperadminDash
+    Metrics --> SuperadminDash
+    AllModules --> Logout([Logout])
+```
+
+---
+
+## Admin Officer / Office Admin Workflow
+
+```mermaid
+graph TD
+    AdminLogin([Admin Officer Login]) --> AdminDash[Admin Officer Dashboard]
+    AdminDash --> ManageUsers[Manage User Accounts]
+    AdminDash --> ManageEmployees[Manage Employees]
+    AdminDash --> ManageTimekeeping[Manage Timekeeping]
+    AdminDash --> ManagePayroll[Manage Payroll]
+    AdminDash --> ManageReports[Generate Reports]
+    AdminDash --> ManageVisitors[Manage Visitors]
+    AdminDash --> ManagePerformance[Manage Performance]
+    ManageUsers --> ReviewReg[Review Registrations]
+    ReviewReg --> ApproveUser{Approve User?}
+    ApproveUser -->|Yes| ActivateUser[Activate User Account]
+    ApproveUser -->|No| RejectUser[Reject Registration]
+    ActivateUser --> LinkToEmployee{Link to Employee?}
+    LinkToEmployee -->|Yes| SearchEmployee[Search Employee Record]
+    LinkToEmployee -->|No| CreateEmployee[Create New Employee]
+    SearchEmployee --> Link[Link User-Employee]
+    CreateEmployee --> Link
+    Link --> UserManagementEnd([User Setup Complete])
+    RejectUser --> UserManagementEnd
+    ...existing code...
+```
 ```
 
 ---
@@ -724,16 +791,17 @@ graph TD
 
 ## System Access Control Matrix
 
-| Module | Admin | HR Staff | Accounting | Office Staff |
-|--------|-------|----------|------------|--------------|
-| **User Management** | Full Access | View Only | No Access | No Access |
-| **Employee Management** | Full Access | Full Access | View Only | View Own |
-| **Timekeeping** | Full Access | Full Access | View Only | View Own |
-| **Payroll** | Full Access | View Only | Full Access | View Own Payslip |
-| **Reports** | Full Access | HR Reports | Financial Reports | Own Reports |
-| **Visitors** | Full Access | Full Access | No Access | No Access |
-| **Performance** | Full Access | Full Access | View Only | View Own |
-| **Leave Management** | Full Access | Full Access | View Only | Submit Requests |
+| Module | Superadmin | Admin Officer | HR Staff | Accounting | Office Staff |
+|--------|------------|--------------|----------|------------|--------------|
+| **System Management** | Full Access | No Access | No Access | No Access | No Access |
+| **User Management** | Full Access | Full Access | View Only | No Access | No Access |
+| **Employee Management** | Full Access | Full Access | Full Access | View Only | View Own |
+| **Timekeeping** | Full Access | Full Access | Full Access | View Only | View Own |
+| **Payroll** | Full Access | Full Access | View Only | Full Access | View Own Payslip |
+| **Reports** | Full Access | Full Access | HR Reports | Financial Reports | Own Reports |
+| **Visitors** | Full Access | Full Access | Full Access | No Access | No Access |
+| **Performance** | Full Access | Full Access | Full Access | View Only | View Own |
+| **Leave Management** | Full Access | Full Access | Full Access | View Only | Submit Requests |
 
 ---
 
