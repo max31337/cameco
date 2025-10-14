@@ -102,35 +102,6 @@ graph TD
 
 ```mermaid
 graph TD
-    AdminLogin([Admin Officer Login]) --> AdminDash[Admin Officer Dashboard]
-    AdminDash --> ManageUsers[Manage User Accounts]
-    AdminDash --> ManageEmployees[Manage Employees]
-    AdminDash --> ManageTimekeeping[Manage Timekeeping]
-    AdminDash --> ManagePayroll[Manage Payroll]
-    AdminDash --> ManageReports[Generate Reports]
-    AdminDash --> ManageVisitors[Manage Visitors]
-    AdminDash --> ManagePerformance[Manage Performance]
-    ManageUsers --> ReviewReg[Review Registrations]
-    ReviewReg --> ApproveUser{Approve User?}
-    ApproveUser -->|Yes| ActivateUser[Activate User Account]
-    ApproveUser -->|No| RejectUser[Reject Registration]
-    ActivateUser --> LinkToEmployee{Link to Employee?}
-    LinkToEmployee -->|Yes| SearchEmployee[Search Employee Record]
-    LinkToEmployee -->|No| CreateEmployee[Create New Employee]
-    SearchEmployee --> Link[Link User-Employee]
-    CreateEmployee --> Link
-    Link --> UserManagementEnd([User Setup Complete])
-    RejectUser --> UserManagementEnd
-    ...existing code...
-
-```
-
----
-
-## Admin User Workflow
-
-```mermaid
-graph TD
     AdminLogin([Admin Login]) --> AdminDash[Admin Dashboard]
     
     AdminDash --> ManageUsers[Manage User Accounts]
