@@ -1,7 +1,16 @@
 # HR Module - Architecture & Implementation Plan
 
 ## Module Overview
-The HR Module is the **foundation module** of the SyncingSteel System, providing comprehensive employee management capabilities for Cathay Metal Corporation. This module establishes the core employee data structure that will be used by Timekeeping an### Admin Self-Onboarding Workflow (System Startup)
+The HR Module is the **foundation module** of the SyncingSteel System, providing comprehensive employee management capabilities for Cathay Metal Corporation. This module establishes the core employee data structure that will be used by Timekeeping and all modules.
+
+**Employee Access Policy:**
+> **Currently, employees (non-HR) have no direct access to the system.** All requests, updates, and information must go through HR staff, who act as the sole interface between employees and the HRIS. Employees do not log in, view, or update their own records.
+
+> **Future Option:** The system is designed to allow for an employee self-service portal in the future, enabling employees to view payslips, request leave, and update personal information directly if enabled by management.
+
+---
+
+### Admin Self-Onboarding Workflow (System Startup)
 1. **Admin registers user account** (`user.employee_id = NULL`)
 2. **System detects unlinked admin** (on first login after registration approval)
 3. **Display self-onboarding prompt** ("Complete your employee profile to continue")

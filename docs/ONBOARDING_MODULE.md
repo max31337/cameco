@@ -94,7 +94,7 @@ The Onboarding Module automates and tracks all post-hire activities for new empl
 ## Roles & Permissions
 - **HR Staff:** Can trigger onboarding, assign tasks, and monitor progress.
 - **Admin Officer:** Full access to onboarding templates, task assignment, and completion approval.
-- **Employee:** Can view and complete assigned onboarding tasks, upload documents, and sign contracts.
+- **Employee:** _Currently, employees do not have direct access to the system. All onboarding tasks, document uploads, and contract signing are managed by HR staff on behalf of employees. In the future, an employee portal may be enabled to allow employees to complete onboarding tasks and upload documents themselves._
 
 ---
 

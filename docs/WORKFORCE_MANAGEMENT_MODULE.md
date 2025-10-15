@@ -2,7 +2,14 @@
 # Workforce Management Module - Architecture & Implementation Plan
 
 ## Module Overview
+
 The Workforce Management Module is responsible for all aspects of workforce scheduling, shift and rotation planning, daily assignment tracking, and workforce analytics for Cathay Metal Corporation. It ensures that employees are assigned to the correct shifts and rotations, and provides the data foundation for timekeeping, payroll, and performance appraisal.
+
+**Manufacturing Employees & Supervisor Access:**
+Currently, supervisors of manufacturing employees and manufacturing employees themselves do not have access to the system. All scheduling, assignment, and workforce management actions are performed by HR Staff and Admin Officers only.
+
+**Future Option:**
+If required, the system can be extended to include an employee portal and supervisor interface, allowing direct access for manufacturing employees and their supervisors to view schedules, assignments, or submit requests. This is not enabled by default and should be clarified with the client before implementation.
 
 ## Module Goals
 1. **Shift Scheduling:** Define and manage work schedules for all departments and employee groups.

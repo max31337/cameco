@@ -2,7 +2,24 @@
 # Appraisal Module - Architecture & Implementation Plan
 
 ## Module Overview
+
 The Appraisal Module manages performance review cycles, scoring, feedback, and rehire recommendations for all employees. It integrates with Timekeeping and Workforce Management to provide a holistic view of employee performance, and its outputs are used by HR and Payroll for separation and rehire decisions.
+
+**Manufacturing Employees & Supervisor Access:**
+Currently, supervisors of manufacturing employees and manufacturing employees themselves do not have access to the system. All appraisal, performance, and HR-related information is managed and accessed by HR Staff and Admin Officers only.
+
+**Future Option:**
+If required, the system can be extended to include an employee portal and supervisor interface, allowing direct access for manufacturing employees and their supervisors to view relevant information, submit requests, or participate in appraisals. This is not enabled by default and should be clarified with the client before implementation.
+
+**Employee Portal & Access Policy:**
+By default, employees do not have direct access to a self-service portal for viewing appraisals, payslips, or submitting requests. All requests and information (including appraisal results, leave requests, and payslip inquiries) are routed through HR Staff, who act as the point of contact for employees.
+
+**Optional Self-Service (Configurable):**
+If the client prefers, the system can be configured to allow employees limited self-service access for:
+- Viewing their own payslips
+- Viewing their own appraisal/performance results
+- Submitting leave requests (e.g., SL, VL, etc.)
+This access is disabled by default and can be enabled per client requirements. Please clarify with the client before enabling any employee self-service features.
 
 ---
 
@@ -141,9 +158,11 @@ CREATE TABLE rehire_recommendations (
 ---
 
 ## Roles & Access
-- **HR Manager / HR Staff:** Create/manage cycles, assign appraisals, review results, override recommendations
-- **Supervisors/Peers:** Enter scores and feedback (if enabled)
-- **Office Staff:** View own appraisals, acknowledge, and comment
+- **HR Manager / HR Staff:** Create/manage cycles, assign appraisals, review results, override recommendations, and serve as the main point of contact for all employee requests and information.
+- **Supervisors/Peers:** Enter scores and feedback (if enabled) 
+- **Office Staff and Manufacturing Employees:**
+	- By default: No direct access; all requests and information go through HR Staff.
+	- Optional (if enabled): May view own appraisals, payslips, and submit leave requests via self-service portal.
 
 ---
 
@@ -157,7 +176,7 @@ CREATE TABLE rehire_recommendations (
 
 ## Status & Timeline
 
-**Last Updated:** October 14, 2025
+**Last Updated:** October 15 2025
 
 **Estimated Timeline:**
 - Appraisal module implementation: 4-5 weeks after Timekeeping module
