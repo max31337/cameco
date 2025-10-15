@@ -530,117 +530,12 @@ graph TD
 
 ## Office Staff (Regular Employee) Workflow
 
-```mermaid
-graph TD
-    StaffLogin([Employee Login]) --> StaffDash[Employee Dashboard]
-    
-    StaffDash --> ViewProfile[View My Profile]
-    StaffDash --> ViewPayslip[View My Payslips]
-    StaffDash --> RequestLeave[Request Leave]
-    StaffDash --> ViewAttendance[View My Attendance]
-    StaffDash --> ViewPerformance[View My Performance]
-    StaffDash --> UpdateInfo[Update Personal Info]
-    
-    %% View Profile
-    ViewProfile --> DisplayProfile[Display Personal Information]
-    DisplayProfile --> ViewEmployment[View Employment Details]
-    ViewEmployment --> ViewFamily[View Family Information]
-    ViewFamily --> ViewEmergency[View Emergency Contacts]
-    ViewEmergency --> ProfileEnd([Profile Viewed])
-    
-    %% View Payslips
-    ViewPayslip --> SelectPayPeriod2[Select Pay Period]
-    SelectPayPeriod2 --> DisplayPayslip[Display Payslip]
-    DisplayPayslip --> ViewBreakdown[View Salary Breakdown]
-    ViewBreakdown --> ViewDeductions2[View Deductions]
-    ViewDeductions2 --> ViewContributions[View Gov't Contributions]
-    ViewContributions --> ViewTaxes[View Taxes]
-    ViewTaxes --> DownloadPayslip{Download Payslip?}
-    DownloadPayslip -->|Yes| DownloadPDF[Download as PDF]
-    DownloadPayslip -->|No| PayslipEnd([Payslip Viewed])
-    DownloadPDF --> PayslipEnd
-    
-    %% Request Leave
-    RequestLeave --> SelectLeaveType[Select Leave Type]
-    SelectLeaveType --> LeaveTypeChoice{Leave Type}
-    LeaveTypeChoice --> VacationLeave[Vacation Leave]
-    LeaveTypeChoice --> SickLeave[Sick Leave]
-    LeaveTypeChoice --> EmergencyLeave[Emergency Leave]
-    LeaveTypeChoice --> MaternityLeave[Maternity/Paternity Leave]
-    
-    VacationLeave --> CheckLeaveBalance[Check Leave Balance]
-    SickLeave --> CheckLeaveBalance
-    EmergencyLeave --> CheckLeaveBalance
-    MaternityLeave --> CheckLeaveBalance
-    
-    CheckLeaveBalance --> BalanceCheck{Sufficient Balance?}
-    BalanceCheck -->|No| InsufficientBalance[Show Insufficient Balance]
-    BalanceCheck -->|Yes| FillLeaveForm[Fill Leave Request Form]
-    InsufficientBalance --> LeaveEnd([Request Cancelled])
-    
-    FillLeaveForm --> SelectDates[Select Start/End Dates]
-    SelectDates --> EnterReason[Enter Reason]
-    EnterReason --> AttachDocuments{Attach Documents?}
-    AttachDocuments -->|Yes| UploadDocs[Upload Supporting Documents]
-    AttachDocuments -->|No| SubmitLeaveRequest[Submit Leave Request]
-    UploadDocs --> SubmitLeaveRequest
-    
-    SubmitLeaveRequest --> NotifySupervisor[Notify Supervisor]
-    NotifySupervisor --> WaitApproval[Wait for Approval]
-    WaitApproval --> ApprovalStatus{Approval Status}
-    ApprovalStatus -->|Approved| LeaveApproved[Leave Approved]
-    ApprovalStatus -->|Rejected| LeaveRejected[Leave Rejected]
-    ApprovalStatus -->|Pending| WaitApproval
-    LeaveApproved --> UpdateLeaveBalance2[Update Leave Balance]
-    UpdateLeaveBalance2 --> LeaveEnd
-    LeaveRejected --> LeaveEnd
-    
-    %% View Attendance
-    ViewAttendance --> SelectAttendancePeriod[Select Period]
-    SelectAttendancePeriod --> DisplayAttendance[Display Attendance Records]
-    DisplayAttendance --> ViewTimeInOut[View Time In/Out]
-    ViewTimeInOut --> ViewHoursWorked[View Hours Worked]
-    ViewHoursWorked --> ViewLateUndertime[View Late/Undertime]
-    ViewLateUndertime --> ViewOvertimeHours[View Overtime Hours]
-    ViewOvertimeHours --> AttendanceStats[View Attendance Statistics]
-    AttendanceStats --> AttendanceEnd([Attendance Viewed])
-    
-    %% View Performance
-    ViewPerformance --> DisplayReviews[Display Performance Reviews]
-    DisplayReviews --> ViewRatings[View Ratings]
-    ViewRatings --> ViewFeedback[View Feedback]
-    ViewFeedback --> ViewGoals[View Goals]
-    ViewGoals --> DownloadReview{Download Review?}
-    DownloadReview -->|Yes| DownloadPerfPDF[Download as PDF]
-    DownloadReview -->|No| PerformanceEnd([Performance Viewed])
-    DownloadPerfPDF --> PerformanceEnd
-    
-    %% Update Personal Info
-    UpdateInfo --> SelectInfoType{What to Update?}
-    SelectInfoType --> UpdateContact[Update Contact Information]
-    SelectInfoType --> UpdateAddress[Update Address]
-    SelectInfoType --> UpdateEmergencyContact[Update Emergency Contact]
-    SelectInfoType --> UpdateBankInfo[Update Bank Information]
-    
-    UpdateContact --> FillContactForm[Fill Contact Form]
-    UpdateAddress --> FillAddressForm[Fill Address Form]
-    UpdateEmergencyContact --> FillEmergencyForm[Fill Emergency Contact Form]
-    UpdateBankInfo --> FillBankForm[Fill Bank Information Form]
-    
-    FillContactForm --> SubmitUpdate[Submit Update]
-    FillAddressForm --> SubmitUpdate
-    FillEmergencyForm --> SubmitUpdate
-    FillBankForm --> SubmitUpdate
-    
-    SubmitUpdate --> HRReview[HR Reviews Update]
-    HRReview --> UpdateApproval{Approved?}
-    UpdateApproval -->|Yes| UpdateRecord[Update Employee Record]
-    UpdateApproval -->|No| RejectUpdate[Update Rejected]
-    UpdateRecord --> NotifyEmployeeUpdate[Notify Employee]
-    RejectUpdate --> NotifyEmployeeUpdate
-    NotifyEmployeeUpdate --> UpdateEnd([Update Processed])
 
-```
+> **Current Policy:** Employees (Office Staff) do not have direct access to the system. All requests, updates, and information must go through HR staff, who act as the sole interface between employees and the HRIS. Employees do not log in, view, or update their own records.
+
+> **Future Option:** The system is designed to allow for an employee self-service portal in the future, enabling employees to view payslips, request leave, and update personal information directly if enabled by management.
+
+<!-- Employee workflow diagram is omitted as employees do not access the system at this time. -->
 
 ---
 
@@ -776,13 +671,13 @@ graph TD
 |--------|------------|--------------|----------|------------|--------------|
 | **System Management** | Full Access | No Access | No Access | No Access | No Access |
 | **User Management** | Full Access | Full Access | View Only | No Access | No Access |
-| **Employee Management** | Full Access | Full Access | Full Access | View Only | View Own |
-| **Timekeeping** | Full Access | Full Access | Full Access | View Only | View Own |
-| **Payroll** | Full Access | Full Access | View Only | Full Access | View Own Payslip |
-| **Reports** | Full Access | Full Access | HR Reports | Financial Reports | Own Reports |
+| **Employee Management** | Full Access | Full Access | Full Access | View Only | No Access |
+| **Timekeeping** | Full Access | Full Access | Full Access | View Only | No Access |
+| **Payroll** | Full Access | Full Access | View Only | Full Access | No Access |
+| **Reports** | Full Access | Full Access | HR Reports | Financial Reports | No Access |
 | **Visitors** | Full Access | Full Access | Full Access | No Access | No Access |
-| **Performance** | Full Access | Full Access | Full Access | View Only | View Own |
-| **Leave Management** | Full Access | Full Access | Full Access | View Only | Submit Requests |
+| **Performance** | Full Access | Full Access | Full Access | View Only | No Access |
+| **Leave Management** | Full Access | Full Access | Full Access | View Only | No Access |
 
 ---
 
@@ -815,10 +710,13 @@ graph TD
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** October 6, 2025  
+**Last Updated:** October 15, 2025  
 **Related Documents:**
 - [System Architecture Plan](SYNCINGSTEEL_ARCHITECTURE_PLAN.md)
 - [Database Schema](DATABASE_SCHEMA.md)
 - [HR Module Architecture](HR_MODULE_ARCHITECTURE.md)
 - [Timekeeping Module Architecture](TIMEKEEPING_MODULE_ARCHITECTURE.md)
 - [Payroll Module Architecture](PAYROLL_MODULE_ARCHITECTURE.md)
+- [Applicant Tracking System (ATS) Module](ATS_MODULE.md)
+- [Onboarding Module](ONBOARDING_MODULE.md)
+- [Workforce Management Module](WORKFORCE_MANAGEMENT_MODULE.md)

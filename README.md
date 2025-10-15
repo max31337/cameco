@@ -3,7 +3,14 @@
 
 **Internal HRIS & Workforce Management for Cathay Metal Corporation**
 
-This HRIS system is used internally by office staff to manage HR core processes, payroll, timekeeping, workforce management, recruitment (ATS), onboarding, and appraisals. It supports role-based access for HR-related roles and a superadmin for system-level management. Future expansion may allow manufacturing supervisors to input workforce data directly instead of submitting paper records.
+This HRIS system is used internally by office staff to manage HR core processes, payroll, timekeeping, workforce management, recruitment (ATS), onboarding, and appraisals. It supports role-based access for HR-related roles and a superadmin for system-level management.
+
+**Employee Access Policy:**
+> **Currently, employees (non-HR) have no direct access to the system.** All requests, updates, and information must go through HR staff, who act as the sole interface between employees and the HRIS. Employees do not log in, view, or update their own records. 
+
+> **Future Option:** The system is designed to allow for an employee self-service portal in the future, enabling employees to view payslips, request leave, and update personal information directly if enabled by management.
+
+Future expansion may allow manufacturing supervisors to input workforce data directly instead of submitting paper records.
 
 ---
 
@@ -84,6 +91,10 @@ Once the system is stable, it will be refactored into **MVCSR + Domain**, adding
 | **Payroll Officer/Accountant**|   ✔️    |   ✔️    |     ✔️      |      ❌        | ❌  |    ❌     |     ❌      |
 
 ---
+## Roles that would be implemented in the future (not in MVP):
+- **Employee:** _Currently, employees do not have direct access to the system. All requests and information go through HR staff. In the future, an employee portal may be enabled to allow employees to view payslips, request leave, and update personal information themselves._
+- **Supervisors:** _Supervisors of manufacturing employees may also be given access in the future to input workforce data directly instead of submitting paper records._
+
 
 ## 🚀 Quick Start
 
@@ -129,14 +140,14 @@ npm run dev          # Vite: http://localhost:5174 (hot reload)
 **Empty System Setup (First Time):**
 1. **Admin registers/seeds** (no employee record needed)
 2. **Admin accesses HR module** (creates employee master data)
-3. **Employees self-register** (initially unlinked to employee records)
-4. **Admin approves users** and optionally links to employee records
-5. **Linked employees access self-service features**
+3. **Employees do not have system access** (all requests and updates are handled by HR staff)
+4. **Admin approves users** and optionally links to employee records (for HR/admin roles only)
+5. **Employee self-service features are disabled by default** (can be enabled in the future)
 
 **Supported Scenarios:**
 - System admins who aren't employees (contractors, IT staff)
-- Employee records without system access (most common)
-- Gradual employee onboarding to self-service portal
+- Employee records without system access (most common; all requests go through HR staff)
+- Employee self-service portal is not enabled by default (future option)
 - Flexible user-employee relationships
 
 ## 🧪 Testing
@@ -248,5 +259,5 @@ composer require spatie/laravel-activitylog
 ---
 
 **🏢 Cathay Metal Corporation - Internal HRIS System**  
-**📅 Last Updated:** October 14, 2025
+**📅 Last Updated:** October 15, 2025
 
