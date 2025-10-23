@@ -233,6 +233,12 @@ CREATE TABLE generated_documents (
 - `employee_loans` — SSS, Pag-IBIG, company, cash advance loans, amortization
 - `loan_payments` — per-loan, per-period payment tracking
 - `payroll_audit_logs` — audit trail for all payroll actions
+ - `salary_component_versions` — versioning for salary component changes (HR Manager edits, audit trail)
+ - `department_pay_bands` — pay bands (min/median/max) per department/position
+ - `department_salary_components` — default salary components per department
+ - `payroll_approval_workflows` — approval hierarchy and workflow config
+ - `payroll_approval_steps` — steps and roles in approval workflows
+ - `payroll_config_audit_logs` — audit/versioning for payroll config changes
 
 ### Timekeeping ([TIMEKEEPING_MODULE_ARCHITECTURE.md](TIMEKEEPING_MODULE_ARCHITECTURE.md))
 - `work_schedules`, `employee_schedules` — shift/assignment
@@ -466,6 +472,103 @@ CREATE TABLE onboarding_skips (
 
 ### payroll_periods
 ```sql
+### salary_component_versions
+```sql
+CREATE TABLE salary_component_versions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    salary_component_id BIGINT UNSIGNED NOT NULL, -- FK -> salary_components.id
+    name VARCHAR(191) NOT NULL,
+    calculation_method ENUM('fixed', 'percentage_of_basic', 'per_hour') NOT NULL,
+    taxable BOOLEAN DEFAULT TRUE,
+    frequency ENUM('monthly', 'semi_monthly', 'weekly', 'daily') NOT NULL,
+    effective_from DATE NOT NULL,
+    effective_to DATE NULL,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (salary_component_id) REFERENCES salary_components(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### department_pay_bands
+```sql
+CREATE TABLE department_pay_bands (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    department_id BIGINT UNSIGNED NOT NULL, -- FK -> departments.id
+    position_title VARCHAR(191) NOT NULL,
+    pay_band_min DECIMAL(15,2) NOT NULL,
+    pay_band_median DECIMAL(15,2) NOT NULL,
+    pay_band_max DECIMAL(15,2) NOT NULL,
+    effective_from DATE NOT NULL,
+    effective_to DATE NULL,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### department_salary_components
+```sql
+CREATE TABLE department_salary_components (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    department_id BIGINT UNSIGNED NOT NULL, -- FK -> departments.id
+    salary_component_id BIGINT UNSIGNED NOT NULL, -- FK -> salary_components.id
+    is_default BOOLEAN DEFAULT FALSE,
+    effective_from DATE NOT NULL,
+    effective_to DATE NULL,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
+    FOREIGN KEY (salary_component_id) REFERENCES salary_components(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### payroll_approval_workflows
+```sql
+CREATE TABLE payroll_approval_workflows (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### payroll_approval_steps
+```sql
+CREATE TABLE payroll_approval_steps (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    workflow_id BIGINT UNSIGNED NOT NULL, -- FK -> payroll_approval_workflows.id
+    step_order INT UNSIGNED NOT NULL,
+    role_name VARCHAR(100) NOT NULL, -- e.g., 'HR Manager', 'Admin', 'Superadmin'
+    requires_approval BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (workflow_id) REFERENCES payroll_approval_workflows(id) ON DELETE CASCADE
+);
+```
+
+### payroll_config_audit_logs
+```sql
+CREATE TABLE payroll_config_audit_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    config_type VARCHAR(100) NOT NULL, -- e.g., 'salary_component', 'pay_band', 'approval_workflow'
+    config_id BIGINT UNSIGNED NOT NULL,
+    action VARCHAR(50) NOT NULL, -- e.g., 'created', 'updated', 'deleted'
+    before_json JSON NULL,
+    after_json JSON NULL,
+    changed_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (changed_by) REFERENCES users(id)
+);
+```
 CREATE TABLE payroll_periods (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
