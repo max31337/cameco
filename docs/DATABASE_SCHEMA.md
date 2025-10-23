@@ -1457,6 +1457,9 @@ CREATE TABLE rehire_recommendations (
     FOREIGN KEY (appraisal_id) REFERENCES appraisals(id)
 );
 ```
+### job_postings
+```sql
+CREATE TABLE job_postings (
     title VARCHAR(255) NOT NULL,
     department_id BIGINT UNSIGNED NULL, -- FK -> departments.id
     description TEXT,
@@ -2946,3 +2949,249 @@ CREATE TABLE activity_log (
 **Last Updated**: October 23, 2025  
 **Total Tables**: 45 tables  
 **Estimated Storage**: ~50MB for 1000 employees with 2 years of data
+
+# Workforce Management Tables (Expanded)
+
+### workforce_schedules
+```sql
+CREATE TABLE workforce_schedules (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    description TEXT NULL,
+    effective_date DATE NOT NULL,
+    expires_at DATE NULL,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### shift_assignments
+```sql
+CREATE TABLE shift_assignments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    schedule_id BIGINT UNSIGNED NOT NULL, -- FK -> workforce_schedules.id
+    date DATE NOT NULL,
+    shift_start TIME NOT NULL,
+    shift_end TIME NOT NULL,
+    location VARCHAR(191) NULL,
+    is_overtime BOOLEAN DEFAULT FALSE,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (schedule_id) REFERENCES workforce_schedules(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### employee_rotations
+```sql
+CREATE TABLE employee_rotations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    pattern_json JSON NOT NULL,
+    description TEXT NULL,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### rotation_assignments
+```sql
+CREATE TABLE rotation_assignments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    rotation_id BIGINT UNSIGNED NOT NULL, -- FK -> employee_rotations.id
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (rotation_id) REFERENCES employee_rotations(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+# Timekeeping Module Tables (Expanded)
+
+### work_schedules
+```sql
+CREATE TABLE work_schedules (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    description TEXT NULL,
+    monday_start TIME NULL,
+    monday_end TIME NULL,
+    tuesday_start TIME NULL,
+    tuesday_end TIME NULL,
+    wednesday_start TIME NULL,
+    wednesday_end TIME NULL,
+    thursday_start TIME NULL,
+    thursday_end TIME NULL,
+    friday_start TIME NULL,
+    friday_end TIME NULL,
+    saturday_start TIME NULL,
+    saturday_end TIME NULL,
+    sunday_start TIME NULL,
+    sunday_end TIME NULL,
+    lunch_break_duration INT NULL,
+    morning_break_duration INT NULL,
+    afternoon_break_duration INT NULL,
+    overtime_threshold INT NULL,
+    overtime_rate_multiplier DECIMAL(3,2) DEFAULT 1.25,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### employee_schedules
+```sql
+CREATE TABLE employee_schedules (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    work_schedule_id BIGINT UNSIGNED NOT NULL, -- FK -> work_schedules.id
+    effective_date DATE NOT NULL,
+    end_date DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (work_schedule_id) REFERENCES work_schedules(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### attendance_events
+```sql
+CREATE TABLE attendance_events (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    event_date DATE NOT NULL,
+    event_time TIMESTAMP NOT NULL,
+    event_type ENUM('time_in','time_out','break_start','break_end','overtime_start','overtime_end') NOT NULL,
+    source ENUM('manual','imported','system') NOT NULL,
+    imported_batch_id BIGINT UNSIGNED NULL, -- FK -> import_batches.id
+    is_corrected BOOLEAN DEFAULT FALSE,
+    original_time TIMESTAMP NULL,
+    correction_reason TEXT NULL,
+    corrected_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    corrected_at TIMESTAMP NULL,
+    location VARCHAR(191) NULL,
+    notes TEXT NULL,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (imported_batch_id) REFERENCES import_batches(id),
+    FOREIGN KEY (corrected_by) REFERENCES users(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### daily_attendance_summary
+```sql
+CREATE TABLE daily_attendance_summary (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    attendance_date DATE NOT NULL,
+    work_schedule_id BIGINT UNSIGNED NOT NULL, -- FK -> work_schedules.id
+    time_in TIMESTAMP NULL,
+    time_out TIMESTAMP NULL,
+    break_start TIMESTAMP NULL,
+    break_end TIMESTAMP NULL,
+    total_hours_worked DECIMAL(4,2) NULL,
+    regular_hours DECIMAL(4,2) NULL,
+    overtime_hours DECIMAL(4,2) NULL,
+    break_duration INT NULL,
+    is_present BOOLEAN DEFAULT FALSE,
+    is_late BOOLEAN DEFAULT FALSE,
+    is_undertime BOOLEAN DEFAULT FALSE,
+    is_overtime BOOLEAN DEFAULT FALSE,
+    late_minutes INT NULL,
+    undertime_minutes INT NULL,
+    leave_request_id BIGINT UNSIGNED NULL, -- FK -> leave_requests.id
+    is_on_leave BOOLEAN DEFAULT FALSE,
+    calculated_at TIMESTAMP NULL,
+    is_finalized BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (work_schedule_id) REFERENCES work_schedules(id),
+    FOREIGN KEY (leave_request_id) REFERENCES leave_requests(id)
+);
+```
+
+### import_batches
+```sql
+CREATE TABLE import_batches (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    file_name VARCHAR(191) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_size INT NOT NULL,
+    import_type ENUM('attendance','schedule','correction') NOT NULL,
+    total_records INT NOT NULL,
+    processed_records INT NOT NULL,
+    successful_records INT NOT NULL,
+    failed_records INT NOT NULL,
+    status ENUM('uploaded','processing','completed','failed') NOT NULL,
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    error_log TEXT NULL,
+    imported_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (imported_by) REFERENCES users(id)
+);
+```
+
+### import_errors
+```sql
+CREATE TABLE import_errors (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    import_batch_id BIGINT UNSIGNED NOT NULL, -- FK -> import_batches.id
+    row_number INT NOT NULL,
+    employee_identifier VARCHAR(191) NOT NULL,
+    error_type ENUM('invalid_employee','invalid_time','duplicate_entry','validation_error') NOT NULL,
+    error_message TEXT NOT NULL,
+    raw_data JSON NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (import_batch_id) REFERENCES import_batches(id)
+);
+```
+
+### overtime_requests
+```sql
+CREATE TABLE overtime_requests (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    request_date DATE NOT NULL,
+    planned_start_time TIMESTAMP NOT NULL,
+    planned_end_time TIMESTAMP NOT NULL,
+    planned_hours DECIMAL(4,2) NOT NULL,
+    reason TEXT NOT NULL,
+    status ENUM('pending','approved','rejected','completed') DEFAULT 'pending',
+    approved_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    approved_at TIMESTAMP NULL,
+    rejection_reason TEXT NULL,
+    actual_start_time TIMESTAMP NULL,
+    actual_end_time TIMESTAMP NULL,
+    actual_hours DECIMAL(4,2) NULL,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (approved_by) REFERENCES users(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
