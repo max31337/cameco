@@ -1,39 +1,122 @@
 
-# HRIS Database Schema — Single-Tenant (Scalable)
 
-**Purpose:** Production-ready HRIS schema for a single small-to-medium manufacturing company (200–800 employees) with scalability, normalized design, rehire support, separate government IDs, device integration, RBAC, and auditability.  
-**Stack:** Laravel (MySQL/Postgres), React + Inertia.js frontend. Single-tenant (not SaaS) but designed to scale.
+# HRIS Database Schema — Complete System Index
+
+**Purpose:** This document provides a detailed, module-referenced index of all database tables required for the SyncingSteel HRIS. For each module, all required tables are listed with key fields and a reference to the module documentation for full details, workflows, and field explanations.
+
+**Stack:** Laravel (MySQL/Postgres), React + Inertia.js frontend. Single-tenant, scalable, modular.
+
+---
+
+## Table of Contents
+
+1. [Design Principles](#design-principles)
+2. [Module Table Index](#module-table-index)
+    - [User Management & RBAC](#user-management--rbac)
+    - [HR Core](#hr-core)
+    - [Payroll](#payroll)
+    - [Timekeeping](#timekeeping)
+    - [Workforce Management](#workforce-management)
+    - [ATS (Applicant Tracking System)](#ats-applicant-tracking-system)
+    - [Onboarding](#onboarding)
+    - [Appraisal & Rehire](#appraisal--rehire)
+    - [System & Support Tables](#system--support-tables)
+3. [Foreign Key & Relationship Notes](#foreign-key--relationship-notes)
+4. [See Also: Module Docs](#see-also-module-docs)
 
 ---
 
 ## Design Principles
 
-- **Normalization (3NF)** for data integrity and maintainability.  
-- **Soft deletes** (`deleted_at`) for auditability using Laravel `SoftDeletes`.  
-- **IDs:** `BIGINT` auto-increment primary keys for simplicity and scale. (Switch to UUIDs later if needed.)  
-- **Foreign keys** with appropriate `ON DELETE` behavior (`CASCADE`, `SET NULL`, `RESTRICT`).  
-- **Rehire/versioning:** `employees` table contains one row per employment contract; same `profile_id` links multiple employments. `rehire_of`/`rehire_reference_id` links records.  
-- **Government IDs** separated into `government_ids` table (1:1 with `profiles`) to avoid repeated fields across employments if desired.  
-- **RBAC:** Roles and permissions tables (can use `spatie/laravel-permission`).  
-- **Audit & logging:** `activity_logs` and `audit_trails` for critical changes.  
-- **Hardware-ready:** `devices` and `time_logs` for biometric/RFID/camera integration.
+- **Normalization (3NF)** for data integrity and maintainability
+- **Soft deletes** (`deleted_at`) for auditability using Laravel `SoftDeletes`
+- **IDs:** `BIGINT` auto-increment primary keys (UUIDs optional for future)
+- **Foreign keys** with strict referential integrity and appropriate `ON DELETE` rules
+- **Auditability:** All critical changes logged in `activity_logs` and `audit_trails`
+- **Government Compliance:** All fields required for BIR, SSS, PhilHealth, Pag-IBIG, DOLE
+- **Extensibility:** Modular, with clear boundaries for each domain
 
+---
 
-## High-Level Entities
+## Module Table Index
 
-- `users` — system authentication & accounts  
-- `profiles` — person identity (name, DOB, contact)  
-- `government_ids` — SSS/TIN/PhilHealth/Pag-IBIG etc. (linked to `profiles`)  
-- `employees` — employment instances/contracts (link to `profiles`)  
-- `departments`, `teams`, `team_members` — org structure  
-- `roles`, `permissions`, `role_user`, `permission_role` — RBAC  
-- `devices`, `time_logs`, `attendance`, `shifts`, `employee_shifts` — timekeeping integration  
-- `leave_requests`, `overtimes` — time-off / OT workflows  
-- `payroll_periods`, `payrolls`, `deductions` — payroll skeleton  
-- `assets`, `documents`, `notifications`, `activity_logs` — support modules
- - `workforce_schedules`, `employee_rotations`, `shift_assignments`, `rotation_assignments` — Workforce Management
- - `candidates`, `job_postings`, `applications`, `interviews`, `candidate_notes` — ATS/Recruitment
- - `onboarding_checklists`, `onboarding_tasks`, `onboarding_documents` — Onboarding
+### User Management & RBAC ([USER_MANAGEMENT.md](USER_MANAGEMENT.md), [RBAC_MATRIX.md](RBAC_MATRIX.md))
+- `users` — system authentication & accounts
+- `profiles` — person identity (name, DOB, contact)
+- `government_ids` — SSS/TIN/PhilHealth/Pag-IBIG etc. (linked to `profiles`)
+- `roles`, `permissions`, `role_user`, `permission_user` — RBAC (Spatie-compatible)
+- `audit_trails`, `activity_logs` — all critical changes
+
+### HR Core ([HR_MODULE_ARCHITECTURE.md](HR_MODULE_ARCHITECTURE.md))
+- `employees` — employment instances/contracts (link to `profiles`)
+- `employee_children`, `employee_remarks` — family, employment events
+- `departments`, `teams`, `team_members` — org structure
+- `leave_requests`, `leave_balances` — time-off workflows
+- `document_templates`, `generated_documents`, `documents` — document management
+- `notifications` — system/user notifications
+
+### Payroll ([PAYROLL_MODULE_ARCHITECTURE.md](PAYROLL_MODULE_ARCHITECTURE.md), [HR_PAYROLL_CONFIG.md](HR_PAYROLL_CONFIG.md))
+- `payroll_periods` — pay period definitions
+- `employee_payroll_info` — salary, tax, and government info per employee
+- `salary_components`, `employee_salary_components` — pay/deduction config
+- `payroll_calculations`, `payroll_calculation_details` — per-period calculations
+- `government_contribution_rates`, `tax_brackets` — statutory rates
+- `payslips`, `government_reports` — output files
+- `deductions`, `payrolls` — per-employee payroll records
+
+### Timekeeping ([TIMEKEEPING_MODULE_ARCHITECTURE.md](TIMEKEEPING_MODULE_ARCHITECTURE.md))
+- `work_schedules`, `employee_schedules` — shift/assignment
+- `attendance_events`, `daily_attendance_summary` — raw and processed attendance
+- `import_batches`, `import_errors` — timesheet import
+- `overtime_requests` — overtime workflow
+- `time_logs`, `devices`, `shifts`, `employee_shifts` — hardware and shift management
+
+### Workforce Management ([WORKFORCE_MANAGEMENT_MODULE.md](WORKFORCE_MANAGEMENT_MODULE.md))
+- `workforce_schedules`, `shift_assignments`, `employee_rotations`, `rotation_assignments` — advanced scheduling
+
+### ATS (Applicant Tracking System) ([ATS_MODULE.md](ATS_MODULE.md))
+- `candidates`, `job_postings`, `applications`, `interviews`, `candidate_notes` — recruitment
+
+### Onboarding ([ONBOARDING_MODULE.md](ONBOARDING_MODULE.md), [ONBOARDING_WORKFLOW.md](ONBOARDING_WORKFLOW.md))
+- `onboarding_checklists`, `onboarding_tasks`, `onboarding_documents` — onboarding workflow
+
+### Appraisal & Rehire ([APPRAISAL_MODULE.md](APPRAISAL_MODULE.md))
+- `appraisals`, `appraisal_cycles`, `appraisal_scores`, `rehire_recommendations` — performance and rehire
+
+### System & Support Tables
+- `jobs`, `job_batches`, `failed_jobs`, `sessions`, `personal_access_tokens` — Laravel/system support
+
+---
+
+## Foreign Key & Relationship Notes
+
+- All `*_id` columns reference their parent tables, with `ON DELETE CASCADE` for required relationships and `ON DELETE SET NULL` for optional ones.
+- All tables use `BIGINT UNSIGNED` for PKs and FKs.
+- All tables (except pure pivot tables) have `created_at`, `updated_at`, and most have `deleted_at` for soft deletes.
+- All tables use strict foreign key constraints.
+- All tables are designed for 3NF normalization and scalability.
+
+---
+
+## See Also: Module Docs
+
+- For full field lists, workflows, and business rules, see the module documentation in `/docs`:
+    - [USER_MANAGEMENT.md](USER_MANAGEMENT.md)
+    - [RBAC_MATRIX.md](RBAC_MATRIX.md)
+    - [HR_MODULE_ARCHITECTURE.md](HR_MODULE_ARCHITECTURE.md)
+    - [PAYROLL_MODULE_ARCHITECTURE.md](PAYROLL_MODULE_ARCHITECTURE.md)
+    - [HR_PAYROLL_CONFIG.md](HR_PAYROLL_CONFIG.md)
+    - [TIMEKEEPING_MODULE_ARCHITECTURE.md](TIMEKEEPING_MODULE_ARCHITECTURE.md)
+    - [WORKFORCE_MANAGEMENT_MODULE.md](WORKFORCE_MANAGEMENT_MODULE.md)
+    - [ATS_MODULE.md](ATS_MODULE.md)
+    - [ONBOARDING_MODULE.md](ONBOARDING_MODULE.md)
+    - [ONBOARDING_WORKFLOW.md](ONBOARDING_WORKFLOW.md)
+    - [APPRAISAL_MODULE.md](APPRAISAL_MODULE.md)
+
+---
+
+# [The detailed SQL table definitions follow below.]
+
 # Workforce Management Tables
 
 ### workforce_schedules
@@ -258,83 +341,50 @@ CREATE TABLE team_user (
 
 
 ## `employees`
-```
-### personal_access_tokens
-profile_id BIGINT UNSIGNED NOT NULL    -- FK -> profiles.id (CASCADE)
-employee_code VARCHAR(50) UNIQUE NOT NULL
+
+## personal_access_tokens
 ```sql
-position_id BIGINT UNSIGNED NULL       -- FK -> positions.id (SET NULL)
-team_id BIGINT UNSIGNED NULL           -- FK -> teams.id (SET NULL)
-employment_type ENUM('Regular','Contractual','Probationary','Intern','OJT') NOT NULL
-status ENUM('Active','Probationary','Resigned','Terminated','Retired','Archived') DEFAULT 'Active'
 CREATE TABLE personal_access_tokens (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-salary_rate DECIMAL(12,2) NULL
-salary_type ENUM('Hourly','Daily','Monthly') DEFAULT 'Monthly'
-sss_number VARCHAR(50) NULL
     tokenable_type VARCHAR(255) NOT NULL,
-philhealth_number VARCHAR(50) NULL
-pagibig_number VARCHAR(50) NULL
-biometric_id VARCHAR(100) NULL
-rfid_tag VARCHAR(100) NULL
-rehire_of BIGINT UNSIGNED NULL         -- FK -> employees.id (SET NULL) reference to previous employment
-notes TEXT NULL
-created_at TIMESTAMP
-updated_at TIMESTAMP
-deleted_at TIMESTAMP NULL
-```
-- One row per employment period. Keep gov IDs here if required for payroll snapshots. `rehire_of` chains previous employment.
- - Add `rehire_of` and `rehire_recommendation` fields to support appraisal-driven rehire decisions.
-
-## `departments`
-```
     tokenable_id BIGINT UNSIGNED NOT NULL,
-name VARCHAR(100) UNIQUE NOT NULL
-code VARCHAR(50) NULL
     name VARCHAR(255) NOT NULL,
-head_employee_id BIGINT UNSIGNED NULL  -- FK -> employees.id (SET NULL)
-created_at TIMESTAMP
-updated_at TIMESTAMP
     token VARCHAR(64) UNIQUE NOT NULL,
-```
-
-## `teams`
-```
     abilities TEXT NULL,
     last_used_at TIMESTAMP NULL,
-name VARCHAR(100) NOT NULL
     expires_at TIMESTAMP NULL,
-team_lead_employee_id BIGINT UNSIGNED NULL  -- FK -> employees.id (SET NULL)
     created_at TIMESTAMP NULL,
-created_at TIMESTAMP
-updated_at TIMESTAMP
     updated_at TIMESTAMP NULL,
-UNIQUE (department_id, name)
-```
-
-## `team_members`
-```
-    
-team_id BIGINT UNSIGNED NOT NULL  -- FK -> teams.id (CASCADE)
-employee_id BIGINT UNSIGNED NOT NULL -- FK -> employees.id (CASCADE)
-role_in_team VARCHAR(50) NULL
-joined_at DATE NULL
-left_at DATE NULL
-UNIQUE(team_id, employee_id)
-```
-- Many-to-many for employees ↔ teams, supports history.
-
-## `positions`
-```
     INDEX personal_access_tokens_tokenable (tokenable_type, tokenable_id)
 );
 ```
 
-### sessions
-created_at TIMESTAMP
-updated_at TIMESTAMP
+
+
+
+
+
+## team_members
 ```sql
+CREATE TABLE team_members (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    team_id BIGINT UNSIGNED NOT NULL, -- FK -> teams.id (CASCADE)
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id (CASCADE)
+    role_in_team VARCHAR(50) NULL,
+    joined_at DATE NULL,
+    left_at DATE NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    UNIQUE(team_id, employee_id),
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
 ```
+* Many-to-many for employees ↔ teams, supports history.
+
+
+
+
 
 CREATE TABLE sessions (
     id VARCHAR(255) PRIMARY KEY,
@@ -350,17 +400,7 @@ CREATE TABLE sessions (
 ```
 
 
-## `profiles`
-```
-    owner VARCHAR(255) NOT NULL,
-user_id BIGINT UNSIGNED NULL     -- FK -> users.id (SET NULL)
-first_name VARCHAR(100) NOT NULL
-middle_name VARCHAR(100) NULL
-last_name VARCHAR(100) NOT NULL
-suffix VARCHAR(20) NULL
-    expiration INT NOT NULL
-);
-```
+
 
 ### jobs
 ```sql
@@ -374,23 +414,7 @@ CREATE TABLE jobs (
 ```
 - Single person identity; do not store employment-specific IDs here (they go in `government_ids` or `employees`).
 
-## `government_ids`
-```
-    created_at INT UNSIGNED NOT NULL,
-profile_id BIGINT UNSIGNED NOT NULL   -- FK -> profiles.id (CASCADE)
-sss_number VARCHAR(50) UNIQUE NULL
-    
-philhealth_number VARCHAR(50) UNIQUE NULL
-pagibig_number VARCHAR(50) UNIQUE NULL
-    INDEX jobs_queue (queue)
-issued_documents JSONB NULL            -- optional serialized IDs or docs
-created_at TIMESTAMP
-updated_at TIMESTAMP
-```
-- 1:1 with profiles. Useful to centralize gov IDs; copy to `employees` on hire if needed.
 
-);
-```
 
 ### job_batches
 ```sql
@@ -426,51 +450,66 @@ CREATE TABLE failed_jobs (
 ## Roles & Permissions (Spatie Laravel Permission)
 
 
-## `roles`
-```
-id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-name VARCHAR(50) UNIQUE NOT NULL
-slug VARCHAR(50) UNIQUE NOT NULL
-description TEXT NULL
-hierarchy_level INT NOT NULL DEFAULT 5
-created_at TIMESTAMP
-updated_at TIMESTAMP
+
+## roles
+```sql
+CREATE TABLE roles (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    slug VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT NULL,
+    hierarchy_level INT NOT NULL DEFAULT 5,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
 ```
 
-## `permissions`
-```
-id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-name VARCHAR(100) UNIQUE NOT NULL
-slug VARCHAR(100) UNIQUE NOT NULL
-description TEXT NULL
-created_at TIMESTAMP
-updated_at TIMESTAMP
+
+## permissions
+```sql
+CREATE TABLE permissions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
 ```
 
-## `role_permissions`
-```
-id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-role_id BIGINT UNSIGNED NOT NULL -- FK -> roles.id (CASCADE)
-permission_id BIGINT UNSIGNED NOT NULL -- FK -> permissions.id (CASCADE)
-UNIQUE(role_id, permission_id)
-created_at TIMESTAMP
+
+## role_permissions
+```sql
+CREATE TABLE role_permissions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    role_id BIGINT UNSIGNED NOT NULL, -- FK -> roles.id (CASCADE)
+    permission_id BIGINT UNSIGNED NOT NULL, -- FK -> permissions.id (CASCADE)
+    UNIQUE(role_id, permission_id),
+    created_at TIMESTAMP
+);
 ```
 
-## `role_user` (pivot)
-```
-user_id BIGINT UNSIGNED NOT NULL -- FK -> users.id (CASCADE)
-role_id BIGINT UNSIGNED NOT NULL -- FK -> roles.id (CASCADE)
-PRIMARY KEY(user_id, role_id)
-assigned_at TIMESTAMP
+
+## role_user (pivot)
+```sql
+CREATE TABLE role_user (
+    user_id BIGINT UNSIGNED NOT NULL, -- FK -> users.id (CASCADE)
+    role_id BIGINT UNSIGNED NOT NULL, -- FK -> roles.id (CASCADE)
+    assigned_at TIMESTAMP,
+    PRIMARY KEY(user_id, role_id)
+);
 ```
 
-## `permissions_user` (optional direct grants)
-```
-id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-user_id BIGINT UNSIGNED NOT NULL -- FK -> users.id (CASCADE)
-permission_id BIGINT UNSIGNED NOT NULL -- FK -> permissions.id (CASCADE)
-granted_at TIMESTAMP
-granted_by BIGINT UNSIGNED NULL -- FK -> users.id (SET NULL)
+
+## permissions_user (optional direct grants)
+```sql
+CREATE TABLE permissions_user (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL, -- FK -> users.id (CASCADE)
+    permission_id BIGINT UNSIGNED NOT NULL, -- FK -> permissions.id (CASCADE)
+    granted_at TIMESTAMP,
+    granted_by BIGINT UNSIGNED NULL -- FK -> users.id (SET NULL)
+);
 ```
 
 
