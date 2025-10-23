@@ -2043,9 +2043,6 @@ foreach ($permissions as $permission) {
 5. Set up audit logging and device integration as per schema.
 6. Validate with sample data and iterate as needed.
 
-
-
-
 -- Department Seeding Data:
 -- Office Departments:
 -- 1. HR (Human Resources) - Code: HR, Type: office
@@ -2063,12 +2060,10 @@ foreach ($permissions as $permission) {
 --
 -- Security Department:
 -- 11. Security/Guards - Code: SECURITY, Type: security
-```
 
----
+
 
 ## HR Module Tables
-
 ### employees
 ```sql
 CREATE TABLE employees (
@@ -2186,8 +2181,9 @@ CREATE TABLE employee_remarks (
 
 
 ## `users`
-```
-```
+```sql
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 username VARCHAR(100) UNIQUE NULL
 email VARCHAR(191) UNIQUE NOT NULL
 password VARCHAR(255) NOT NULL
@@ -2195,6 +2191,7 @@ is_active BOOLEAN DEFAULT TRUE
 created_at TIMESTAMP
 updated_at TIMESTAMP
 deleted_at TIMESTAMP NULL
+);
 ```
 - Authentication entity. Link to `profiles` via `profiles.user_id` if needed (one-to-one).
 
