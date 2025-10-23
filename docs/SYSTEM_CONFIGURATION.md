@@ -1,37 +1,40 @@
 # System Configuration & Platform Settings
 
 ## Overview
-System-wide configuration and domain-level settings. Clarifies which roles can edit which settings and describes feature toggles, access controls, and global parameters.
+Company-wide configuration and system-level settings. Clarifies which roles can edit which settings and describes feature toggles, access controls, and global parameters.
 
 ## Configuration responsibility split
 - Superadmin:
-  - Platform-level settings, tenant management, global feature toggles, domain whitelist, and audit retention defaults.
-  - Can add/remove tenants (if multi-tenant later), manage global statutory rate updates, and configure email/SMTP at platform level.
+  - Platform/system-level settings, company-wide feature toggles, global environment controls, and audit retention defaults.
+  - Manage global statutory rate updates and configure platform email/SMTP settings.
+  - Approve or enforce overrides that affect the entire system.
 - Admin:
-  - Organization-level settings: timezone, currency, payroll defaults, department-level feature access.
-  - Manage organization-level integrations (e.g., attendance device endpoints) and test credentials.
+  - Company-level settings: timezone, currency, payroll defaults, department-level feature access.
+  - Manage integrations used by the company (e.g., attendance device endpoints) and test credentials.
 - HR Manager:
   - Limited configuration related to HR and Payroll only (salary components, leave types, approval chains).
 
-## Domain-specific settings
-- Domain whitelist and invitation constraints (allowlist/blocklist).
-- Per-organization branding (logo, contact email) managed by Admin.
+## Company-specific settings
+- Email domain and invitation constraints (allowlist/blocklist for onboarding).
+- Company branding (logo, contact email) managed by Admin.
 
-## Feature toggles per organization
+## Feature toggles for the company
 - Toggle modules: Timekeeping, Payroll, Onboarding, ATS, Appraisal, Workforce Management.
-- Admin can enable/disable modules for their organization; Superadmin can override.
+- Admin can enable/disable modules for the company; Superadmin can enforce or override platform-wide defaults.
 
 ## Access control per module
-- Modules have their own permission sets. Admin can assign module-level access to roles; Superadmin can enforce global overrides.
+- Modules have their own permission sets. Admin assigns module-level access to roles; Superadmin can enforce global overrides.
 
 ## Global parameter management
-- Statutory rates (SSS, PhilHealth, Pag-IBIG) may be updated by Superadmin; Admins can set org-level offsets or apply local overrides.
-- Email templates and notification settings: Admins edit org templates; Superadmin can modify platform base templates.
+- Statutory rates (SSS, PhilHealth, Pag-IBIG) are maintained at the platform level by Superadmin; Admins may set company-level offsets or local adjustments where permitted.
+- Email templates and notification settings: Admins edit company templates; Superadmin maintains platform base templates.
 
 ## Safeguards & restrictions
 - Immutable fields: `users.email` (unless verified/reset), `employees.employee_number` once issued (edits require Superadmin justification), audit-enabled fields.
-- Critical actions (tenant delete, global statutory update) require Superadmin with two-factor confirmation.
+- Critical actions (company data deletion, global statutory updates) require Superadmin authorization with two-factor confirmation.
 
 ## Acceptance criteria
-- Superadmin controls platform-level toggles and tenant/domain settings.
-- Admin controls organization-level settings and can enable/disable modules for their organization.
+- Superadmin controls platform-level toggles and system-wide settings.
+- Admin controls company-level settings and can enable/disable modules for the company.
+- Changes to immutable fields and critical actions are auditable and require required authorizations.
+- Role permissions and overrides are clearly documented and enforced.

@@ -251,7 +251,11 @@ CREATE TABLE generated_documents (
 - `workforce_schedules`, `shift_assignments`, `employee_rotations`, `rotation_assignments` — advanced scheduling
 
 ### ATS (Applicant Tracking System) ([ATS_MODULE.md](ATS_MODULE.md))
-- `candidates`, `job_postings`, `applications`, `interviews`, `candidate_notes` — recruitment
+- `candidates` — applicant master record, source, status, notes
+- `job_postings` — job opening, department, requirements, status, posted/closed dates
+- `applications` — candidate application to job, status, score, resume, cover letter
+- `interviews` — interview schedule, interviewer, feedback, score, status
+- `candidate_notes` — notes per candidate, created by user
 
 ### Onboarding ([ONBOARDING_MODULE.md](ONBOARDING_MODULE.md), [ONBOARDING_WORKFLOW.md](ONBOARDING_WORKFLOW.md))
 - `onboarding_checklists`, `onboarding_tasks`, `onboarding_documents` — onboarding workflow
@@ -431,10 +435,20 @@ CREATE TABLE onboarding_skips (
 ```
 
 ### Appraisal & Rehire ([APPRAISAL_MODULE.md](APPRAISAL_MODULE.md))
-- `appraisals`, `appraisal_cycles`, `appraisal_scores`, `rehire_recommendations` — performance and rehire
+- `appraisals` — performance review per employee per cycle, status, score, feedback
+- `appraisal_cycles` — review cycle definition, period, status
+- `appraisal_scores` — per-criterion score/notes per appraisal
+- `rehire_recommendations` — rehire eligibility per appraisal
 
 ### System & Support Tables
 - `jobs`, `job_batches`, `failed_jobs`, `sessions`, `personal_access_tokens` — Laravel/system support
+ - `system_settings` — platform-level settings (Superadmin only)
+ - `company_settings` — company-level settings (Admin editable)
+ - `feature_toggles` — module enable/disable per company
+ - `module_access_controls` — module-level access assignments per role
+ - `statutory_rate_overrides` — company-level statutory rate adjustments
+ - `email_templates` — company and platform email templates
+ - `critical_action_audit_logs` — audit log for critical/immutable field changes and authorizations
 
 ---
 
@@ -467,6 +481,118 @@ CREATE TABLE onboarding_skips (
 
 
 # [The detailed SQL table definitions follow below.]
+
+# System & Configuration Tables
+
+### system_settings
+```sql
+CREATE TABLE system_settings (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    key VARCHAR(191) NOT NULL UNIQUE,
+    value TEXT NOT NULL,
+    description VARCHAR(255) NULL,
+    updated_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+```
+
+### company_settings
+```sql
+CREATE TABLE company_settings (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    key VARCHAR(191) NOT NULL,
+    value TEXT NOT NULL,
+    description VARCHAR(255) NULL,
+    updated_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY company_settings_key_unique (key),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+```
+
+### feature_toggles
+```sql
+CREATE TABLE feature_toggles (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    module_name VARCHAR(100) NOT NULL,
+    is_enabled BOOLEAN DEFAULT TRUE,
+    enforced_by_superadmin BOOLEAN DEFAULT FALSE,
+    company_id BIGINT UNSIGNED NULL, -- NULL = platform default, else company-specific
+    updated_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+```
+
+### module_access_controls
+```sql
+CREATE TABLE module_access_controls (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    module_name VARCHAR(100) NOT NULL,
+    role_id BIGINT UNSIGNED NOT NULL, -- FK -> roles.id
+    can_access BOOLEAN DEFAULT TRUE,
+    company_id BIGINT UNSIGNED NULL, -- NULL = platform default, else company-specific
+    updated_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+```
+
+### statutory_rate_overrides
+```sql
+CREATE TABLE statutory_rate_overrides (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    rate_type VARCHAR(50) NOT NULL, -- e.g., 'SSS', 'PhilHealth', 'Pag-IBIG'
+    base_rate_id BIGINT UNSIGNED NOT NULL, -- FK -> government_contribution_rates.id
+    company_id BIGINT UNSIGNED NOT NULL,
+    override_json JSON NOT NULL, -- new rate table/values
+    effective_from DATE NOT NULL,
+    effective_to DATE NULL,
+    approved_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    approved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (base_rate_id) REFERENCES government_contribution_rates(id),
+    FOREIGN KEY (approved_by) REFERENCES users(id)
+);
+```
+
+### email_templates
+```sql
+CREATE TABLE email_templates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    template_name VARCHAR(100) NOT NULL,
+    subject VARCHAR(191) NOT NULL,
+    body TEXT NOT NULL,
+    is_platform_default BOOLEAN DEFAULT FALSE,
+    company_id BIGINT UNSIGNED NULL, -- NULL = platform default, else company-specific
+    updated_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+```
+
+### critical_action_audit_logs
+```sql
+CREATE TABLE critical_action_audit_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    action_type VARCHAR(100) NOT NULL, -- e.g., 'email_change', 'employee_number_edit', 'company_data_deletion', 'statutory_update'
+    target_table VARCHAR(100) NOT NULL,
+    target_id BIGINT UNSIGNED NOT NULL,
+    before_json JSON NULL,
+    after_json JSON NULL,
+    authorized_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    authorized_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (authorized_by) REFERENCES users(id)
+);
+```
 
 ## Payroll Module Tables (Expanded for Philippine Compliance)
 
@@ -1182,6 +1308,18 @@ CREATE TABLE candidates (
     notes TEXT NULL,
     created_at TIMESTAMP,
     updated_at TIMESTAMP
+### candidates
+```sql
+CREATE TABLE candidates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    profile_id BIGINT UNSIGNED NULL, -- FK -> profiles.id
+    source ENUM('referral','job_board','walk_in','agency','internal','other') NOT NULL,
+    status ENUM('new','in_process','interviewed','offered','hired','rejected','withdrawn') DEFAULT 'new',
+    applied_at TIMESTAMP NOT NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (profile_id) REFERENCES profiles(id)
 );
 ```
 
@@ -1189,6 +1327,136 @@ CREATE TABLE candidates (
 ```sql
 CREATE TABLE job_postings (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(191) NOT NULL,
+    department_id BIGINT UNSIGNED NOT NULL, -- FK -> departments.id
+    description TEXT NULL,
+    requirements TEXT NULL,
+    status ENUM('open','closed','draft') DEFAULT 'draft',
+    posted_at TIMESTAMP NOT NULL,
+    closed_at TIMESTAMP NULL,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### applications
+```sql
+CREATE TABLE applications (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    candidate_id BIGINT UNSIGNED NOT NULL, -- FK -> candidates.id
+    job_id BIGINT UNSIGNED NOT NULL, -- FK -> job_postings.id
+    status ENUM('submitted','shortlisted','interviewed','offered','hired','rejected','withdrawn') DEFAULT 'submitted',
+    score DECIMAL(5,2) NULL,
+    resume_path VARCHAR(255) NULL,
+    cover_letter TEXT NULL,
+    applied_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (candidate_id) REFERENCES candidates(id),
+    FOREIGN KEY (job_id) REFERENCES job_postings(id)
+);
+```
+
+### interviews
+```sql
+CREATE TABLE interviews (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    application_id BIGINT UNSIGNED NOT NULL, -- FK -> applications.id
+    scheduled_at TIMESTAMP NOT NULL,
+    interviewer_id BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    feedback TEXT NULL,
+    score DECIMAL(5,2) NULL,
+    status ENUM('scheduled','completed','cancelled','no_show') DEFAULT 'scheduled',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (application_id) REFERENCES applications(id),
+    FOREIGN KEY (interviewer_id) REFERENCES users(id)
+);
+```
+
+### candidate_notes
+```sql
+CREATE TABLE candidate_notes (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    candidate_id BIGINT UNSIGNED NOT NULL, -- FK -> candidates.id
+    note TEXT NOT NULL,
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (candidate_id) REFERENCES candidates(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+# Appraisal & Rehire Tables
+
+### appraisals
+```sql
+CREATE TABLE appraisals (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    cycle_id BIGINT UNSIGNED NOT NULL,    -- FK -> appraisal_cycles.id
+    status ENUM('draft','in_progress','completed','acknowledged') DEFAULT 'draft',
+    overall_score DECIMAL(5,2) NULL,
+    feedback TEXT NULL,
+    created_by BIGINT UNSIGNED NOT NULL,  -- FK -> users.id
+    updated_by BIGINT UNSIGNED NULL,      -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (cycle_id) REFERENCES appraisal_cycles(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+```
+
+### appraisal_cycles
+```sql
+CREATE TABLE appraisal_cycles (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status ENUM('open','closed') DEFAULT 'open',
+    created_by BIGINT UNSIGNED NOT NULL,  -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### appraisal_scores
+```sql
+CREATE TABLE appraisal_scores (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    appraisal_id BIGINT UNSIGNED NOT NULL, -- FK -> appraisals.id
+    criterion VARCHAR(100) NOT NULL,
+    score DECIMAL(5,2) NOT NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (appraisal_id) REFERENCES appraisals(id)
+);
+```
+
+### rehire_recommendations
+```sql
+CREATE TABLE rehire_recommendations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    appraisal_id BIGINT UNSIGNED NOT NULL, -- FK -> appraisals.id
+    recommendation ENUM('eligible','not_recommended','review_required') DEFAULT 'review_required',
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (appraisal_id) REFERENCES appraisals(id)
+);
+```
     title VARCHAR(255) NOT NULL,
     department_id BIGINT UNSIGNED NULL, -- FK -> departments.id
     description TEXT,
