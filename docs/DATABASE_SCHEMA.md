@@ -44,25 +44,195 @@
 - `users` — system authentication & accounts
 - `profiles` — person identity (name, DOB, contact)
 - `government_ids` — SSS/TIN/PhilHealth/Pag-IBIG etc. (linked to `profiles`)
+- `user_invitations` — invitation-based onboarding, tokens, status, audit
 - `roles`, `permissions`, `role_user`, `permission_user` — RBAC (Spatie-compatible)
-- `audit_trails`, `activity_logs` — all critical changes
+- `role_templates` — reusable role/permission sets for onboarding
+- `audit_trails`, `activity_logs` — all critical changes, user lifecycle, RBAC changes
+- `user_audit_logs` — user-specific audit trail (creation, invite, update, role change, deactivate, delete)
 
 ### HR Core ([HR_MODULE_ARCHITECTURE.md](HR_MODULE_ARCHITECTURE.md))
-- `employees` — employment instances/contracts (link to `profiles`)
-- `employee_children`, `employee_remarks` — family, employment events
-- `departments`, `teams`, `team_members` — org structure
-- `leave_requests`, `leave_balances` — time-off workflows
-- `document_templates`, `generated_documents`, `documents` — document management
+- `employees` — employment instances/contracts (bidirectional link to `users`), all personal, employment, government, family, and emergency info
+- `employee_children` — dependents/children of employees
+- `employee_remarks` — employment events, status changes, disciplinary actions, rehire notes
+- `departments`, `teams`, `team_members` — org structure, department/production/security, team assignments
+- `leave_requests`, `leave_balances` — time-off workflows, multi-level approval, balance tracking
+- `document_templates`, `generated_documents`, `documents` — document management, contracts, certificates, leave slips
 - `notifications` — system/user notifications
+# HR Module Tables (Expanded)
+
+### employees
+```sql
+CREATE TABLE employees (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL, -- FK to users.id, nullable for unlinked employees
+    employee_number VARCHAR(20) NOT NULL UNIQUE, -- EMP-YYYY-NNNN
+    lastname VARCHAR(100) NOT NULL,
+    firstname VARCHAR(100) NOT NULL,
+    middlename VARCHAR(100) NULL,
+    address TEXT,
+    contact_number VARCHAR(30) NULL,
+    email_personal VARCHAR(191) NULL,
+    place_of_birth VARCHAR(100) NULL,
+    date_of_birth DATE NULL,
+    civil_status ENUM('single','married','divorced','widowed') NOT NULL,
+    gender ENUM('male','female') NOT NULL,
+    department_id BIGINT UNSIGNED NOT NULL,
+    position VARCHAR(100) NULL,
+    employment_type ENUM('regular','contractual','probationary','consultant') NOT NULL,
+    date_employed DATE NOT NULL,
+    date_regularized DATE NULL,
+    immediate_supervisor_id BIGINT UNSIGNED NULL, -- FK to employees.id
+    sss_no VARCHAR(30) UNIQUE NULL,
+    pagibig_no VARCHAR(30) UNIQUE NULL,
+    tin_no VARCHAR(30) UNIQUE NULL,
+    philhealth_no VARCHAR(30) UNIQUE NULL,
+    spouse_name VARCHAR(100) NULL,
+    spouse_dob DATE NULL,
+    spouse_occupation VARCHAR(100) NULL,
+    father_name VARCHAR(100) NULL,
+    father_dob DATE NULL,
+    mother_name VARCHAR(100) NULL,
+    mother_dob DATE NULL,
+    emergency_contact_name VARCHAR(100) NULL,
+    emergency_contact_relationship VARCHAR(50) NULL,
+    emergency_contact_number VARCHAR(30) NULL,
+    status ENUM('active','archived','terminated','on_leave','suspended') DEFAULT 'active',
+    termination_date DATE NULL,
+    termination_reason TEXT NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NOT NULL,
+    rehired_of BIGINT UNSIGNED NULL, -- FK to employees.id
+    rehire_recommendation ENUM('eligible','not_recommended','review_required') DEFAULT 'review_required',
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### employee_children
+```sql
+CREATE TABLE employee_children (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    child_name VARCHAR(100) NOT NULL,
+    child_dob DATE NULL,
+    child_gender ENUM('male','female') NOT NULL,
+    is_student BOOLEAN DEFAULT FALSE,
+    school_name VARCHAR(100) NULL,
+    remarks TEXT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### employee_remarks
+```sql
+CREATE TABLE employee_remarks (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    remark_type ENUM('rehired','end_of_contract','leave_of_absence','suspension','promotion','demotion','salary_adjustment','disciplinary_action') NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    note TEXT,
+    effective_date DATE NOT NULL,
+    expiry_date DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### leave_requests
+```sql
+CREATE TABLE leave_requests (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    leave_type ENUM('VL','SL','EL','ML','PL','BL','SP','LWOP') NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    days_count DECIMAL(4,2) NOT NULL,
+    half_day BOOLEAN DEFAULT FALSE,
+    reason TEXT,
+    status ENUM('draft','pending','approved','rejected','cancelled') DEFAULT 'draft',
+    submitted_at TIMESTAMP NULL,
+    approved_by BIGINT UNSIGNED NULL,
+    approved_at TIMESTAMP NULL,
+    rejection_reason TEXT NULL,
+    deducted_days DECIMAL(4,2) NULL,
+    remaining_balance DECIMAL(4,2) NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### leave_balances
+```sql
+CREATE TABLE leave_balances (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    year INT NOT NULL,
+    leave_type ENUM('VL','SL','EL','ML','PL','BL','SP') NOT NULL,
+    earned_days DECIMAL(4,2) NOT NULL,
+    used_days DECIMAL(4,2) DEFAULT 0,
+    remaining_days DECIMAL(4,2) NOT NULL,
+    carried_forward DECIMAL(4,2) DEFAULT 0,
+    expires_at DATE NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### document_templates
+```sql
+CREATE TABLE document_templates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type ENUM('employment_contract','job_offer','leave_slip','certificate_of_employment','excuse_slip','memorandum') NOT NULL,
+    template_path VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    variables JSON NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### generated_documents
+```sql
+CREATE TABLE generated_documents (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    template_id BIGINT UNSIGNED NOT NULL,
+    document_type VARCHAR(100) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_size INT NOT NULL,
+    generated_by BIGINT UNSIGNED NOT NULL,
+    generated_at TIMESTAMP NOT NULL,
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
 
 ### Payroll ([PAYROLL_MODULE_ARCHITECTURE.md](PAYROLL_MODULE_ARCHITECTURE.md), [HR_PAYROLL_CONFIG.md](HR_PAYROLL_CONFIG.md))
-- `payroll_periods` — pay period definitions
-- `employee_payroll_info` — salary, tax, and government info per employee
-- `salary_components`, `employee_salary_components` — pay/deduction config
-- `payroll_calculations`, `payroll_calculation_details` — per-period calculations
-- `government_contribution_rates`, `tax_brackets` — statutory rates
-- `payslips`, `government_reports` — output files
-- `deductions`, `payrolls` — per-employee payroll records
+- `payroll_periods` — pay period definitions, status, summary fields, audit
+- `employee_payroll_info` — salary, tax, government, bank, de minimis, and benefit info per employee
+- `salary_components` — all earnings, deductions, benefits, taxes, contributions, loans, allowances, with calculation and display settings
+- `employee_salary_components` — per-employee config for all salary components, frequency, proration, attendance, etc.
+- `payroll_calculations` — per-period, per-employee payroll snapshot (all breakdowns, YTD, status, errors, audit)
+- `payroll_calculation_details` — per-component calculation breakdown, formula, adjustments
+- `payroll_adjustments` — manual adjustments, overrides, approvals
+- `government_contribution_rates` — SSS, PhilHealth, Pag-IBIG, EC, with brackets, rates, caps, effective dates
+- `tax_brackets` — BIR tax tables, all statuses, effective dates
+- `payslips` — detailed payslip records, file info, distribution, acknowledgment
+- `government_reports` — all BIR, SSS, PhilHealth, Pag-IBIG, bank, and summary reports
+- `government_remittances` — remittance tracking, payment info, status, attachments
+- `bank_payroll_files` — generated bank files for ATM payroll, upload status
+- `payroll_journal_entries` — accounting journal entries, export info
+- `employee_loans` — SSS, Pag-IBIG, company, cash advance loans, amortization
+- `loan_payments` — per-loan, per-period payment tracking
+- `payroll_audit_logs` — audit trail for all payroll actions
 
 ### Timekeeping ([TIMEKEEPING_MODULE_ARCHITECTURE.md](TIMEKEEPING_MODULE_ARCHITECTURE.md))
 - `work_schedules`, `employee_schedules` — shift/assignment
@@ -79,6 +249,180 @@
 
 ### Onboarding ([ONBOARDING_MODULE.md](ONBOARDING_MODULE.md), [ONBOARDING_WORKFLOW.md](ONBOARDING_WORKFLOW.md))
 - `onboarding_checklists`, `onboarding_tasks`, `onboarding_documents` — onboarding workflow
+- `system_onboarding` — system-wide onboarding status, setup progress
+- `onboarding_skips` — records of onboarding skip actions, user, timestamp, reason
+# User Management & RBAC Tables (Expanded)
+
+### users
+```sql
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    email VARCHAR(191) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    invited_by BIGINT UNSIGNED NULL,
+    created_by BIGINT UNSIGNED NULL,
+    suspended_at TIMESTAMP NULL,
+    archived_at TIMESTAMP NULL,
+    last_login_at TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### user_invitations
+```sql
+CREATE TABLE user_invitations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(191) NOT NULL,
+    token VARCHAR(64) NOT NULL UNIQUE,
+    invited_by BIGINT UNSIGNED NOT NULL,
+    role_id BIGINT UNSIGNED NULL,
+    department_id BIGINT UNSIGNED NULL,
+    expires_at TIMESTAMP NOT NULL,
+    accepted_at TIMESTAMP NULL,
+    declined_at TIMESTAMP NULL,
+    revoked_at TIMESTAMP NULL,
+    status ENUM('pending','accepted','declined','revoked','expired') DEFAULT 'pending',
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### profiles
+```sql
+CREATE TABLE profiles (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL UNIQUE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100) NULL,
+    dob DATE NULL,
+    contact_number VARCHAR(30) NULL,
+    address TEXT NULL,
+    emergency_contact VARCHAR(100) NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### government_ids
+```sql
+CREATE TABLE government_ids (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    profile_id BIGINT UNSIGNED NOT NULL,
+    sss_number VARCHAR(20) NULL,
+    tin_number VARCHAR(20) NULL,
+    philhealth_number VARCHAR(20) NULL,
+    pagibig_number VARCHAR(20) NULL,
+    passport_number VARCHAR(20) NULL,
+    drivers_license VARCHAR(20) NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### roles
+```sql
+CREATE TABLE roles (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255) NULL,
+    is_system_role BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### permissions
+```sql
+CREATE TABLE permissions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255) NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### role_user (pivot)
+```sql
+CREATE TABLE role_user (
+    user_id BIGINT UNSIGNED NOT NULL,
+    role_id BIGINT UNSIGNED NOT NULL,
+    assigned_by BIGINT UNSIGNED NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(user_id, role_id)
+);
+```
+
+### permission_user (pivot)
+```sql
+CREATE TABLE permission_user (
+    user_id BIGINT UNSIGNED NOT NULL,
+    permission_id BIGINT UNSIGNED NOT NULL,
+    granted_by BIGINT UNSIGNED NULL,
+    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(user_id, permission_id)
+);
+```
+
+### role_templates
+```sql
+CREATE TABLE role_templates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255) NULL,
+    template_json JSON NOT NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### user_audit_logs
+```sql
+CREATE TABLE user_audit_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    actor_id BIGINT UNSIGNED NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    details JSON NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent VARCHAR(255) NULL,
+    created_at TIMESTAMP
+);
+```
+
+# Onboarding Workflow Tables (System-wide)
+
+### system_onboarding
+```sql
+CREATE TABLE system_onboarding (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    status ENUM('pending','in_progress','completed','skipped') DEFAULT 'pending',
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    skipped_at TIMESTAMP NULL,
+    skipped_by BIGINT UNSIGNED NULL,
+    checklist_json JSON NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### onboarding_skips
+```sql
+CREATE TABLE onboarding_skips (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    skipped_at TIMESTAMP NOT NULL,
+    reason TEXT NULL,
+    created_at TIMESTAMP
+);
+```
 
 ### Appraisal & Rehire ([APPRAISAL_MODULE.md](APPRAISAL_MODULE.md))
 - `appraisals`, `appraisal_cycles`, `appraisal_scores`, `rehire_recommendations` — performance and rehire
@@ -115,7 +459,551 @@
 
 ---
 
+
 # [The detailed SQL table definitions follow below.]
+
+## Payroll Module Tables (Expanded for Philippine Compliance)
+
+### payroll_periods
+```sql
+CREATE TABLE payroll_periods (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    period_type ENUM('weekly','bi_weekly','semi_monthly','monthly') NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    cutoff_date DATE NULL,
+    pay_date DATE NOT NULL,
+    status ENUM('draft','importing','calculating','calculated','reviewing','approved','bank_file_generated','paid','closed') DEFAULT 'draft',
+    processed_at TIMESTAMP NULL,
+    approved_by BIGINT UNSIGNED NULL,
+    approved_at TIMESTAMP NULL,
+    finalized_by BIGINT UNSIGNED NULL,
+    finalized_at TIMESTAMP NULL,
+    total_employees INT DEFAULT 0,
+    total_gross_pay DECIMAL(14,2) DEFAULT 0,
+    total_deductions DECIMAL(14,2) DEFAULT 0,
+    total_net_pay DECIMAL(14,2) DEFAULT 0,
+    total_employer_cost DECIMAL(14,2) DEFAULT 0,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### employee_payroll_info
+```sql
+CREATE TABLE employee_payroll_info (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    salary_type ENUM('monthly','daily','hourly','contractual','project_based') NOT NULL,
+    basic_salary DECIMAL(10,2) NOT NULL,
+    daily_rate DECIMAL(8,2) NULL,
+    hourly_rate DECIMAL(8,2) NULL,
+    tax_status ENUM('Z','S','ME','S1','ME1','S2','ME2','S3','ME3','S4','ME4') NOT NULL,
+    rdo_code VARCHAR(10) NULL,
+    withholding_tax_exemption DECIMAL(8,2) DEFAULT 0,
+    is_tax_exempt BOOLEAN DEFAULT FALSE,
+    is_substituted_filing BOOLEAN DEFAULT FALSE,
+    sss_number VARCHAR(20) NULL,
+    philhealth_number VARCHAR(20) NULL,
+    pagibig_number VARCHAR(20) NULL,
+    tin_number VARCHAR(20) NULL,
+    sss_bracket VARCHAR(20) NULL,
+    is_sss_voluntary BOOLEAN DEFAULT FALSE,
+    philhealth_is_indigent BOOLEAN DEFAULT FALSE,
+    pagibig_employee_rate DECIMAL(4,2) DEFAULT 1.00,
+    payment_method ENUM('bank_transfer','cash','check') NOT NULL,
+    bank_name VARCHAR(100) NULL,
+    bank_code VARCHAR(20) NULL,
+    bank_account_number VARCHAR(50) NULL,
+    bank_account_name VARCHAR(100) NULL,
+    is_entitled_to_rice BOOLEAN DEFAULT TRUE,
+    is_entitled_to_uniform BOOLEAN DEFAULT TRUE,
+    is_entitled_to_laundry BOOLEAN DEFAULT TRUE,
+    is_entitled_to_medical BOOLEAN DEFAULT TRUE,
+    effective_date DATE NOT NULL,
+    end_date DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### salary_components
+```sql
+CREATE TABLE salary_components (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(30) NOT NULL UNIQUE,
+    component_type ENUM('earning','deduction','benefit','tax','contribution','loan','allowance') NOT NULL,
+    category ENUM('regular','overtime','holiday','leave','allowance','deduction','tax','contribution','loan','adjustment') NOT NULL,
+    calculation_method ENUM('fixed_amount','percentage_of_basic','percentage_of_gross','per_hour','per_day','per_unit','percentage_of_component') NOT NULL,
+    default_amount DECIMAL(10,2) NULL,
+    default_percentage DECIMAL(5,2) NULL,
+    reference_component_id BIGINT UNSIGNED NULL,
+    ot_multiplier DECIMAL(4,2) NULL,
+    is_premium_pay BOOLEAN DEFAULT FALSE,
+    is_taxable BOOLEAN DEFAULT TRUE,
+    is_deminimis BOOLEAN DEFAULT FALSE,
+    deminimis_limit_monthly DECIMAL(10,2) NULL,
+    deminimis_limit_annual DECIMAL(10,2) NULL,
+    is_13th_month BOOLEAN DEFAULT FALSE,
+    is_other_benefits BOOLEAN DEFAULT FALSE,
+    affects_sss BOOLEAN DEFAULT FALSE,
+    affects_philhealth BOOLEAN DEFAULT FALSE,
+    affects_pagibig BOOLEAN DEFAULT FALSE,
+    affects_gross_compensation BOOLEAN DEFAULT TRUE,
+    display_order INT DEFAULT 0,
+    is_displayed_on_payslip BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_system_component BOOLEAN DEFAULT FALSE,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### employee_salary_components
+```sql
+CREATE TABLE employee_salary_components (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    salary_component_id BIGINT UNSIGNED NOT NULL,
+    amount DECIMAL(10,2) NULL,
+    percentage DECIMAL(5,2) NULL,
+    units DECIMAL(8,2) NULL,
+    frequency ENUM('per_payroll','monthly','quarterly','semi_annual','annually','one_time') NOT NULL,
+    effective_date DATE NOT NULL,
+    end_date DATE NULL,
+    is_prorated BOOLEAN DEFAULT FALSE,
+    requires_attendance BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### payroll_calculations
+```sql
+CREATE TABLE payroll_calculations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    payroll_period_id BIGINT UNSIGNED NOT NULL,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    employee_number VARCHAR(30) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    department_id BIGINT UNSIGNED NOT NULL,
+    position_id BIGINT UNSIGNED NULL,
+    employment_status VARCHAR(50) NOT NULL,
+    tin_number VARCHAR(20) NULL,
+    sss_number VARCHAR(20) NULL,
+    philhealth_number VARCHAR(20) NULL,
+    pagibig_number VARCHAR(20) NULL,
+    salary_type VARCHAR(20) NOT NULL,
+    basic_salary DECIMAL(10,2) NOT NULL,
+    daily_rate DECIMAL(8,2) NULL,
+    hourly_rate DECIMAL(8,2) NULL,
+    scheduled_days DECIMAL(4,2) NOT NULL,
+    days_worked DECIMAL(4,2) NOT NULL,
+    days_absent DECIMAL(4,2) DEFAULT 0,
+    days_late DECIMAL(4,2) DEFAULT 0,
+    days_undertime DECIMAL(4,2) DEFAULT 0,
+    regular_hours DECIMAL(6,2) NOT NULL,
+    overtime_regular_hours DECIMAL(6,2) DEFAULT 0,
+    overtime_restday_hours DECIMAL(6,2) DEFAULT 0,
+    overtime_special_holiday_hours DECIMAL(6,2) DEFAULT 0,
+    overtime_regular_holiday_hours DECIMAL(6,2) DEFAULT 0,
+    night_differential_hours DECIMAL(6,2) DEFAULT 0,
+    regular_holiday_hours DECIMAL(6,2) DEFAULT 0,
+    special_holiday_hours DECIMAL(6,2) DEFAULT 0,
+    leave_with_pay_hours DECIMAL(6,2) DEFAULT 0,
+    leave_without_pay_hours DECIMAL(6,2) DEFAULT 0,
+    basic_pay DECIMAL(10,2) NOT NULL,
+    overtime_pay DECIMAL(10,2) DEFAULT 0,
+    night_differential_pay DECIMAL(10,2) DEFAULT 0,
+    holiday_pay DECIMAL(10,2) DEFAULT 0,
+    leave_pay DECIMAL(10,2) DEFAULT 0,
+    rice_allowance DECIMAL(8,2) DEFAULT 0,
+    uniform_allowance DECIMAL(8,2) DEFAULT 0,
+    laundry_allowance DECIMAL(8,2) DEFAULT 0,
+    medical_allowance DECIMAL(8,2) DEFAULT 0,
+    cola DECIMAL(8,2) DEFAULT 0,
+    transportation_allowance DECIMAL(8,2) DEFAULT 0,
+    meal_allowance DECIMAL(8,2) DEFAULT 0,
+    communication_allowance DECIMAL(8,2) DEFAULT 0,
+    bonuses DECIMAL(10,2) DEFAULT 0,
+    incentives DECIMAL(10,2) DEFAULT 0,
+    commissions DECIMAL(10,2) DEFAULT 0,
+    retroactive_pay DECIMAL(10,2) DEFAULT 0,
+    other_earnings DECIMAL(10,2) DEFAULT 0,
+    thirteenth_month_pay DECIMAL(10,2) DEFAULT 0,
+    other_benefits_pay DECIMAL(10,2) DEFAULT 0,
+    gross_pay DECIMAL(10,2) NOT NULL,
+    non_taxable_earnings DECIMAL(10,2) DEFAULT 0,
+    total_earnings DECIMAL(10,2) NOT NULL,
+    sss_employee DECIMAL(8,2) DEFAULT 0,
+    sss_ec DECIMAL(6,2) DEFAULT 0,
+    philhealth_employee DECIMAL(8,2) DEFAULT 0,
+    pagibig_employee DECIMAL(8,2) DEFAULT 0,
+    sss_employer DECIMAL(8,2) DEFAULT 0,
+    philhealth_employer DECIMAL(8,2) DEFAULT 0,
+    pagibig_employer DECIMAL(8,2) DEFAULT 0,
+    taxable_income DECIMAL(10,2) NOT NULL,
+    withholding_tax DECIMAL(10,2) DEFAULT 0,
+    tax_status VARCHAR(10) NOT NULL,
+    tardiness_deduction DECIMAL(8,2) DEFAULT 0,
+    undertime_deduction DECIMAL(8,2) DEFAULT 0,
+    absence_deduction DECIMAL(8,2) DEFAULT 0,
+    sss_loan DECIMAL(8,2) DEFAULT 0,
+    pagibig_loan DECIMAL(8,2) DEFAULT 0,
+    company_loan DECIMAL(8,2) DEFAULT 0,
+    cash_advance DECIMAL(8,2) DEFAULT 0,
+    insurance_premium DECIMAL(8,2) DEFAULT 0,
+    hmo_premium DECIMAL(8,2) DEFAULT 0,
+    uniform_deduction DECIMAL(8,2) DEFAULT 0,
+    other_deductions DECIMAL(10,2) DEFAULT 0,
+    total_statutory_deductions DECIMAL(10,2) NOT NULL,
+    total_other_deductions DECIMAL(10,2) NOT NULL,
+    total_deductions DECIMAL(10,2) NOT NULL,
+    net_pay DECIMAL(10,2) NOT NULL,
+    employer_contributions DECIMAL(10,2) NOT NULL,
+    total_employer_cost DECIMAL(10,2) NOT NULL,
+    ytd_gross DECIMAL(12,2) DEFAULT 0,
+    ytd_tax DECIMAL(12,2) DEFAULT 0,
+    ytd_sss_employee DECIMAL(10,2) DEFAULT 0,
+    ytd_sss_employer DECIMAL(10,2) DEFAULT 0,
+    ytd_philhealth_employee DECIMAL(10,2) DEFAULT 0,
+    ytd_philhealth_employer DECIMAL(10,2) DEFAULT 0,
+    ytd_pagibig_employee DECIMAL(10,2) DEFAULT 0,
+    ytd_pagibig_employer DECIMAL(10,2) DEFAULT 0,
+    ytd_13th_month DECIMAL(10,2) DEFAULT 0,
+    ytd_other_benefits DECIMAL(10,2) DEFAULT 0,
+    ytd_deminimis DECIMAL(10,2) DEFAULT 0,
+    ytd_net_pay DECIMAL(12,2) DEFAULT 0,
+    calculation_version INT DEFAULT 1,
+    calculation_notes TEXT NULL,
+    has_adjustments BOOLEAN DEFAULT FALSE,
+    has_errors BOOLEAN DEFAULT FALSE,
+    error_messages TEXT NULL,
+    is_finalized BOOLEAN DEFAULT FALSE,
+    is_paid BOOLEAN DEFAULT FALSE,
+    paid_at TIMESTAMP NULL,
+    calculated_at TIMESTAMP,
+    calculated_by BIGINT UNSIGNED NOT NULL,
+    finalized_at TIMESTAMP NULL,
+    finalized_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    INDEX(payroll_period_id, employee_id),
+    INDEX(employee_id, is_finalized),
+    INDEX(payroll_period_id, is_finalized)
+);
+```
+
+### payroll_calculation_details
+```sql
+CREATE TABLE payroll_calculation_details (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    payroll_calculation_id BIGINT UNSIGNED NOT NULL,
+    salary_component_id BIGINT UNSIGNED NOT NULL,
+    component_name VARCHAR(100) NOT NULL,
+    component_code VARCHAR(30) NOT NULL,
+    component_type VARCHAR(20) NOT NULL,
+    base_amount DECIMAL(10,2) NOT NULL,
+    rate_or_percentage DECIMAL(8,4) NOT NULL,
+    units DECIMAL(8,2) NULL,
+    calculated_amount DECIMAL(10,2) NOT NULL,
+    calculation_formula VARCHAR(255) NULL,
+    calculation_notes TEXT NULL,
+    is_adjustment BOOLEAN DEFAULT FALSE,
+    adjusted_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP NULL
+);
+```
+
+### payroll_adjustments
+```sql
+CREATE TABLE payroll_adjustments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    payroll_calculation_id BIGINT UNSIGNED NOT NULL,
+    salary_component_id BIGINT UNSIGNED NULL,
+    adjustment_type ENUM('add','deduct','override') NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    reason TEXT NOT NULL,
+    reference_number VARCHAR(50) NULL,
+    requested_by BIGINT UNSIGNED NOT NULL,
+    approved_by BIGINT UNSIGNED NULL,
+    approved_at TIMESTAMP NULL,
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### government_contribution_rates
+```sql
+CREATE TABLE government_contribution_rates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    contribution_type ENUM('sss','sss_ec','philhealth','pagibig') NOT NULL,
+    bracket_name VARCHAR(50) NULL,
+    min_salary DECIMAL(10,2) NOT NULL,
+    max_salary DECIMAL(10,2) NULL,
+    employee_contribution DECIMAL(8,2) NULL,
+    employer_contribution DECIMAL(8,2) NULL,
+    ec_contribution DECIMAL(6,2) NULL,
+    total_contribution DECIMAL(8,2) NULL,
+    employee_rate DECIMAL(6,4) NULL,
+    employer_rate DECIMAL(6,4) NULL,
+    minimum_contribution DECIMAL(8,2) NULL,
+    maximum_contribution DECIMAL(8,2) NULL,
+    effective_date DATE NOT NULL,
+    end_date DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### tax_brackets
+```sql
+CREATE TABLE tax_brackets (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tax_status ENUM('Z','S','ME','S1','ME1','S2','ME2','S3','ME3','S4','ME4') NOT NULL,
+    min_income DECIMAL(10,2) NOT NULL,
+    max_income DECIMAL(10,2) NULL,
+    base_tax DECIMAL(10,2) NOT NULL,
+    tax_rate DECIMAL(5,4) NOT NULL,
+    excess_over DECIMAL(10,2) NOT NULL,
+    description VARCHAR(100) NULL,
+    effective_date DATE NOT NULL,
+    end_date DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### payslips
+```sql
+CREATE TABLE payslips (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    payroll_calculation_id BIGINT UNSIGNED NOT NULL,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    payroll_period_id BIGINT UNSIGNED NOT NULL,
+    payslip_number VARCHAR(30) NOT NULL UNIQUE,
+    generated_at TIMESTAMP NOT NULL,
+    pdf_file_path VARCHAR(255) NULL,
+    pdf_file_size INT NULL,
+    pdf_hash VARCHAR(64) NULL,
+    distribution_method ENUM('email','portal','printed') NOT NULL,
+    email_sent BOOLEAN DEFAULT FALSE,
+    email_sent_at TIMESTAMP NULL,
+    email_address VARCHAR(191) NULL,
+    downloaded_by_employee BOOLEAN DEFAULT FALSE,
+    downloaded_at TIMESTAMP NULL,
+    printed BOOLEAN DEFAULT FALSE,
+    printed_at TIMESTAMP NULL,
+    printed_by BIGINT UNSIGNED NULL,
+    acknowledged_by_employee BOOLEAN DEFAULT FALSE,
+    acknowledged_at TIMESTAMP NULL,
+    generated_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### government_reports
+```sql
+CREATE TABLE government_reports (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    report_type ENUM('bir_1601c','bir_1604c','bir_1604cf','bir_2316','bir_alphalist','sss_r3','sss_r5','philhealth_rf1','pagibig_mcrf','bank_file') NOT NULL,
+    reporting_period VARCHAR(20) NOT NULL,
+    period_type ENUM('monthly','quarterly','annual') NOT NULL,
+    period_start_date DATE NOT NULL,
+    period_end_date DATE NOT NULL,
+    total_employees INT DEFAULT 0,
+    total_gross_pay DECIMAL(14,2) DEFAULT 0,
+    total_taxable_income DECIMAL(14,2) DEFAULT 0,
+    total_contributions DECIMAL(14,2) DEFAULT 0,
+    total_taxes DECIMAL(14,2) DEFAULT 0,
+    total_employer_share DECIMAL(14,2) DEFAULT 0,
+    report_file_path VARCHAR(255) NULL,
+    report_file_name VARCHAR(100) NULL,
+    report_file_size INT NULL,
+    file_format ENUM('pdf','excel','csv','txt','dat') NOT NULL,
+    report_file_hash VARCHAR(64) NULL,
+    status ENUM('draft','generated','validated','submitted','accepted','rejected') DEFAULT 'draft',
+    generated_at TIMESTAMP NULL,
+    validated_at TIMESTAMP NULL,
+    submitted_at TIMESTAMP NULL,
+    submitted_by BIGINT UNSIGNED NULL,
+    reference_number VARCHAR(50) NULL,
+    acknowledgment_receipt VARCHAR(100) NULL,
+    submission_notes TEXT NULL,
+    generated_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### government_remittances
+```sql
+CREATE TABLE government_remittances (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    remittance_type ENUM('sss','philhealth','pagibig','bir_tax') NOT NULL,
+    reporting_period VARCHAR(20) NOT NULL,
+    total_employee_contribution DECIMAL(12,2) NOT NULL,
+    total_employer_contribution DECIMAL(12,2) NOT NULL,
+    total_ec_contribution DECIMAL(10,2) DEFAULT 0,
+    total_amount DECIMAL(12,2) NOT NULL,
+    payment_date DATE NULL,
+    payment_method ENUM('online','otc','bank') NULL,
+    payment_reference_number VARCHAR(50) NULL,
+    bank_name VARCHAR(100) NULL,
+    check_number VARCHAR(50) NULL,
+    transaction_number VARCHAR(50) NULL,
+    status ENUM('pending','paid','confirmed') DEFAULT 'pending',
+    paid_by BIGINT UNSIGNED NULL,
+    confirmed_by BIGINT UNSIGNED NULL,
+    confirmed_at TIMESTAMP NULL,
+    payment_proof_path VARCHAR(255) NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### bank_payroll_files
+```sql
+CREATE TABLE bank_payroll_files (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    payroll_period_id BIGINT UNSIGNED NOT NULL,
+    bank_name VARCHAR(100) NOT NULL,
+    bank_code VARCHAR(20) NULL,
+    file_name VARCHAR(100) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_format ENUM('csv','txt','excel','fixed_width') NOT NULL,
+    file_size INT NOT NULL,
+    file_hash VARCHAR(64) NULL,
+    total_employees INT NOT NULL,
+    total_amount DECIMAL(14,2) NOT NULL,
+    status ENUM('generated','uploaded','processed','confirmed','failed') DEFAULT 'generated',
+    generated_at TIMESTAMP NOT NULL,
+    uploaded_at TIMESTAMP NULL,
+    uploaded_by BIGINT UNSIGNED NULL,
+    confirmation_number VARCHAR(50) NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### payroll_journal_entries
+```sql
+CREATE TABLE payroll_journal_entries (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    payroll_period_id BIGINT UNSIGNED NOT NULL,
+    journal_entry_number VARCHAR(30) NOT NULL UNIQUE,
+    journal_date DATE NOT NULL,
+    total_salaries_wages DECIMAL(14,2) NOT NULL,
+    total_employer_contributions DECIMAL(12,2) NOT NULL,
+    total_employee_deductions DECIMAL(12,2) NOT NULL,
+    total_tax_payable DECIMAL(12,2) NOT NULL,
+    status ENUM('draft','posted','exported') DEFAULT 'draft',
+    posted_at TIMESTAMP NULL,
+    posted_by BIGINT UNSIGNED NULL,
+    exported_at TIMESTAMP NULL,
+    export_file_path VARCHAR(255) NULL,
+    exported_to_system VARCHAR(50) NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### employee_loans
+```sql
+CREATE TABLE employee_loans (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    loan_type ENUM('sss','pagibig','company','cash_advance') NOT NULL,
+    loan_number VARCHAR(30) NOT NULL UNIQUE,
+    principal_amount DECIMAL(10,2) NOT NULL,
+    interest_rate DECIMAL(5,2) NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    monthly_amortization DECIMAL(8,2) NOT NULL,
+    number_of_installments INT NOT NULL,
+    installments_paid INT DEFAULT 0,
+    remaining_balance DECIMAL(10,2) NOT NULL,
+    start_deduction_period_id BIGINT UNSIGNED NOT NULL,
+    last_deduction_period_id BIGINT UNSIGNED NULL,
+    loan_date DATE NOT NULL,
+    start_date DATE NOT NULL,
+    maturity_date DATE NOT NULL,
+    status ENUM('active','completed','cancelled','restructured') DEFAULT 'active',
+    is_active BOOLEAN DEFAULT TRUE,
+    approved_by BIGINT UNSIGNED NULL,
+    approved_at TIMESTAMP NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
+### loan_payments
+```sql
+CREATE TABLE loan_payments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_loan_id BIGINT UNSIGNED NOT NULL,
+    payroll_calculation_id BIGINT UNSIGNED NOT NULL,
+    payroll_period_id BIGINT UNSIGNED NOT NULL,
+    payment_amount DECIMAL(8,2) NOT NULL,
+    principal_payment DECIMAL(8,2) NOT NULL,
+    interest_payment DECIMAL(8,2) DEFAULT 0,
+    balance_after_payment DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP
+);
+```
+
+### payroll_audit_logs
+```sql
+CREATE TABLE payroll_audit_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    payroll_period_id BIGINT UNSIGNED NULL,
+    payroll_calculation_id BIGINT UNSIGNED NULL,
+    action VARCHAR(30) NOT NULL,
+    entity_type VARCHAR(30) NOT NULL,
+    entity_id BIGINT UNSIGNED NOT NULL,
+    old_values JSON NULL,
+    new_values JSON NULL,
+    changes_summary TEXT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent VARCHAR(255) NULL,
+    created_at TIMESTAMP
+);
+```
 
 # Workforce Management Tables
 
