@@ -1199,34 +1199,55 @@ CREATE TABLE onboarding_documents (
 
 ### teams
 ```sql
-CREATE TABLE teams (
+CREATE TABLE onboarding_checklists (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    personal_team BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    name VARCHAR(191) NOT NULL, -- e.g., "Standard Office Onboarding"
+    tasks_json JSON NOT NULL, -- Serialized list of tasks (e.g., ["Submit SSS", "Sign Contract", ...])
+    created_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
 );
 ```
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 
-### team_user
 ```sql
-CREATE TABLE team_user (
+CREATE TABLE onboarding_tasks (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    checklist_id BIGINT UNSIGNED NOT NULL, -- FK -> onboarding_checklists.id
+    task VARCHAR(191) NOT NULL,
+    status ENUM('pending', 'in_progress', 'completed', 'skipped') DEFAULT 'pending',
+    due_date DATE NULL,
+    completed_at TIMESTAMP NULL,
+    assigned_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (checklist_id) REFERENCES onboarding_checklists(id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_by) REFERENCES users(id)
+);
+```
     team_id BIGINT UNSIGNED NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,
-    role VARCHAR(255) NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    
-    UNIQUE KEY team_user_unique (team_id, user_id),
-    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+```sql
+CREATE TABLE onboarding_documents (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    document_type VARCHAR(100) NOT NULL, -- e.g., "SSS", "TIN", "Contract"
+    file_path VARCHAR(255) NOT NULL,
+    status ENUM('pending', 'submitted', 'verified', 'rejected') DEFAULT 'pending',
+    submitted_at TIMESTAMP NULL,
+    verified_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    verified_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (verified_by) REFERENCES users(id)
 );
 ```
-
 
 ## `employees`
 
@@ -1247,11 +1268,6 @@ CREATE TABLE personal_access_tokens (
 );
 ```
 
-
-
-
-
-
 ## team_members
 ```sql
 CREATE TABLE team_members (
@@ -1271,9 +1287,8 @@ CREATE TABLE team_members (
 * Many-to-many for employees ↔ teams, supports history.
 
 
-
-
-
+### sessions
+```sql
 CREATE TABLE sessions (
     id VARCHAR(255) PRIMARY KEY,
     user_id BIGINT UNSIGNED NULL,
@@ -1287,9 +1302,6 @@ CREATE TABLE sessions (
 );
 ```
 
-
-
-
 ### jobs
 ```sql
 CREATE TABLE jobs (
@@ -1299,10 +1311,11 @@ CREATE TABLE jobs (
     attempts TINYINT UNSIGNED NOT NULL,
     reserved_at INT UNSIGNED NULL,
     available_at INT UNSIGNED NOT NULL,
+    created_at INT UNSIGNED NOT NULL,
+    INDEX jobs_queue_reserved_at (queue, reserved_at)
+);
 ```
 - Single person identity; do not store employment-specific IDs here (they go in `government_ids` or `employees`).
-
-
 
 ### job_batches
 ```sql
