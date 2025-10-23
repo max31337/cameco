@@ -170,7 +170,15 @@ Each module has its own detailed architectural plan and implementation guide:
 - Contract generation and sign-off
 - Account provisioning and initial training steps
 
-### 📊 [Appraisal Module](APPRAISAL_MODULE.md) - **Planned**
+### � New: Foundation & Admin Docs
+
+- [User Management](USER_MANAGEMENT.md) — CRUD, invitations, activation, role lifecycle and audit logging (focus: Superadmin/Admin control)
+- [Onboarding Workflow](ONBOARDING_WORKFLOW.md) — Organization creation, admin invitation, HR first-run checklist and domain restrictions
+- [HR & Payroll Configuration](HR_PAYROLL_CONFIG.md) — Salary components, departmental pay bands, payroll periods and approval flows
+- [System Configuration](SYSTEM_CONFIGURATION.md) — Domain-specific settings, feature toggles and configuration responsibility split
+- [RBAC Matrix](RBAC_MATRIX.md) — Editable scopes per role, inheritance rules, system safeguards and audit requirements
+
+### �📊 [Appraisal Module](APPRAISAL_MODULE.md) - **Planned**
 **Status:** Planning
 **Core Features:**
 - Performance review cycles
