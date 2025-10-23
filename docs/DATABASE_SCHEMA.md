@@ -1671,6 +1671,6 @@ CREATE TABLE activity_log (
 ---
 
 **Schema Version**: 1.0  
-**Last Updated**: October 14, 2025  
+**Last Updated**: October 23, 2025  
 **Total Tables**: 45 tables  
 **Estimated Storage**: ~50MB for 1000 employees with 2 years of data
