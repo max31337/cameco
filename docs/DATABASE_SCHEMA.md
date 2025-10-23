@@ -536,9 +536,9 @@ CREATE TABLE departments (
     UNIQUE KEY departments_name_unique (name),
     UNIQUE KEY departments_code_unique (code)
 );
-
-## `devices`
 ```
+## devices
+```sql
 CREATE TABLE devices (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
@@ -555,7 +555,7 @@ CREATE TABLE devices (
 ```
 
 ## `time_logs`
-```
+```sql
 CREATE TABLE time_logs (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     device_id BIGINT UNSIGNED NULL, -- FK -> devices.id (SET NULL)
@@ -571,7 +571,7 @@ CREATE TABLE time_logs (
 ```
 
 ## `shifts`
-```
+```sql
 CREATE TABLE shifts (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -585,7 +585,7 @@ CREATE TABLE shifts (
 ```
 
 ## `employee_shifts`
-```
+```sql
 CREATE TABLE employee_shifts (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id (CASCADE)
@@ -600,7 +600,7 @@ CREATE TABLE employee_shifts (
 
 
 ## `leave_requests`
-```
+```sql
 CREATE TABLE leave_requests (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id (CASCADE)
@@ -617,7 +617,7 @@ CREATE TABLE leave_requests (
 ```
 
 ## `overtimes`
-```
+```sql
 CREATE TABLE overtimes (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id (CASCADE)
@@ -633,7 +633,7 @@ CREATE TABLE overtimes (
 ```
 
 ## `payroll_periods`
-```
+```sql
 CREATE TABLE payroll_periods (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     period_start DATE NOT NULL,
@@ -646,7 +646,7 @@ CREATE TABLE payroll_periods (
 ```
 
 ## `payrolls`
-```
+```sql
 CREATE TABLE payrolls (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id (CASCADE)
@@ -663,7 +663,7 @@ CREATE TABLE payrolls (
 ```
 
 ## `deductions`
-```
+```sql
 CREATE TABLE deductions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     payroll_id BIGINT UNSIGNED NOT NULL, -- FK -> payrolls.id (CASCADE)
@@ -677,7 +677,7 @@ CREATE TABLE deductions (
 
 
 ## `documents`
-```
+```sql
 CREATE TABLE documents (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     employee_id BIGINT UNSIGNED NULL, -- FK -> employees.id (SET NULL)
@@ -692,7 +692,7 @@ CREATE TABLE documents (
 ```
 
 ## `notifications`
-```
+```sql
 CREATE TABLE notifications (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NOT NULL, -- FK -> users.id (CASCADE)

@@ -40,16 +40,25 @@ Once the system is stable, it will be refactored into **MVCSR + Domain**, adding
 - **Database:** PostgreSQL/SQLite
 - **Authentication:** Role-based access control with admin approval workflow
 
+
 **📋 Complete Documentation:**
-- **[System Architecture](docs/SYNCINGSTEEL_ARCHITECTURE_PLAN.md)** - Complete system overview and implementation strategy
-- **[Database Schema](docs/DATABASE_SCHEMA.md)** - 45 tables across all modules with relationships
-- **[HR Module Architecture](docs/HR_MODULE_ARCHITECTURE.md)** - Employee management (Priority module)
-- **[Timekeeping Module Architecture](docs/TIMEKEEPING_MODULE_ARCHITECTURE.md)** - Attendance tracking
-- **[Payroll Module Architecture](docs/PAYROLL_MODULE_ARCHITECTURE.md)** - Philippine tax compliance
-- **[Workforce Management Module](docs/WORKFORCE_MANAGEMENT_MODULE.md)** - Shift scheduling, rotations, and daily assignments
-- **[Applicant Tracking (ATS) Module](docs/ATS_MODULE.md)** - Candidate pipelines, interviews, and offers
-- **[Onboarding Module](docs/ONBOARDING_MODULE.md)** - Post-hire checklists, document collection, and account provisioning
-- **[Appraisal Module](docs/APPRAISAL_MODULE.md)** - Performance reviews, scoring, and rehire recommendations
+
+- **[System Architecture](docs/SYNCINGSTEEL_ARCHITECTURE_PLAN.md)** — Complete system overview and implementation strategy
+- **[Database Schema](docs/DATABASE_SCHEMA.md)** — All tables, relationships, and cross-module references
+- **[System Workflow Flowchart](docs/SYSTEM_WORKFLOW_FLOWCHART.md)** — Visual flow of all modules and data
+- **[User Management](docs/USER_MANAGEMENT.md)** — User CRUD, invitations, role assignment, audit logging
+- **[RBAC Matrix](docs/RBAC_MATRIX.md)** — Role-based access control, permission matrix, and safeguards
+- **[HR Module Architecture](docs/HR_MODULE_ARCHITECTURE.md)** — Employee management, onboarding, and HR core
+- **[Payroll Module Architecture](docs/PAYROLL_MODULE_ARCHITECTURE.md)** — Philippine payroll, tax compliance, payslips, government reports
+- **[HR & Payroll Config](docs/HR_PAYROLL_CONFIG.md)** — Salary components, pay bands, deduction management, approval flows
+- **[Timekeeping Module Architecture](docs/TIMEKEEPING_MODULE_ARCHITECTURE.md)** — Attendance, schedules, overtime, device integration
+- **[Workforce Management Module](docs/WORKFORCE_MANAGEMENT_MODULE.md)** — Shift scheduling, rotations, and daily assignments
+- **[Applicant Tracking (ATS) Module](docs/ATS_MODULE.md)** — Recruitment, job postings, applications, interviews
+- **[Onboarding Module](docs/ONBOARDING_MODULE.md)** — Post-hire checklists, document collection, account provisioning
+- **[Onboarding Workflow](docs/ONBOARDING_WORKFLOW.md)** — Organization onboarding, admin/HR setup, domain config
+- **[Appraisal Module](docs/APPRAISAL_MODULE.md)** — Performance reviews, scoring, rehire recommendations
+
+---
 
 
 ---
