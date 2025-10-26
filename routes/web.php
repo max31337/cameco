@@ -12,12 +12,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-
-        // Superadmin-specific dashboard (keep route for compatibility but redirect to canonical /dashboard)
-        Route::get('superadmin/dashboard', function () {
-                return redirect()->route('dashboard');
-        })->name('superadmin.dashboard')
-            ->middleware(\App\Http\Middleware\EnsureSuperadmin::class);
+        
 });
 
 require __DIR__.'/settings.php';
