@@ -7,6 +7,8 @@ The Timekeeping Module manages employee attendance, time tracking, and work sche
 - **HR Module**: Employee records, department structure
 - **Foundation**: User management, roles, permissions
 - 🔄 **Provides data to**: Payroll Module (attendance for salary calculations)
+ - **Foundation**: User management, roles, permissions (we recommend `spatie/laravel-permission`)
+ - 🔄 **Provides data to**: Payroll Module (attendance for salary calculations)
 
 ## Module Goals
 1. **Manual Time Entry**: Staff-assisted time recording system
@@ -24,184 +26,242 @@ The Timekeeping Module manages employee attendance, time tracking, and work sche
 
 ### Attendance & Schedule Tables
 
-#### work_schedules
+## Timekeeping Module Tables
+
+### work_schedules
 ```sql
-- id (primary key)
-- name (string, required) # "Standard Office Hours", "Shift A", etc.
-- description (text, nullable)
-- 
-# Schedule Definition
-- monday_start (time, nullable)
-- monday_end (time, nullable)
-- tuesday_start (time, nullable)
-- tuesday_end (time, nullable)
-- wednesday_start (time, nullable)
-- wednesday_end (time, nullable)
-- thursday_start (time, nullable)
-- thursday_end (time, nullable)
-- friday_start (time, nullable)
-- friday_end (time, nullable)
-- saturday_start (time, nullable)
-- saturday_end (time, nullable)
-- sunday_start (time, nullable)
-- sunday_end (time, nullable)
-- 
-# Break Times
-- lunch_break_duration (integer) # minutes
-- morning_break_duration (integer, nullable) # minutes
-- afternoon_break_duration (integer, nullable) # minutes
-- 
-# Overtime Rules
-- overtime_threshold (integer) # minutes over regular hours
-- overtime_rate_multiplier (decimal(3,2), default 1.25)
-- 
-# System Fields
-- is_active (boolean, default true)
-- created_by (foreign key to users)
-- created_at, updated_at
+CREATE TABLE work_schedules (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    
+    -- Schedule Definition
+    monday_start TIME NULL,
+    monday_end TIME NULL,
+    tuesday_start TIME NULL,
+    tuesday_end TIME NULL,
+    wednesday_start TIME NULL,
+    wednesday_end TIME NULL,
+    thursday_start TIME NULL,
+    thursday_end TIME NULL,
+    friday_start TIME NULL,
+    friday_end TIME NULL,
+    saturday_start TIME NULL,
+    saturday_end TIME NULL,
+    sunday_start TIME NULL,
+    sunday_end TIME NULL,
+    
+    -- Break Times
+    lunch_break_duration INT UNSIGNED DEFAULT 60, -- minutes
+    morning_break_duration INT UNSIGNED NULL, -- minutes
+    afternoon_break_duration INT UNSIGNED NULL, -- minutes
+    
+    -- Overtime Rules
+    overtime_threshold INT UNSIGNED DEFAULT 480, -- minutes (8 hours)
+    overtime_rate_multiplier DECIMAL(3,2) DEFAULT 1.25,
+    
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_work_schedules_is_active (is_active),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
 ```
 
-#### employee_schedules
+### attendance_events
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- work_schedule_id (foreign key to work_schedules)
-- effective_date (date)
-- end_date (date, nullable)
-- is_active (boolean, default true)
-- created_by (foreign key to users)
-- created_at, updated_at
+CREATE TABLE attendance_events (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    event_date DATE NOT NULL,
+    event_time TIMESTAMP NOT NULL,
+    event_type ENUM('time_in', 'time_out', 'break_start', 'break_end', 'overtime_start', 'overtime_end') NOT NULL,
+    
+    -- Data Source
+    source ENUM('manual', 'imported', 'system') DEFAULT 'manual',
+    imported_batch_id BIGINT UNSIGNED NULL,
+    
+    -- Validation & Correction
+    is_corrected BOOLEAN DEFAULT FALSE,
+    original_time TIMESTAMP NULL,
+    correction_reason TEXT NULL,
+    corrected_by BIGINT UNSIGNED NULL,
+    corrected_at TIMESTAMP NULL,
+    
+    -- Location & Device Info
+    location VARCHAR(255) NULL,
+    notes TEXT NULL,
+    
+    created_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_attendance_events_employee_date (employee_id, event_date),
+    INDEX idx_attendance_events_event_time (event_time),
+    INDEX idx_attendance_events_batch_id (imported_batch_id),
+    
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (corrected_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+);
 ```
 
-#### attendance_events
+### daily_attendance_summary
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- event_date (date)
-- event_time (timestamp)
-- event_type (enum: time_in, time_out, break_start, break_end, overtime_start, overtime_end)
-- 
-# Data Source
-- source (enum: manual, imported, system)
-- imported_batch_id (foreign key to import_batches, nullable)
-- 
-# Validation & Correction
-- is_corrected (boolean, default false)
-- original_time (timestamp, nullable) # Before correction
-- correction_reason (text, nullable)
-- corrected_by (foreign key to users, nullable)
-- corrected_at (timestamp, nullable)
-- 
-# Location & Device Info
-- location (string, nullable) # "Main Office", "Site A", etc.
-- notes (text, nullable)
-- 
-# System Fields  
-- created_by (foreign key to users, nullable)
-- created_at, updated_at
+CREATE TABLE daily_attendance_summary (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    attendance_date DATE NOT NULL,
+    work_schedule_id BIGINT UNSIGNED NOT NULL,
+    
+    -- Time Tracking
+    time_in TIMESTAMP NULL,
+    time_out TIMESTAMP NULL,
+    break_start TIMESTAMP NULL,
+    break_end TIMESTAMP NULL,
+    
+    -- Calculated Fields
+    total_hours_worked DECIMAL(4,2) NULL,
+    regular_hours DECIMAL(4,2) NULL,
+    overtime_hours DECIMAL(4,2) NULL,
+    break_duration INT UNSIGNED NULL, -- minutes
+    
+    -- Status Flags
+    is_present BOOLEAN DEFAULT FALSE,
+    is_late BOOLEAN DEFAULT FALSE,
+    is_undertime BOOLEAN DEFAULT FALSE,
+    is_overtime BOOLEAN DEFAULT FALSE,
+    late_minutes INT UNSIGNED NULL,
+    undertime_minutes INT UNSIGNED NULL,
+    
+    -- Leave Integration
+    leave_request_id BIGINT UNSIGNED NULL,
+    is_on_leave BOOLEAN DEFAULT FALSE,
+    
+    calculated_at TIMESTAMP NULL,
+    is_finalized BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    UNIQUE KEY daily_attendance_employee_date (employee_id, attendance_date),
+    INDEX idx_daily_attendance_date (attendance_date),
+    INDEX idx_daily_attendance_schedule_id (work_schedule_id),
+    
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (work_schedule_id) REFERENCES work_schedules(id),
+    FOREIGN KEY (leave_request_id) REFERENCES leave_requests(id) ON DELETE SET NULL
+);
 ```
 
-#### daily_attendance_summary
+### import_batches
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- attendance_date (date)
-- work_schedule_id (foreign key to work_schedules)
-- 
-# Time Tracking
-- time_in (timestamp, nullable)
-- time_out (timestamp, nullable)
-- break_start (timestamp, nullable)
-- break_end (timestamp, nullable)
-- 
-# Calculated Fields
-- total_hours_worked (decimal(4,2), nullable)
-- regular_hours (decimal(4,2), nullable)
-- overtime_hours (decimal(4,2), nullable)
-- break_duration (integer, nullable) # minutes
-- 
-# Status Flags
-- is_present (boolean, default false)
-- is_late (boolean, default false)
-- is_undertime (boolean, default false)
-- is_overtime (boolean, default false)
-- late_minutes (integer, nullable)
-- undertime_minutes (integer, nullable)
-- 
-# Leave Integration
-- leave_request_id (foreign key to leave_requests, nullable)
-- is_on_leave (boolean, default false)
-- 
-# System Fields
-- calculated_at (timestamp, nullable)
-- is_finalized (boolean, default false)
-- created_at, updated_at
+CREATE TABLE import_batches (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size INT UNSIGNED NOT NULL,
+    
+    -- Import Details
+    import_type ENUM('attendance', 'schedule', 'correction') NOT NULL,
+    total_records INT UNSIGNED NOT NULL,
+    processed_records INT UNSIGNED DEFAULT 0,
+    successful_records INT UNSIGNED DEFAULT 0,
+    failed_records INT UNSIGNED DEFAULT 0,
+    
+    -- Processing Status
+    status ENUM('uploaded', 'processing', 'completed', 'failed') DEFAULT 'uploaded',
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    error_log TEXT NULL,
+    
+    imported_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_import_batches_status (status),
+    INDEX idx_import_batches_imported_by (imported_by),
+    
+    FOREIGN KEY (imported_by) REFERENCES users(id)
+);
 ```
 
-#### import_batches
+### import_errors
 ```sql
-- id (primary key)
-- file_name (string, required)
-- file_path (string, required)
-- file_size (integer)
-- 
-# Import Details
-- import_type (enum: attendance, schedule, correction)
-- total_records (integer)
-- processed_records (integer)
-- successful_records (integer)  
-- failed_records (integer)
-- 
-# Processing Status
-- status (enum: uploaded, processing, completed, failed)
-- started_at (timestamp, nullable)
-- completed_at (timestamp, nullable)
-- error_log (text, nullable)
-- 
-# System Fields
-- imported_by (foreign key to users)
-- created_at, updated_at
+CREATE TABLE import_errors (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    import_batch_id BIGINT UNSIGNED NOT NULL,
+    row_number INT UNSIGNED NOT NULL,
+    employee_identifier VARCHAR(255) NOT NULL,
+    error_type ENUM('invalid_employee', 'invalid_time', 'duplicate_entry', 'validation_error') NOT NULL,
+    error_message TEXT NOT NULL,
+    raw_data JSON NOT NULL,
+    created_at TIMESTAMP NULL,
+    
+    INDEX idx_import_errors_batch_id (import_batch_id),
+    FOREIGN KEY (import_batch_id) REFERENCES import_batches(id) ON DELETE CASCADE
+);
 ```
 
-#### import_errors
+### overtime_requests
 ```sql
-- id (primary key)
-- import_batch_id (foreign key to import_batches)
-- row_number (integer)
-- employee_identifier (string) # Employee number or name from import
-- error_type (enum: invalid_employee, invalid_time, duplicate_entry, validation_error)
-- error_message (text)
-- raw_data (json) # Original row data
-- created_at
+CREATE TABLE overtime_requests (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    request_date DATE NOT NULL,
+    planned_start_time TIMESTAMP NOT NULL,
+    planned_end_time TIMESTAMP NOT NULL,
+    planned_hours DECIMAL(4,2) NOT NULL,
+    reason TEXT NOT NULL,
+    
+    -- Approval Workflow
+    status ENUM('pending', 'approved', 'rejected', 'completed') DEFAULT 'pending',
+    approved_by BIGINT UNSIGNED NULL,
+    approved_at TIMESTAMP NULL,
+    rejection_reason TEXT NULL,
+    
+    -- Actual Time Tracking
+    actual_start_time TIMESTAMP NULL,
+    actual_end_time TIMESTAMP NULL,
+    actual_hours DECIMAL(4,2) NULL,
+    
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_overtime_requests_employee_id (employee_id),
+    INDEX idx_overtime_requests_status (status),
+    INDEX idx_overtime_requests_request_date (request_date),
+    
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
 ```
 
-#### overtime_requests
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- request_date (date)
-- planned_start_time (timestamp)
-- planned_end_time (timestamp)
-- planned_hours (decimal(4,2))
-- reason (text)
-- 
-# Approval Workflow  
-- status (enum: pending, approved, rejected, completed)
-- approved_by (foreign key to users, nullable)
-- approved_at (timestamp, nullable)
-- rejection_reason (text, nullable)
-- 
-# Actual Time Tracking
-- actual_start_time (timestamp, nullable)
-- actual_end_time (timestamp, nullable)
-- actual_hours (decimal(4,2), nullable)
-- 
-# System Fields
-- created_by (foreign key to users)
-- created_at, updated_at
+CREATE TABLE employee_schedules (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    work_schedule_id BIGINT UNSIGNED NOT NULL,
+    effective_date DATE NOT NULL,
+    end_date DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_employee_schedules_employee_id (employee_id),
+    INDEX idx_employee_schedules_schedule_id (work_schedule_id),
+    INDEX idx_employee_schedules_effective_date (effective_date),
+    
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (work_schedule_id) REFERENCES work_schedules(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
 ```
 
----
 
 ## Implementation Phases
 
@@ -211,6 +271,12 @@ The Timekeeping Module manages employee attendance, time tracking, and work sche
 - [ ] Set up model factories for testing data
 - [ ] Create seeders for work schedules and sample attendance
 - [ ] Add database indexes for performance
+
+RBAC notes for Timekeeping:
+
+- Use Spatie permission names for fine-grained access, for example: `timekeeping.attendance.create`, `timekeeping.attendance.update`, `timekeeping.reports.view`.
+- Ensure the `User` model uses `HasRoles` and check `can()` / `hasRole()` in controllers and form requests.
+- If onboarding creates role templates, map them to the module permissions (see `SYSTEM_ONBOARDING_WORKFLOW.md`).
 
 ### Phase 2: Repository Layer (Week 1-2)
 - [ ] Create repository interfaces (Attendance, Schedule, Import)

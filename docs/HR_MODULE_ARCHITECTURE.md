@@ -94,158 +94,179 @@ External User Registration → Admin Review → Remain Unlinked
 
 ### Core Employee Tables
 
-#### employees
+## HR Module Tables (see HR_MODULE_ARCHITECTURE.md for full schema and details)
+### employees
 ```sql
-- id (primary key)
-- user_id (foreign key to users, nullable) # Links to system user account
-- employee_number (unique, auto-generated: EMP-YYYY-NNNN)
-- lastname (string, required)
-- firstname (string, required)
-- middlename (string, nullable)
--
-# Personal Information
-- address (text)
-- contact_number (string, nullable)
-- email_personal (string, nullable)
-- place_of_birth (string)
-- date_of_birth (date)
-- civil_status (enum: single, married, divorced, widowed)
-- gender (enum: male, female)
-- 
-# Employment Information  
-- department_id (foreign key to departments)
-- position (string, nullable)
-- employment_type (enum: regular, contractual, probationary, consultant)
-- date_employed (date)
-- date_regularized (date, nullable)
-- immediate_supervisor_id (foreign key to employees, nullable)
-- 
-# Government IDs
-- sss_no (string, unique, nullable)
-- pagibig_no (string, unique, nullable)  
-- tin_no (string, unique, nullable)
-- philhealth_no (string, unique, nullable)
-- 
-# Family Information
-- spouse_name (string, nullable)
-- spouse_dob (date, nullable)
-- spouse_occupation (string, nullable)
-- father_name (string, nullable)
-- father_dob (date, nullable)
-- mother_name (string, nullable)  
-- mother_dob (date, nullable)
-- 
-# Emergency Contact
-- emergency_contact_name (string, nullable)
-- emergency_contact_relationship (string, nullable)
-- emergency_contact_number (string, nullable)
-- 
-# System Fields
-- status (enum: active, archived, terminated, on_leave, suspended)
-- termination_date (date, nullable)
-- termination_reason (text, nullable)
-- created_by (foreign key to users)
-- updated_by (foreign key to users)
-- timestamps
-- soft deletes
+CREATE TABLE employees (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    profile_id BIGINT UNSIGNED NOT NULL, -- Personal information lives in profiles; employees reference profiles
+    employee_number VARCHAR(50) UNIQUE NOT NULL,
 
-# Appraisal & Rehire fields
-- rehired_of (nullable FK -> employees.id)
-- rehire_recommendation (enum: eligible, not_recommended, review_required) DEFAULT 'review_required'
+    -- Employment Information (keep employment-only fields here)
+    department_id BIGINT UNSIGNED NULL,
+    position VARCHAR(255) NULL,
+    employment_type ENUM('regular', 'contractual', 'probationary', 'consultant') NULL,
+    date_employed DATE NULL,
+    date_regularized DATE NULL,
+    immediate_supervisor_id BIGINT UNSIGNED NULL,
+
+    -- System Fields
+    status ENUM('active', 'archived', 'terminated', 'on_leave', 'suspended') DEFAULT 'active',
+    termination_date DATE NULL,
+    termination_reason TEXT NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    deleted_at TIMESTAMP NULL,
+
+    INDEX idx_employees_user_id (user_id),
+    INDEX idx_employees_profile_id (profile_id),
+    INDEX idx_employees_employee_number (employee_number),
+    INDEX idx_employees_department_id (department_id),
+    INDEX idx_employees_supervisor_id (immediate_supervisor_id),
+    INDEX idx_employees_status (status),
+    INDEX idx_employees_employment_type (employment_type),
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE RESTRICT,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
+    FOREIGN KEY (immediate_supervisor_id) REFERENCES employees(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
 ```
 
-#### employee_children
+Note: Employees do not store personal identity fields (name, DOB, contact, address). Those live in the profiles table. Link employees.profile_id to profiles.id. This separation allows a single person identity to be reused across modules (User Management, ATS) and keeps employment data isolated.
+
+### government_ids
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- child_name (string, required)
-- child_dob (date)
-- child_gender (enum: male, female)
-- is_student (boolean, default false)
-- school_name (string, nullable)
-- remarks (text, nullable)
-- created_at, updated_at
+CREATE TABLE government_ids (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    profile_id BIGINT UNSIGNED NOT NULL,
+    sss_number VARCHAR(20) NULL,
+    tin_number VARCHAR(20) NULL,
+    philhealth_number VARCHAR(20) NULL,
+    pagibig_number VARCHAR(20) NULL,
+    passport_number VARCHAR(20) NULL,
+    drivers_license VARCHAR(20) NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
 ```
 
-#### employee_remarks
+
+### employee_children
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- remark_type (enum: rehired, end_of_contract, leave_of_absence, suspension, promotion, demotion, salary_adjustment, disciplinary_action)
-- title (string, required)
-- note (text)
-- effective_date (date)
-- expiry_date (date, nullable)
-- is_active (boolean, default true)
-- created_by (foreign key to users)
-- created_at, updated_at
+CREATE TABLE employee_children (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    child_name VARCHAR(255) NOT NULL,
+    child_dob DATE NOT NULL,
+    child_gender ENUM('male', 'female') NOT NULL,
+    is_student BOOLEAN DEFAULT FALSE,
+    school_name VARCHAR(255) NULL,
+    remarks TEXT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_employee_children_employee_id (employee_id),
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
 ```
 
-#### leave_requests
+### employee_remarks
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- leave_type (enum: VL, SL, EL, ML, PL, BL, SP, LWOP) # Vacation, Sick, Emergency, Maternity, Paternity, Bereavement, Special, Leave Without Pay
-- start_date (date)
-- end_date (date)
-- days_count (decimal(4,2))
-- half_day (boolean, default false)
-- reason (text)
-- 
-# Approval Workflow
-- status (enum: draft, pending, approved, rejected, cancelled)
-- submitted_at (timestamp, nullable)
-- approved_by (foreign key to users, nullable)
-- approved_at (timestamp, nullable)
-- rejection_reason (text, nullable)
-- 
-# Leave Balance Impact
-- deducted_days (decimal(4,2), nullable)
-- remaining_balance (decimal(4,2), nullable)
-- 
-# System Fields
-- created_at, updated_at
+CREATE TABLE employee_remarks (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    remark_type ENUM('rehired', 'end_of_contract', 'leave_of_absence', 'suspension', 'promotion', 'demotion', 'salary_adjustment', 'disciplinary_action') NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    note TEXT NOT NULL,
+    effective_date DATE NOT NULL,
+    expiry_date DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_employee_remarks_employee_id (employee_id),
+    INDEX idx_employee_remarks_type (remark_type),
+    INDEX idx_employee_remarks_effective_date (effective_date),
+    
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
 ```
 
-#### leave_balances
+### leave_balances
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- year (integer)
-- leave_type (enum: VL, SL, EL, ML, PL, BL, SP)
-- earned_days (decimal(4,2))
-- used_days (decimal(4,2), default 0)
-- remaining_days (decimal(4,2))
-- carried_forward (decimal(4,2), default 0)
-- expires_at (date, nullable)
-- created_at, updated_at
+CREATE TABLE leave_balances (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    year INT NOT NULL,
+    leave_type ENUM('VL', 'SL', 'EL', 'ML', 'PL', 'BL', 'SP') NOT NULL,
+    earned_days DECIMAL(4,2) NOT NULL,
+    used_days DECIMAL(4,2) DEFAULT 0,
+    remaining_days DECIMAL(4,2) NOT NULL,
+    carried_forward DECIMAL(4,2) DEFAULT 0,
+    expires_at DATE NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    UNIQUE KEY leave_balances_employee_year_type (employee_id, year, leave_type),
+    INDEX idx_leave_balances_employee_id (employee_id),
+    INDEX idx_leave_balances_year (year),
+    
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
 ```
 
-#### document_templates
-```sql  
-- id (primary key)
-- name (string, required)
-- type (enum: employment_contract, job_offer, leave_slip, certificate_of_employment, excuse_slip, memorandum)
-- template_path (string, required) # Path to Blade template
-- is_active (boolean, default true)
-- variables (json) # Available template variables
-- created_by (foreign key to users)
-- created_at, updated_at
+### document_templates
+```sql
+CREATE TABLE document_templates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type ENUM('employment_contract', 'job_offer', 'leave_slip', 'certificate_of_employment', 'excuse_slip', 'memorandum') NOT NULL,
+    template_path VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    variables JSON NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_document_templates_type (type),
+    INDEX idx_document_templates_is_active (is_active),
+    
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
 ```
 
-#### generated_documents
+### generated_documents
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- template_id (foreign key to document_templates)
-- document_type (string)
-- file_name (string)
-- file_path (string)
-- file_size (integer)
-- generated_by (foreign key to users)
-- generated_at (timestamp)
-- is_archived (boolean, default false)
-- created_at, updated_at
+CREATE TABLE generated_documents (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    template_id BIGINT UNSIGNED NOT NULL,
+    document_type VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size INT UNSIGNED NOT NULL,
+    generated_by BIGINT UNSIGNED NOT NULL,
+    generated_at TIMESTAMP NOT NULL,
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_generated_documents_employee_id (employee_id),
+    INDEX idx_generated_documents_template_id (template_id),
+    INDEX idx_generated_documents_generated_at (generated_at),
+    
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (template_id) REFERENCES document_templates(id),
+    FOREIGN KEY (generated_by) REFERENCES users(id)
+);
 ```
 
 ---

@@ -54,3 +54,7 @@ CREATE TABLE system_settings (
     FOREIGN KEY (updated_by) REFERENCES users(id)
 );
 ```
+
+(In Laravel migrations prefer `timestamps()` and `softDeletes()` helpers. SQL shown is illustrative.)
+
+Permissions to edit system settings should follow `system.settings.*` naming (e.g., `system.settings.update`). Seed these permissions and associated roles using the standard `database/seeders/RolesAndPermissionsSeeder.php`.

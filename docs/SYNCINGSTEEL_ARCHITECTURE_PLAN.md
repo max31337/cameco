@@ -13,7 +13,7 @@
 **📋 Complete Database Schema:** [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - 45 tables across all modules with relationships and constraints
 
 ## Current State
-- ✅ Laravel 11 + Jetstream + Inertia.js + React setup
+- ✅ Laravel 12 + Jetstream + Inertia.js + React setup
 - ✅ Authentication system with admin approval workflow
 - ✅ Landing page, login, and registration pages
 - ✅ User management with status-based access control

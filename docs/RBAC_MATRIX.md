@@ -47,13 +47,13 @@ Defines exactly who can edit what across the platform to prevent accidental full
 - Daily summary of role changes sent to Superadmin (configurable).
 
 ## Example permission matrix (high-level)
-| Area | Superadmin | Admin | HR Manager | HR Staff | User |
-|------|------------|-------|------------|----------|------|
-| Create users | yes | yes | limited (employee) | no | no |
-| Invite Admins | yes | limited (with approval) | no | no | no |
-| Assign roles | yes | yes (except Superadmin) | limited | no | no |
-| Edit payroll master | yes | limited | yes | no | no |
-| View audit logs | yes | yes | limited | limited | no |
+| Area                      | Superadmin |          Admin           | HR Manager          | HR Staff | User |
+|---------------------------|------------|--------------------------|---------------------|----------|------|
+| Create users              | yes        | yes                      | limited (employee)  | no       | no   |
+| Invite Admins             | yes        | limited (with approval)  | no                  | no       | no   |
+| Assign roles              | yes        | yes (except Superadmin)  | limited             | no       | no   |
+| Edit payroll master       | yes        | limited                  | yes                 | no       | no   |
+| View audit logs           | yes        | yes                      | limited             | limited  | no   |
 
 ## Acceptance criteria
 - Role assignment rules enforce no elevation without approval.
@@ -62,13 +62,39 @@ Defines exactly who can edit what across the platform to prevent accidental full
 
 ## Database schema snippet for roles table
 ### roles
+This repository uses Spatie's `spatie/laravel-permission` package for role and permission management. Rather than rolling a custom `roles`/`permissions` schema and pivots, prefer the package's migrations and helpers.
+
+Setup (recommended):
+
+- composer require spatie/laravel-permission
+- php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
+- php artisan migrate
+
+Spatie creates the canonical tables: `roles`, `permissions`, `role_has_permissions`, `model_has_roles`, and `model_has_permissions`. These map cleanly to the RBAC matrix described above and support seeding role templates, auditing, and guard names.
+
+If you still want a compact SQL example, Spatie's migrations roughly create:
+
 ```sql
 CREATE TABLE roles (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description VARCHAR(255) NULL,
-    is_system_role BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  guard_name VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL
+);
+
+CREATE TABLE permissions (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  guard_name VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL
 );
 ```
+
+Notes:
+- Use the `HasRoles` trait on your `User` model. Example: `use Spatie\Permission\Traits\HasRoles;` and `class User extends Authenticatable { use HasRoles; }`.
+- Seed roles and permissions via seeders and reference them by name in code and policies.
+- Enforce the "no elevation" rule in application logic and gates; Spatie helps with checks like `auth()->user()->hasRole('Admin')` and permission checks like `can('users.create')`.
+
+See `docs/RBAC_GUIDE.md` for the canonical permission naming convention, seeder example, role_templates mapping and migration guidance.

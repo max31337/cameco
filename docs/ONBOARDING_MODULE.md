@@ -14,44 +14,58 @@ The Onboarding Module automates and tracks all post-hire activities for new empl
 ---
 
 ## Database Schema (Onboarding Module)
+# Onboarding Tables
 
 ### onboarding_checklists
 ```sql
-- id (primary key)
-- name (string, required) # "Standard Office Onboarding", etc.
-- tasks_json (json) # Serialized list of tasks (e.g., ["Submit SSS", "Sign Contract", ...])
-- created_by (foreign key to users)
-- is_active (boolean, default true)
-- created_at, updated_at
+CREATE TABLE onboarding_checklists (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL, -- "Standard Office Onboarding", etc.
+    tasks_json JSON NOT NULL,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
 ```
 
 ### onboarding_tasks
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- checklist_id (foreign key to onboarding_checklists)
-- task (string)
-- status (enum: pending, in_progress, completed, skipped)
-- due_date (date, nullable)
-- completed_at (timestamp, nullable)
-- assigned_by (foreign key to users)
-- created_at, updated_at
+CREATE TABLE onboarding_tasks (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    checklist_id BIGINT UNSIGNED NOT NULL, -- FK -> onboarding_checklists.id
+    task VARCHAR(255) NOT NULL,
+    status ENUM('pending','in_progress','completed','skipped'),
+    due_date DATE NULL,
+    completed_at TIMESTAMP NULL,
+    assigned_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
 ```
 
 ### onboarding_documents
 ```sql
-- id (primary key)
-- employee_id (foreign key to employees)
-- document_type (string) # e.g., "SSS", "TIN", "Contract"
-- file_path (string)
-- status (enum: pending, submitted, verified, rejected)
-- submitted_at (timestamp, nullable)
-- verified_by (foreign key to users, nullable)
-- verified_at (timestamp, nullable)
-- created_at, updated_at
+CREATE TABLE onboarding_documents (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    document_type VARCHAR(100) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    status ENUM('pending','submitted','verified','rejected'),
+    submitted_at TIMESTAMP NULL,
+    verified_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    verified_at TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
 ```
+ - `appraisals`, `appraisal_scores`, `rehire_recommendations` — Appraisal & Rehire
+
 
 ---
+
+
 
 ## Key Workflows
 

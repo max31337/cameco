@@ -43,64 +43,130 @@ This access is disabled by default and can be enabled per client requirements. P
 ---
 
 ## Database Schema (Appraisal Module)
+# Appraisal & Rehire Tables
 
 ### appraisals
 ```sql
 CREATE TABLE appraisals (
-	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
-	cycle_id BIGINT UNSIGNED NOT NULL,    -- FK -> appraisal_cycles.id
-	status ENUM('draft','in_progress','completed','acknowledged') DEFAULT 'draft',
-	overall_score DECIMAL(5,2) NULL,
-	feedback TEXT NULL,
-	created_by BIGINT UNSIGNED NOT NULL,  -- FK -> users.id
-	updated_by BIGINT UNSIGNED NULL,      -- FK -> users.id
-	created_at TIMESTAMP,
-	updated_at TIMESTAMP,
-	deleted_at TIMESTAMP NULL
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    cycle_id BIGINT UNSIGNED NOT NULL,    -- FK -> appraisal_cycles.id
+    status ENUM('draft','in_progress','completed','acknowledged') DEFAULT 'draft',
+    overall_score DECIMAL(5,2) NULL,
+    feedback TEXT NULL,
+    created_by BIGINT UNSIGNED NOT NULL,  -- FK -> users.id
+    updated_by BIGINT UNSIGNED NULL,      -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (cycle_id) REFERENCES appraisal_cycles(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
 );
 ```
 
 ### appraisal_cycles
 ```sql
 CREATE TABLE appraisal_cycles (
-	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	name VARCHAR(100) NOT NULL, -- e.g. "2025 Annual Review"
-	start_date DATE NOT NULL,
-	end_date DATE NOT NULL,
-	status ENUM('open','closed') DEFAULT 'open',
-	created_by BIGINT UNSIGNED NOT NULL,  -- FK -> users.id
-	created_at TIMESTAMP,
-	updated_at TIMESTAMP
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status ENUM('open','closed') DEFAULT 'open',
+    created_by BIGINT UNSIGNED NOT NULL,  -- FK -> users.id
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
 );
 ```
 
 ### appraisal_scores
 ```sql
 CREATE TABLE appraisal_scores (
-	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	appraisal_id BIGINT UNSIGNED NOT NULL, -- FK -> appraisals.id
-	criterion VARCHAR(100) NOT NULL,       -- e.g. "Attendance", "Teamwork"
-	score DECIMAL(5,2) NOT NULL,
-	notes TEXT NULL,
-	created_at TIMESTAMP,
-	updated_at TIMESTAMP
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    appraisal_id BIGINT UNSIGNED NOT NULL, -- FK -> appraisals.id
+    criterion VARCHAR(100) NOT NULL,
+    score DECIMAL(5,2) NOT NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (appraisal_id) REFERENCES appraisals(id)
 );
 ```
 
 ### rehire_recommendations
 ```sql
 CREATE TABLE rehire_recommendations (
-	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
-	appraisal_id BIGINT UNSIGNED NOT NULL, -- FK -> appraisals.id
-	recommendation ENUM('eligible','not_recommended','review_required') DEFAULT 'review_required',
-	notes TEXT NULL,
-	created_at TIMESTAMP,
-	updated_at TIMESTAMP
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL, -- FK -> employees.id
+    appraisal_id BIGINT UNSIGNED NOT NULL, -- FK -> appraisals.id
+    recommendation ENUM('eligible','not_recommended','review_required') DEFAULT 'review_required',
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (appraisal_id) REFERENCES appraisals(id)
+);
+```
+### job_postings
+```sql
+CREATE TABLE job_postings (
+    title VARCHAR(255) NOT NULL,
+    department_id BIGINT UNSIGNED NULL, -- FK -> departments.id
+    description TEXT,
+    requirements TEXT,
+    status ENUM('open','closed','draft'),
+    posted_at TIMESTAMP,
+    closed_at TIMESTAMP NULL,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
 );
 ```
 
+### applications
+```sql
+CREATE TABLE applications (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    candidate_id BIGINT UNSIGNED NOT NULL, -- FK -> candidates.id
+    job_id BIGINT UNSIGNED NOT NULL, -- FK -> job_postings.id
+    status ENUM('submitted','shortlisted','interviewed','offered','hired','rejected','withdrawn'),
+    score DECIMAL(5,2) NULL,
+    resume_path VARCHAR(255) NULL,
+    cover_letter TEXT NULL,
+    applied_at TIMESTAMP,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### interviews
+```sql
+CREATE TABLE interviews (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    application_id BIGINT UNSIGNED NOT NULL, -- FK -> applications.id
+    scheduled_at TIMESTAMP,
+    interviewer_id BIGINT UNSIGNED NULL, -- FK -> users.id
+    feedback TEXT NULL,
+    score DECIMAL(5,2) NULL,
+    status ENUM('scheduled','completed','cancelled','no_show'),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### candidate_notes
+```sql
+CREATE TABLE candidate_notes (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    candidate_id BIGINT UNSIGNED NOT NULL, -- FK -> candidates.id
+    note TEXT,
+    created_by BIGINT UNSIGNED NULL, -- FK -> users.id
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
 ---
 
 ## Key Workflows
