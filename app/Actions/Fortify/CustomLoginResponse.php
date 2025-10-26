@@ -21,8 +21,10 @@ class CustomLoginResponse implements LoginResponseContract
         if ($user) {
             // Prefer Spatie's hasRole helper for role checks.
             if ($user->hasRole('Superadmin')) {
-                // append a query flag so the dashboard can open the welcome/setup modal after login
-                $redirect = route('superadmin.dashboard', ['welcome' => 1]);
+                // Redirect to the central /dashboard route. The DashboardController
+                // determines which dashboard to render and whether to show the modal
+                // (based on onboarding state). This keeps the URL canonical: /dashboard
+                $redirect = route('dashboard');
             }
             // Other roles may share the same default dashboard for now.
             // You could add more mappings here: Admin -> admin.dashboard, HR Manager -> hr.dashboard, etc.
