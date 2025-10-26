@@ -45,7 +45,12 @@ class DashboardController extends Controller
 
 		// Show modal if welcome query param present OR onboarding exists and is not completed
 		$showByQuery = (bool) $request->query('welcome', false);
-		$showByOnboarding = $onboarding && isset($onboarding->status) ? $onboarding->status !== 'completed' : false;
+		// Only show the modal when onboarding is actively pending or in_progress.
+		// If onboarding was skipped, do not show the modal for Superadmin.
+		$showByOnboarding = false;
+		if ($onboarding && isset($onboarding->status)) {
+			$showByOnboarding = in_array($onboarding->status, ['pending', 'in_progress'], true);
+		}
 
 		$data = [
 			'counts' => $counts,
