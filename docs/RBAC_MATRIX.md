@@ -59,3 +59,16 @@ Defines exactly who can edit what across the platform to prevent accidental full
 - Role assignment rules enforce no elevation without approval.
 - Immutable fields and critical actions require Superadmin justification.
 - Audit logging for all RBAC changes exists and is searchable.
+
+## Database schema snippet for roles table
+### roles
+```sql
+CREATE TABLE roles (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255) NULL,
+    is_system_role BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```

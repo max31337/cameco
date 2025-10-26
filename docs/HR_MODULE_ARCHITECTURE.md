@@ -91,6 +91,7 @@ External User Registration → Admin Review → Remain Unlinked
 
 ## Database Schema (HR Module)
 
+
 ### Core Employee Tables
 
 #### employees

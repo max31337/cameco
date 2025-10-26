@@ -133,3 +133,106 @@ Provide documented runbooks for common incidents, including:
 ---
 
 For any questions about SLA specifics or to request changes to targets, contact the Superadmin or Platform team.
+
+
+### Monitoring & SLA (system monitoring, alerts, uptime)
+```sql
+-- monitoring_checks: uptime probes and synthetic checks
+CREATE TABLE monitoring_checks (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    check_type ENUM('http','tcp','blackbox','ping') DEFAULT 'http',
+    interval_seconds INT DEFAULT 60,
+    enabled BOOLEAN DEFAULT TRUE,
+    last_checked_at TIMESTAMP NULL,
+    last_status VARCHAR(50) NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- system_metrics: time-series aggregated metrics (store summarized rows)
+CREATE TABLE system_metrics (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    metric_key VARCHAR(191) NOT NULL, -- e.g. "app.requests.p95", "db.connections"
+    metric_value DOUBLE NOT NULL,
+    recorded_at TIMESTAMP NOT NULL,
+    tags JSON NULL,
+    created_at TIMESTAMP,
+    INDEX(metric_key, recorded_at)
+);
+
+-- alerts: recorded alert events and statuses
+CREATE TABLE alerts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    monitoring_check_id BIGINT UNSIGNED NULL,
+    alert_key VARCHAR(191) NOT NULL,
+    severity ENUM('critical','high','medium','low') DEFAULT 'medium',
+    message TEXT NULL,
+    status ENUM('triggered','acknowledged','resolved') DEFAULT 'triggered',
+    triggered_at TIMESTAMP NOT NULL,
+    acknowledged_at TIMESTAMP NULL,
+    resolved_at TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- incident_reports: higher-level incidents created from alerts
+CREATE TABLE incident_reports (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    severity ENUM('critical','high','medium','low') DEFAULT 'medium',
+    started_at TIMESTAMP NOT NULL,
+    ended_at TIMESTAMP NULL,
+    status ENUM('open','mitigating','resolved') DEFAULT 'open',
+    created_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- maintenance_windows: scheduled maintenance periods
+CREATE TABLE maintenance_windows (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(191) NOT NULL,
+    description TEXT NULL,
+    starts_at TIMESTAMP NOT NULL,
+    ends_at TIMESTAMP NOT NULL,
+    created_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- sla_agreements: high-level SLA records and contact/emergency policies
+CREATE TABLE sla_agreements (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    description TEXT NULL,
+    uptime_target VARCHAR(50) NULL, -- e.g. '99.9%'
+    response_time_policy JSON NULL, -- e.g. {"critical":15, "high":60}
+    escalation_policy JSON NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- monitoring_integrations: external integrations (PagerDuty, Sentry, Prometheus endpoints)
+CREATE TABLE monitoring_integrations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    integration_type VARCHAR(100) NOT NULL,
+    config JSON NULL,
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- notification_subscriptions: who/where to notify for alerts
+CREATE TABLE notification_subscriptions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    target_type ENUM('user','email','slack','pager') DEFAULT 'email',
+    target_identifier VARCHAR(255) NOT NULL,
+    subscription_type VARCHAR(100) NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```

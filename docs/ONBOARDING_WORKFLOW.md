@@ -85,3 +85,31 @@ Any user who skips initialization (Admin, HR Manager, HR Staff) must complete th
 - HR Manager completes HR initialization checklist and can import initial employees once profile and system requirements are satisfied.
 - System prevents critical operations (e.g., payroll runs, bulk external integrations) until required system configuration and user profile completion are verified.
 - Audit logs include onboarding skip actions and profile completion timestamps.
+
+# Onboarding Workflow Tables (System-wide)
+
+### system_onboarding
+```sql
+CREATE TABLE system_onboarding (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    status ENUM('pending','in_progress','completed','skipped') DEFAULT 'pending',
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    skipped_at TIMESTAMP NULL,
+    skipped_by BIGINT UNSIGNED NULL,
+    checklist_json JSON NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### onboarding_skips
+```sql
+CREATE TABLE onboarding_skips (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    skipped_at TIMESTAMP NOT NULL,
+    reason TEXT NULL,
+    created_at TIMESTAMP
+);
+```

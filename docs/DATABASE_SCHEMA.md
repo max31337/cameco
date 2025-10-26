@@ -21,12 +21,14 @@
     - [Onboarding](#onboarding)
     - [Appraisal & Rehire](#appraisal--rehire)
     - [System & Support Tables](#system--support-tables)
+    - [Monitoring & SLA](#monitoring--sla)
+    - []
 3. [Foreign Key & Relationship Notes](#foreign-key--relationship-notes)
 4. [See Also: Module Docs](#see-also-module-docs)
 
 ---
 
-## Design Principles
+## Design Principles    
 
 - **Normalization (3NF)** for data integrity and maintainability
 - **Soft deletes** (`deleted_at`) for auditability using Laravel `SoftDeletes`
@@ -50,185 +52,14 @@
 - `audit_trails`, `activity_logs` — all critical changes, user lifecycle, RBAC changes
 - `user_audit_logs` — user-specific audit trail (creation, invite, update, role change, deactivate, delete)
 
-### HR Core ([HR_MODULE_ARCHITECTURE.md](HR_MODULE_ARCHITECTURE.md))
-- `employees` — employment instances/contracts (bidirectional link to `users`), all personal, employment, government, family, and emergency info
+### HR Core ([HR_MODULE_ARCHITECTURE.md](HR_MODULE_ARCHITECTURE.md), [HR_CORE_SCHEMA.md](HR_CORE_SCHEMA.md))
+- `employees` — employment instances/contracts (bidirectional link to `users`), personal identity via `profiles`, plus employment, family, and remarks tables
 - `employee_children` — dependents/children of employees
 - `employee_remarks` — employment events, status changes, disciplinary actions, rehire notes
 - `departments`, `teams`, `team_members` — org structure, department/production/security, team assignments
 - `leave_requests`, `leave_balances` — time-off workflows, multi-level approval, balance tracking
 - `document_templates`, `generated_documents`, `documents` — document management, contracts, certificates, leave slips
 - `notifications` — system/user notifications
-# HR Module Tables (Expanded)
-
-### employees
-```sql
-CREATE TABLE employees (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NULL, -- FK to users.id, nullable for unlinked employees
-    employee_number VARCHAR(20) NOT NULL UNIQUE, -- EMP-YYYY-NNNN
-    lastname VARCHAR(100) NOT NULL,
-    firstname VARCHAR(100) NOT NULL,
-    middlename VARCHAR(100) NULL,
-    address TEXT,
-    contact_number VARCHAR(30) NULL,
-    email_personal VARCHAR(191) NULL,
-    place_of_birth VARCHAR(100) NULL,
-    date_of_birth DATE NULL,
-    civil_status ENUM('single','married','divorced','widowed') NOT NULL,
-    gender ENUM('male','female') NOT NULL,
-    department_id BIGINT UNSIGNED NOT NULL,
-    position VARCHAR(100) NULL,
-    employment_type ENUM('regular','contractual','probationary','consultant') NOT NULL,
-    date_employed DATE NOT NULL,
-    date_regularized DATE NULL,
-    immediate_supervisor_id BIGINT UNSIGNED NULL, -- FK to employees.id
-    sss_no VARCHAR(30) UNIQUE NULL,
-    pagibig_no VARCHAR(30) UNIQUE NULL,
-    tin_no VARCHAR(30) UNIQUE NULL,
-    philhealth_no VARCHAR(30) UNIQUE NULL,
-    spouse_name VARCHAR(100) NULL,
-    spouse_dob DATE NULL,
-    spouse_occupation VARCHAR(100) NULL,
-    father_name VARCHAR(100) NULL,
-    father_dob DATE NULL,
-    mother_name VARCHAR(100) NULL,
-    mother_dob DATE NULL,
-    emergency_contact_name VARCHAR(100) NULL,
-    emergency_contact_relationship VARCHAR(50) NULL,
-    emergency_contact_number VARCHAR(30) NULL,
-    status ENUM('active','archived','terminated','on_leave','suspended') DEFAULT 'active',
-    termination_date DATE NULL,
-    termination_reason TEXT NULL,
-    created_by BIGINT UNSIGNED NOT NULL,
-    updated_by BIGINT UNSIGNED NOT NULL,
-    rehired_of BIGINT UNSIGNED NULL, -- FK to employees.id
-    rehire_recommendation ENUM('eligible','not_recommended','review_required') DEFAULT 'review_required',
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
-    deleted_at TIMESTAMP NULL
-);
-```
-
-### employee_children
-```sql
-CREATE TABLE employee_children (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    employee_id BIGINT UNSIGNED NOT NULL,
-    child_name VARCHAR(100) NOT NULL,
-    child_dob DATE NULL,
-    child_gender ENUM('male','female') NOT NULL,
-    is_student BOOLEAN DEFAULT FALSE,
-    school_name VARCHAR(100) NULL,
-    remarks TEXT NULL,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-### employee_remarks
-```sql
-CREATE TABLE employee_remarks (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    employee_id BIGINT UNSIGNED NOT NULL,
-    remark_type ENUM('rehired','end_of_contract','leave_of_absence','suspension','promotion','demotion','salary_adjustment','disciplinary_action') NOT NULL,
-    title VARCHAR(100) NOT NULL,
-    note TEXT,
-    effective_date DATE NOT NULL,
-    expiry_date DATE NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_by BIGINT UNSIGNED NOT NULL,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-### departments
-```sql
-CREATE TABLE departments (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(191) NOT NULL,
-    code VARCHAR(50) NULL UNIQUE,
-    description TEXT NULL,
-    department_type ENUM('office','production','security','other') DEFAULT 'office',
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
-    deleted_at TIMESTAMP NULL
-);
-```
-
-### leave_requests
-```sql
-CREATE TABLE leave_requests (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    employee_id BIGINT UNSIGNED NOT NULL,
-    leave_type ENUM('VL','SL','EL','ML','PL','BL','SP','LWOP') NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    days_count DECIMAL(4,2) NOT NULL,
-    half_day BOOLEAN DEFAULT FALSE,
-    reason TEXT,
-    status ENUM('draft','pending','approved','rejected','cancelled') DEFAULT 'draft',
-    submitted_at TIMESTAMP NULL,
-    approved_by BIGINT UNSIGNED NULL,
-    approved_at TIMESTAMP NULL,
-    rejection_reason TEXT NULL,
-    deducted_days DECIMAL(4,2) NULL,
-    remaining_balance DECIMAL(4,2) NULL,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-### leave_balances
-```sql
-CREATE TABLE leave_balances (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    employee_id BIGINT UNSIGNED NOT NULL,
-    year INT NOT NULL,
-    leave_type ENUM('VL','SL','EL','ML','PL','BL','SP') NOT NULL,
-    earned_days DECIMAL(4,2) NOT NULL,
-    used_days DECIMAL(4,2) DEFAULT 0,
-    remaining_days DECIMAL(4,2) NOT NULL,
-    carried_forward DECIMAL(4,2) DEFAULT 0,
-    expires_at DATE NULL,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-### document_templates
-```sql
-CREATE TABLE document_templates (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    type ENUM('employment_contract','job_offer','leave_slip','certificate_of_employment','excuse_slip','memorandum') NOT NULL,
-    template_path VARCHAR(255) NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    variables JSON NULL,
-    created_by BIGINT UNSIGNED NOT NULL,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-### generated_documents
-```sql
-CREATE TABLE generated_documents (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    employee_id BIGINT UNSIGNED NOT NULL,
-    template_id BIGINT UNSIGNED NOT NULL,
-    document_type VARCHAR(100) NOT NULL,
-    file_name VARCHAR(255) NOT NULL,
-    file_path VARCHAR(255) NOT NULL,
-    file_size INT NOT NULL,
-    generated_by BIGINT UNSIGNED NOT NULL,
-    generated_at TIMESTAMP NOT NULL,
-    is_archived BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
 
 ### Payroll ([PAYROLL_MODULE_ARCHITECTURE.md](PAYROLL_MODULE_ARCHITECTURE.md), [HR_PAYROLL_CONFIG.md](HR_PAYROLL_CONFIG.md))
 - `payroll_periods` — pay period definitions, status, summary fields, audit
@@ -276,8 +107,58 @@ CREATE TABLE generated_documents (
 - `onboarding_checklists`, `onboarding_tasks`, `onboarding_documents` — onboarding workflow
 - `system_onboarding` — system-wide onboarding status, setup progress
 - `onboarding_skips` — records of onboarding skip actions, user, timestamp, reason
-# User Management & RBAC Tables (Expanded)
 
+
+### Appraisal & Rehire ([APPRAISAL_MODULE.md](APPRAISAL_MODULE.md))
+- `appraisals` — performance review per employee per cycle, status, score, feedback
+- `appraisal_cycles` — review cycle definition, period, status
+- `appraisal_scores` — per-criterion score/notes per appraisal
+- `rehire_recommendations` — rehire eligibility per appraisal
+
+### System & Support Tables
+- `jobs`, `job_batches`, `failed_jobs`, `sessions`, `personal_access_tokens` — Laravel/system support
+ - `system_settings` — platform-level settings (Superadmin only)
+ - `company_settings` — company-level settings (Admin editable)
+ - `feature_toggles` — module enable/disable per company
+ - `module_access_controls` — module-level access assignments per role
+ - `statutory_rate_overrides` — company-level statutory rate adjustments
+ - `email_templates` — company and platform email templates
+ - `critical_action_audit_logs` — audit log for critical/immutable field changes and authorizations
+
+---
+
+## Foreign Key & Relationship Notes
+
+- All `*_id` columns reference their parent tables, with `ON DELETE CASCADE` for required relationships and `ON DELETE SET NULL` for optional ones.
+- All tables use `BIGINT UNSIGNED` for PKs and FKs.
+- All tables (except pure pivot tables) have `created_at`, `updated_at`, and most have `deleted_at` for soft deletes.
+- All tables use strict foreign key constraints.
+- All tables are designed for 3NF normalization and scalability.
+
+---
+
+## See Also: Module Docs
+
+- For full field lists, workflows, and business rules, see the module documentation in `/docs`:
+    - [USER_MANAGEMENT.md](USER_MANAGEMENT.md)
+    - [RBAC_MATRIX.md](RBAC_MATRIX.md)
+    - [HR_MODULE_ARCHITECTURE.md](HR_MODULE_ARCHITECTURE.md)
+    - [PAYROLL_MODULE_ARCHITECTURE.md](PAYROLL_MODULE_ARCHITECTURE.md)
+    - [HR_PAYROLL_CONFIG.md](HR_PAYROLL_CONFIG.md)
+    - [TIMEKEEPING_MODULE_ARCHITECTURE.md](TIMEKEEPING_MODULE_ARCHITECTURE.md)
+    - [WORKFORCE_MANAGEMENT_MODULE.md](WORKFORCE_MANAGEMENT_MODULE.md)
+    - [ATS_MODULE.md](ATS_MODULE.md)
+    - [ONBOARDING_MODULE.md](ONBOARDING_MODULE.md)
+    - [ONBOARDING_WORKFLOW.md](ONBOARDING_WORKFLOW.md)
+    - [APPRAISAL_MODULE.md](APPRAISAL_MODULE.md)
+
+---
+
+
+# [The detailed SQL table definitions follow below.]
+
+
+# User Management & RBAC Tables (Expanded)
 ### users
 ```sql
 CREATE TABLE users (
@@ -296,6 +177,7 @@ CREATE TABLE users (
     deleted_at TIMESTAMP NULL
 );
 ```
+- Authentication entity. Link to `profiles` via `profiles.user_id` if needed (one-to-one).
 
 ### user_invitations
 ```sql
@@ -328,22 +210,6 @@ CREATE TABLE profiles (
     contact_number VARCHAR(30) NULL,
     address TEXT NULL,
     emergency_contact VARCHAR(100) NULL,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-### government_ids
-```sql
-CREATE TABLE government_ids (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    profile_id BIGINT UNSIGNED NOT NULL,
-    sss_number VARCHAR(20) NULL,
-    tin_number VARCHAR(20) NULL,
-    philhealth_number VARCHAR(20) NULL,
-    pagibig_number VARCHAR(20) NULL,
-    passport_number VARCHAR(20) NULL,
-    drivers_license VARCHAR(20) NULL,
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
@@ -448,55 +314,6 @@ CREATE TABLE onboarding_skips (
     created_at TIMESTAMP
 );
 ```
-
-### Appraisal & Rehire ([APPRAISAL_MODULE.md](APPRAISAL_MODULE.md))
-- `appraisals` — performance review per employee per cycle, status, score, feedback
-- `appraisal_cycles` — review cycle definition, period, status
-- `appraisal_scores` — per-criterion score/notes per appraisal
-- `rehire_recommendations` — rehire eligibility per appraisal
-
-### System & Support Tables
-- `jobs`, `job_batches`, `failed_jobs`, `sessions`, `personal_access_tokens` — Laravel/system support
- - `system_settings` — platform-level settings (Superadmin only)
- - `company_settings` — company-level settings (Admin editable)
- - `feature_toggles` — module enable/disable per company
- - `module_access_controls` — module-level access assignments per role
- - `statutory_rate_overrides` — company-level statutory rate adjustments
- - `email_templates` — company and platform email templates
- - `critical_action_audit_logs` — audit log for critical/immutable field changes and authorizations
-
----
-
-## Foreign Key & Relationship Notes
-
-- All `*_id` columns reference their parent tables, with `ON DELETE CASCADE` for required relationships and `ON DELETE SET NULL` for optional ones.
-- All tables use `BIGINT UNSIGNED` for PKs and FKs.
-- All tables (except pure pivot tables) have `created_at`, `updated_at`, and most have `deleted_at` for soft deletes.
-- All tables use strict foreign key constraints.
-- All tables are designed for 3NF normalization and scalability.
-
----
-
-## See Also: Module Docs
-
-- For full field lists, workflows, and business rules, see the module documentation in `/docs`:
-    - [USER_MANAGEMENT.md](USER_MANAGEMENT.md)
-    - [RBAC_MATRIX.md](RBAC_MATRIX.md)
-    - [HR_MODULE_ARCHITECTURE.md](HR_MODULE_ARCHITECTURE.md)
-    - [PAYROLL_MODULE_ARCHITECTURE.md](PAYROLL_MODULE_ARCHITECTURE.md)
-    - [HR_PAYROLL_CONFIG.md](HR_PAYROLL_CONFIG.md)
-    - [TIMEKEEPING_MODULE_ARCHITECTURE.md](TIMEKEEPING_MODULE_ARCHITECTURE.md)
-    - [WORKFORCE_MANAGEMENT_MODULE.md](WORKFORCE_MANAGEMENT_MODULE.md)
-    - [ATS_MODULE.md](ATS_MODULE.md)
-    - [ONBOARDING_MODULE.md](ONBOARDING_MODULE.md)
-    - [ONBOARDING_WORKFLOW.md](ONBOARDING_WORKFLOW.md)
-    - [APPRAISAL_MODULE.md](APPRAISAL_MODULE.md)
-
----
-
-
-# [The detailed SQL table definitions follow below.]
-
 # System & Configuration Tables
 
 ### system_settings
@@ -714,7 +531,6 @@ CREATE TABLE critical_action_audit_logs (
 ## Payroll Module Tables (Expanded for Philippine Compliance)
 
 ### payroll_periods
-```sql
 ### salary_component_versions
 ```sql
 CREATE TABLE salary_component_versions (
@@ -812,6 +628,8 @@ CREATE TABLE payroll_config_audit_logs (
     FOREIGN KEY (changed_by) REFERENCES users(id)
 );
 ```
+### payroll_periods
+```sql
 CREATE TABLE payroll_periods (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -2180,54 +1998,23 @@ foreach ($permissions as $permission) {
 
 
 
-## HR Module Tables
+## HR Module Tables (see HR_MODULE_ARCHITECTURE.md for full schema and details)
 ### employees
 ```sql
 CREATE TABLE employees (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NULL,
+    profile_id BIGINT UNSIGNED NOT NULL, -- Personal information lives in profiles; employees reference profiles
     employee_number VARCHAR(50) UNIQUE NOT NULL,
-    lastname VARCHAR(255) NOT NULL,
-    firstname VARCHAR(255) NOT NULL,
-    middlename VARCHAR(255) NULL,
-    
-    -- Personal Information
-    address TEXT NULL,
-    contact_number VARCHAR(50) NULL,
-    email_personal VARCHAR(255) NULL,
-    place_of_birth VARCHAR(255) NULL,
-    date_of_birth DATE NULL,
-    civil_status ENUM('single', 'married', 'divorced', 'widowed') NULL,
-    gender ENUM('male', 'female') NULL,
-    
-    -- Employment Information
+
+    -- Employment Information (keep employment-only fields here)
     department_id BIGINT UNSIGNED NULL,
     position VARCHAR(255) NULL,
     employment_type ENUM('regular', 'contractual', 'probationary', 'consultant') NULL,
     date_employed DATE NULL,
     date_regularized DATE NULL,
     immediate_supervisor_id BIGINT UNSIGNED NULL,
-    
-    -- Government IDs
-    sss_no VARCHAR(50) UNIQUE NULL,
-    pagibig_no VARCHAR(50) UNIQUE NULL,
-    tin_no VARCHAR(50) UNIQUE NULL,
-    philhealth_no VARCHAR(50) UNIQUE NULL,
-    
-    -- Family Information
-    spouse_name VARCHAR(255) NULL,
-    spouse_dob DATE NULL,
-    spouse_occupation VARCHAR(255) NULL,
-    father_name VARCHAR(255) NULL,
-    father_dob DATE NULL,
-    mother_name VARCHAR(255) NULL,
-    mother_dob DATE NULL,
-    
-    -- Emergency Contact
-    emergency_contact_name VARCHAR(255) NULL,
-    emergency_contact_relationship VARCHAR(255) NULL,
-    emergency_contact_number VARCHAR(50) NULL,
-    
+
     -- System Fields
     status ENUM('active', 'archived', 'terminated', 'on_leave', 'suspended') DEFAULT 'active',
     termination_date DATE NULL,
@@ -2237,21 +2024,42 @@ CREATE TABLE employees (
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     deleted_at TIMESTAMP NULL,
-    
+
     INDEX idx_employees_user_id (user_id),
+    INDEX idx_employees_profile_id (profile_id),
     INDEX idx_employees_employee_number (employee_number),
     INDEX idx_employees_department_id (department_id),
     INDEX idx_employees_supervisor_id (immediate_supervisor_id),
     INDEX idx_employees_status (status),
     INDEX idx_employees_employment_type (employment_type),
-    
+
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE RESTRICT,
     FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
     FOREIGN KEY (immediate_supervisor_id) REFERENCES employees(id) ON DELETE SET NULL,
     FOREIGN KEY (created_by) REFERENCES users(id),
     FOREIGN KEY (updated_by) REFERENCES users(id)
 );
 ```
+
+Note: Employees do not store personal identity fields (name, DOB, contact, address). Those live in the profiles table. Link employees.profile_id to profiles.id. This separation allows a single person identity to be reused across modules (User Management, ATS) and keeps employment data isolated.
+
+### government_ids
+```sql
+CREATE TABLE government_ids (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    profile_id BIGINT UNSIGNED NOT NULL,
+    sss_number VARCHAR(20) NULL,
+    tin_number VARCHAR(20) NULL,
+    philhealth_number VARCHAR(20) NULL,
+    pagibig_number VARCHAR(20) NULL,
+    passport_number VARCHAR(20) NULL,
+    drivers_license VARCHAR(20) NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
 
 ### employee_children
 ```sql
@@ -2295,23 +2103,6 @@ CREATE TABLE employee_remarks (
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 ```
-
-
-## `users`
-```sql
-CREATE TABLE users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-username VARCHAR(100) UNIQUE NULL
-email VARCHAR(191) UNIQUE NOT NULL
-password VARCHAR(255) NOT NULL
-is_active BOOLEAN DEFAULT TRUE
-created_at TIMESTAMP
-updated_at TIMESTAMP
-deleted_at TIMESTAMP NULL
-);
-```
-- Authentication entity. Link to `profiles` via `profiles.user_id` if needed (one-to-one).
-
 
 ### leave_balances
 ```sql
@@ -3002,68 +2793,6 @@ CREATE TABLE activity_log (
     INDEX activity_log_causer (causer_type, causer_id)
 );
 ```
-
----
-
-## Foreign Key Relationships Summary
-
-### Key Relationships
-1. **users ↔ employees**: Bidirectional optional relationship
-2. **employees → departments**: Employee belongs to department
-3. **employees → employees**: Self-referencing for supervisors
-4. **leave_requests → employees**: Employee has many leave requests
-5. **attendance_events → employees**: Employee has many attendance events
-6. **payroll_calculations → employees**: Employee has many payroll calculations
-7. **daily_attendance_summary → work_schedules**: Attendance linked to schedules
-8. **employee_payroll_info → employees**: Payroll settings per employee
-
-### Cross-Module Dependencies
-- **HR → Foundation**: employees references users, departments
-- **Timekeeping → HR**: attendance_events references employees
-- **Payroll → HR**: payroll_calculations references employees
-- **Payroll → Timekeeping**: Uses attendance data for calculations
-
----
-
-## Indexing Strategy
-
-### Performance Indexes
-- **Foreign Key Indexes**: All foreign key columns indexed
-- **Date Indexes**: All date columns for reporting queries
-- **Status Indexes**: Enum status columns for filtering
-- **Unique Constraints**: Employee numbers, government IDs, email addresses
-- **Composite Indexes**: Employee+Date combinations for time-series data
-
-### Query Optimization
-- **Partitioning**: Consider partitioning large tables by date/year
-- **Archiving**: Implement data archiving strategy for old records
-- **Caching**: Cache frequently accessed lookup data
-- **Read Replicas**: Consider read replicas for reporting queries
-
----
-
-## Data Migration Notes
-
-### Seeding Order
-1. **Foundation**: users, roles, permissions, departments
-2. **HR**: employees, leave_balances, document_templates
-3. **Timekeeping**: work_schedules, employee_schedules
-4. **Payroll**: salary_components, government_contribution_rates, tax_brackets
-
-### Migration Dependencies
-- Create base Laravel tables first (users, teams, sessions, etc.)
-- Install Spatie Permission tables
-- Create departments before employees
-- Create employees before module-specific tables
-- Seed configuration tables before operational tables
-
----
-
-**Schema Version**: 1.0  
-**Last Updated**: October 23, 2025  
-**Total Tables**: 45 tables  
-**Estimated Storage**: ~50MB for 1000 employees with 2 years of data
-
 # Workforce Management Tables (Expanded)
 
 ### workforce_schedules
@@ -3309,3 +3038,64 @@ CREATE TABLE overtime_requests (
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 ```
+
+---
+
+## Foreign Key Relationships Summary
+
+### Key Relationships
+1. **users ↔ employees**: Bidirectional optional relationship
+2. **employees → departments**: Employee belongs to department
+3. **employees → employees**: Self-referencing for supervisors
+4. **leave_requests → employees**: Employee has many leave requests
+5. **attendance_events → employees**: Employee has many attendance events
+6. **payroll_calculations → employees**: Employee has many payroll calculations
+7. **daily_attendance_summary → work_schedules**: Attendance linked to schedules
+8. **employee_payroll_info → employees**: Payroll settings per employee
+
+### Cross-Module Dependencies
+- **HR → Foundation**: employees references users, departments
+- **Timekeeping → HR**: attendance_events references employees
+- **Payroll → HR**: payroll_calculations references employees
+- **Payroll → Timekeeping**: Uses attendance data for calculations
+
+---
+
+## Indexing Strategy
+
+### Performance Indexes
+- **Foreign Key Indexes**: All foreign key columns indexed
+- **Date Indexes**: All date columns for reporting queries
+- **Status Indexes**: Enum status columns for filtering
+- **Unique Constraints**: Employee numbers, government IDs, email addresses
+- **Composite Indexes**: Employee+Date combinations for time-series data
+
+### Query Optimization
+- **Partitioning**: Consider partitioning large tables by date/year
+- **Archiving**: Implement data archiving strategy for old records
+- **Caching**: Cache frequently accessed lookup data
+- **Read Replicas**: Consider read replicas for reporting queries
+
+---
+
+## Data Migration Notes
+
+### Seeding Order
+1. **Foundation**: users, roles, permissions, departments
+2. **HR**: employees, leave_balances, document_templates
+3. **Timekeeping**: work_schedules, employee_schedules
+4. **Payroll**: salary_components, government_contribution_rates, tax_brackets
+
+### Migration Dependencies
+- Create base Laravel tables first (users, teams, sessions, etc.)
+- Install Spatie Permission tables
+- Create departments before employees
+- Create employees before module-specific tables
+- Seed configuration tables before operational tables
+
+---
+
+**Schema Version**: 1.0  
+**Last Updated**: October 23, 2025  
+**Total Tables**: 45 tables  
+**Estimated Storage**: ~50MB for 1000 employees with 2 years of data

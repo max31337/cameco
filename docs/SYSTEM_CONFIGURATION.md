@@ -38,3 +38,19 @@ Company-wide configuration and system-level settings. Clarifies which roles can 
 - Admin controls company-level settings and can enable/disable modules for the company.
 - Changes to immutable fields and critical actions are auditable and require required authorizations.
 - Role permissions and overrides are clearly documented and enforced.
+
+# System & Configuration Tables
+
+### system_settings
+```sql
+CREATE TABLE system_settings (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    key VARCHAR(191) NOT NULL UNIQUE,
+    value TEXT NOT NULL,
+    description VARCHAR(255) NULL,
+    updated_by BIGINT UNSIGNED NOT NULL, -- FK -> users.id
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+```
