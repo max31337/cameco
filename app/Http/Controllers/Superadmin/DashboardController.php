@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Repositories\SystemOnboardingRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -13,14 +17,43 @@ class DashboardController extends Controller
 	 */
 	public function index(Request $request)
 	{
-		// Minimal payload — teams can extend with stats or counts as needed.
+		// Compute real values for a single-organization app.
+		$counts = [
+			'users' => User::count(),
+		];
+
+		// Read company name from a simple settings table if present. The codebase sometimes uses 'settings' for key/value.
+		$companyName = null;
+		try {
+			if (Schema::hasTable('settings')) {
+				$companyName = DB::table('settings')->where('key', 'company.name')->value('value');
+			}
+		} catch (\Exception $e) {
+			$companyName = null;
+		}
+
+		// Get onboarding status from repository if available
+		$repo = app(SystemOnboardingRepository::class);
+		$onboarding = null;
+		try {
+			$onboarding = $repo->findLatest();
+		} catch (\Exception $e) {
+			$onboarding = null;
+		}
+
+		$onboardingStatus = $onboarding->status ?? 'not_configured';
+
+		// Show modal if welcome query param present OR onboarding exists and is not completed
+		$showByQuery = (bool) $request->query('welcome', false);
+		$showByOnboarding = $onboarding && isset($onboarding->status) ? $onboarding->status !== 'completed' : false;
+
 		$data = [
-			'counts' => [
-				'users' => 0,
-				'companies' => 0,
+			'counts' => $counts,
+			'company' => [
+				'name' => $companyName,
 			],
-			// If the login response appended ?welcome=1 we open a small onboarding/setup modal for Superadmins.
-			'showSetupModal' => (bool) $request->query('welcome', false),
+			'onboardingStatus' => $onboardingStatus,
+			'showSetupModal' => $showByQuery || $showByOnboarding,
 			'welcomeText' => 'Welcome to the Superadmin dashboard — manage platform settings and users from here.',
 		];
 
