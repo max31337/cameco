@@ -1,67 +1,27 @@
 <?php
 
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\AdminProfileController;
-use App\Http\Controllers\DashboardController;
+use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+    return Inertia::render('welcome', [
+        'canRegister' => Features::enabled(Features::registration()),
     ]);
+})->name('home');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('dashboard', function () {
+        return Inertia::render('dashboard');
+    })->name('dashboard');
 });
 
-// Admin profile completion routes (before middleware that requires employee records)
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
-    Route::get('/admin/profile/complete', [AdminProfileController::class, 'show'])
-        ->name('admin.profile.complete');
-    Route::post('/admin/profile/complete', [AdminProfileController::class, 'store'])
-        ->name('admin.profile.store');
-    Route::post('/admin/profile/skip', [AdminProfileController::class, 'skip'])
-        ->name('admin.profile.skip');
-    Route::post('/admin/profile/save-progress', [AdminProfileController::class, 'saveProgress'])
-        ->name('admin.profile.save-progress');
-});
+require __DIR__.'/settings.php';
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'user.active', // Ensure user account is active
-    'admin.has.employee', // Redirect admins without employee records
-])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
-    // Admin Pages
-    Route::get('/admin/employees', function () {
-        return Inertia::render('Admin/Employees');
-    })->name('admin.employees');
-    
-    Route::get('/admin/timekeeping', function () {
-        return Inertia::render('Admin/Timekeeping');
-    })->name('admin.timekeeping');
-    
-    Route::get('/admin/payroll', function () {
-        return Inertia::render('Admin/Payroll');
-    })->name('admin.payroll');
-    
-    Route::get('/admin/reports', function () {
-        return Inertia::render('Admin/Reports');
-    })->name('admin.reports');
-    
-    Route::get('/admin/visitors', function () {
-        return Inertia::render('Admin/Visitors');
-    })->name('admin.visitors');
-    
-    Route::get('/admin/performance', function () {
-        return Inertia::render('Admin/Performance');
-    })->name('admin.performance');
+use App\Http\Controllers\SystemOnboarding\SuperadminOnboarding;
+
+// Superadmin onboarding endpoints (use existing auth)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/superadmin/onboarding/start', [SuperadminOnboarding::class, 'start']);
+    Route::post('/superadmin/onboarding/skip', [SuperadminOnboarding::class, 'skip']);
 });

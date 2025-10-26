@@ -13,29 +13,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create departments first (required for employee relationships)
-        $this->call([
-            DepartmentSeeder::class,
-        ]);
+        // User::factory(10)->create();
 
-        // Create admin user first (required for approval relationships)
-        $this->call([
-            AdminUserSeeder::class,
-        ]);
-
-        // Create test users for different approval states
-        $this->call([
-            ApprovedUserSeeder::class,
-            RejectedUserSeeder::class,
-        ]);
-
-        // User::factory(10)->withPersonalTeam()->create();
-
-        // Optionally create test user with pending status
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        //     'status' => 'pending',
-        // ]);
+        User::firstOrCreate(
+            ['email' => 'superadmin@cameco.com'],
+            [
+                'name' => 'Test User',
+                'username' => 'superadmin',
+                'password' => 'password',
+                'email_verified_at' => now(),
+            ]
+        );
     }
 }
