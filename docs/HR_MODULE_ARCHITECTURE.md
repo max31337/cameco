@@ -276,6 +276,21 @@ External User Registration → Admin Review → Remain Unlinked
 **Security Department:**
 - Security/Guards - Code: SECURITY
 
+#### departments (table definition)
+```sql
+CREATE TABLE departments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL,
+    code VARCHAR(50) NULL UNIQUE,
+    description TEXT NULL,
+    department_type ENUM('office','production','security','other') DEFAULT 'office',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+```
+
 ### Phase 2: Repository Layer (Week 1-2)
 - [ ] Create repository interfaces (Employee, Leave, Document)
 - [ ] Implement Eloquent repositories with advanced querying

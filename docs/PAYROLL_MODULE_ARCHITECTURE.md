@@ -6,6 +6,7 @@ The Payroll Module handles salary calculations, deductions, benefits, and compre
 ## Module Dependencies
 - **HR Module**: Employee records, leave requests, employment details, 201 files
 - **Timekeeping Module**: Attendance data, overtime hours, work schedules, biometric logs
+ - **Timekeeping Module**: Attendance data, overtime hours, work schedules, RFID (ID) logs
 - **Foundation**: User management, roles, permissions, audit logging
 - 🔄 **Integrates with**: Philippine government systems (BIR eFPS, SSS eR3, PhilHealth EPRS, Pag-IBIG eSRS)
 - **Workforce Management**: For shift-based pay, rotation premiums, night differential

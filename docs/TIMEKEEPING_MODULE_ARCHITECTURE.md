@@ -452,7 +452,7 @@ EMP-2025-0002,2025-10-06,08:15,17:30,12:00,13:00,"Late arrival"
 - **Mobile Time Entry**: Mobile app for remote time recording
 - **Geolocation**: GPS validation for remote work attendance
 - **Photo Verification**: Photo capture during time entry
-- **Biometric Integration**: Future integration with fingerprint devices
+ - **RFID Integration**: Future integration with RFID card readers (ID badges)
 
 ### Analytics Enhancements
 - **Predictive Analytics**: Predict attendance patterns
