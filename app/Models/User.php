@@ -7,13 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Models\Role;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -55,20 +54,12 @@ class User extends Authenticatable
     /**
      * Roles relationship
      */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'role_user');
-    }
-
     /**
      * Check if user has superadmin role.
      */
     public function isSuperadmin(): bool
     {
-        if ($this->relationLoaded('roles')) {
-            return $this->roles->contains('name', 'superadmin');
-        }
-
-        return $this->roles()->where('name', 'superadmin')->exists();
+        // Use Spatie's hasRole helper for a consistent check (case-insensitive support can be added if needed)
+        return $this->hasRole('Superadmin');
     }
 }

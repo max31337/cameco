@@ -24,5 +24,19 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+        
+        // Seed roles and permissions (Spatie) and assign Superadmin role to the seeded user
+        if (class_exists(\Database\Seeders\RolesAndPermissionsSeeder::class)) {
+            $this->call(\Database\Seeders\RolesAndPermissionsSeeder::class);
+
+            $user = User::where('email', 'superadmin@cameco.com')->first();
+            if ($user && method_exists($user, 'assignRole')) {
+                try {
+                    $user->assignRole('Superadmin');
+                } catch (\Throwable $e) {
+                    // ignore assignment errors during seeding
+                }
+            }
+        }
     }
 }

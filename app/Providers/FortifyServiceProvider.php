@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use App\Actions\Fortify\CustomLoginResponse;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -20,7 +22,8 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bind custom Fortify login response to perform role-aware redirects
+        $this->app->singleton(LoginResponseContract::class, CustomLoginResponse::class);
     }
 
     /**

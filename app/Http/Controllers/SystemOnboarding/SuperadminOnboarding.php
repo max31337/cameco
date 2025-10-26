@@ -37,6 +37,11 @@ class SuperadminOnboarding extends Controller
 
 		$id = $this->service->start($validator->validated(), $user->id);
 
+		// If the request came from Inertia, return a redirect so Inertia can handle it
+		if ($request->header('X-Inertia')) {
+			return redirect()->route('superadmin.dashboard');
+		}
+
 		return response()->json(['message' => 'Onboarding started', 'id' => $id], 201);
 	}
 
@@ -56,6 +61,11 @@ class SuperadminOnboarding extends Controller
 		}
 
 		$id = $this->service->skip($user->id, $validator->validated()['reason'] ?? null);
+
+		// If the request came from Inertia, redirect back to the dashboard so Inertia receives a proper response
+		if ($request->header('X-Inertia')) {
+			return redirect()->route('superadmin.dashboard');
+		}
 
 		return response()->json(['message' => 'Onboarding skipped', 'id' => $id], 201);
 	}

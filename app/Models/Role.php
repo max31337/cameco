@@ -3,20 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+class Role extends SpatieRole
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'is_system_role'];
+    // keep any project-specific attributes but include guard_name for Spatie compatibility
+    protected $fillable = ['name', 'guard_name', 'description', 'is_system_role'];
 
     protected $casts = [
         'is_system_role' => 'boolean',
     ];
-
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'role_user');
-    }
 }

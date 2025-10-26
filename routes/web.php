@@ -14,6 +14,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    // Superadmin-specific dashboard
+    Route::get('superadmin/dashboard', [\App\Http\Controllers\Superadmin\DashboardController::class, 'index'])
+        ->name('superadmin.dashboard')
+        ->middleware(\App\Http\Middleware\EnsureSuperadmin::class);
 });
 
 require __DIR__.'/settings.php';
