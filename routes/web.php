@@ -17,10 +17,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/settings.php';
 
-use App\Http\Controllers\SystemOnboarding\SuperadminOnboarding;
+use App\Http\Controllers\System\SystemOnboarding;
 
-// Superadmin onboarding endpoints (use existing auth)
+// System onboarding endpoints (use existing auth)
 Route::middleware(['auth'])->group(function () {
-    Route::post('/superadmin/onboarding/start', [SuperadminOnboarding::class, 'start']);
-    Route::post('/superadmin/onboarding/skip', [SuperadminOnboarding::class, 'skip']);
+    Route::post('/system/onboarding/start', [SystemOnboarding::class, 'start']);
+    Route::post('/system/onboarding/skip', [SystemOnboarding::class, 'skip']);
+    Route::post('/system/onboarding/complete', [SystemOnboarding::class, 'complete'])->name('system.onboarding.complete');
+
+    // Per-user onboarding endpoints
+    Route::get('/user/onboarding', [\App\Http\Controllers\UserOnboardingController::class, 'show'])->name('user.onboarding.show');
+    Route::patch('/user/onboarding', [\App\Http\Controllers\UserOnboardingController::class, 'update'])->name('user.onboarding.update');
+    Route::post('/user/onboarding/skip', [\App\Http\Controllers\UserOnboardingController::class, 'skip'])->name('user.onboarding.skip');
 });

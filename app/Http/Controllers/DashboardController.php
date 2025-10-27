@@ -22,11 +22,28 @@ class DashboardController extends Controller
         // and return them here.
         if ($user->hasRole('Superadmin')) {
             // Delegate to the Superadmin dashboard controller to keep behavior consistent
-            return app(\App\Http\Controllers\Superadmin\DashboardController::class)->index($request);
+            $systemController = '\App\Http\Controllers\System\DashboardController';
+            if (class_exists($systemController)) {
+                return app($systemController)->index($request);
+            }
+            // Fallback if the controller isn't available.
+            abort(404, 'System dashboard controller not found.');
         }
 
-        // Admin/HR/other roles: render the default app dashboard for now.
-        // You can add role-specific pages like 'Admin/Dashboard' and return them here.
+        if ($user->hasAnyRole(['HR','HR Manager','HR Staff'])) {
+            // Delegate to the HR dashboard controller. That controller should render the Inertia
+            // component "HR/Dashboard".
+            $hrController = '\App\Http\Controllers\HR\DashboardController';
+            if (class_exists($hrController)) {
+                return app($hrController)->index($request);
+            }
+            // Fallback if the controller isn't available.
+            abort(404, 'HR dashboard controller not found.');
+        }
+
+        // Default fallback: redirect to a generic home/dashboard route
+        // Render the generic dashboard Inertia page instead of redirecting to the same route
+        // (which caused a recursive redirect and a 404 inside the client modal).
         return Inertia::render('dashboard');
     }
 }

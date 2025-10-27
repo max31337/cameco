@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Superadmin;
+namespace App\Http\Controllers\System;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
+use App\Services\UserOnboardingService;
 
 class DashboardController extends Controller
 {
@@ -43,13 +44,28 @@ class DashboardController extends Controller
 
 		$onboardingStatus = $onboarding->status ?? 'not_configured';
 
-		// Show modal if welcome query param present OR onboarding exists and is not completed
-		$showByQuery = (bool) $request->query('welcome', false);
-		// Only show the modal when onboarding is actively pending or in_progress.
-		// If onboarding was skipped, do not show the modal for Superadmin.
-		$showByOnboarding = false;
-		if ($onboarding && isset($onboarding->status)) {
-			$showByOnboarding = in_array($onboarding->status, ['pending', 'in_progress'], true);
+		// Per-user onboarding (profile) — show modal when user's onboarding is not skipped
+		$userOnboarding = null;
+		try {
+			$userOnboarding = app(UserOnboardingService::class)->getForUser($request->user()->id);
+		} catch (\Throwable $e) {
+			$userOnboarding = null;
+		}
+
+		$showByUserOnboarding = false;
+		if ($userOnboarding && isset($userOnboarding->status)) {
+			$showByUserOnboarding = $userOnboarding->status !== 'skipped';
+		}
+
+		// Determine whether the current user may complete system onboarding
+		$canCompleteOnboarding = false;
+		try {
+			$u = $request->user();
+			if ($u) {
+				$canCompleteOnboarding = $u->hasRole('Superadmin') || $u->hasRole('Admin') || $u->can('system.onboarding.manage');
+			}
+		} catch (\Throwable $e) {
+			$canCompleteOnboarding = false;
 		}
 
 		$data = [
@@ -57,11 +73,14 @@ class DashboardController extends Controller
 			'company' => [
 				'name' => $companyName,
 			],
+			'systemOnboarding' => $onboarding,
+			'userOnboarding' => $userOnboarding,
 			'onboardingStatus' => $onboardingStatus,
-			'showSetupModal' => $showByQuery || $showByOnboarding,
+			'showSetupModal' => $showByUserOnboarding,
+			'canCompleteOnboarding' => $canCompleteOnboarding,
 			'welcomeText' => 'Welcome to the Superadmin dashboard — manage platform settings and users from here.',
 		];
 
-		return Inertia::render('Superadmin/Dashboard', $data);
+		return Inertia::render('System/Dashboard', $data);
 	}
 }
