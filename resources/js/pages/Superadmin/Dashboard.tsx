@@ -116,7 +116,7 @@ export default function SuperadminDashboard({ counts, company, onboardingStatus,
                                         onClick={() => {
                                             // Submit start onboarding
                                             setErrors({});
-                                            router.post('/superadmin/onboarding/start', form, {
+                                            router.post('/system/onboarding/start', form, {
                                                 onSuccess: () => setOpen(false),
                                                 onError: (errs: Record<string, string | string[]>) => setErrors(errs),
                                             });
@@ -137,7 +137,7 @@ export default function SuperadminDashboard({ counts, company, onboardingStatus,
                                 variant="ghost"
                                 onClick={() => {
                                     // Call skip endpoint and close modal on success
-                                    router.post('/superadmin/onboarding/skip', {}, {
+                                    router.post('/system/onboarding/skip', {}, {
                                         onSuccess: () => setOpen(false),
                                     });
                                 }}

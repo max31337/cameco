@@ -52,9 +52,15 @@ class DashboardController extends Controller
 			$userOnboarding = null;
 		}
 
+		// Show the setup modal when the user hasn't skipped onboarding.
+		// Treat a missing per-user onboarding row as the user not having completed onboarding
+		// so the modal will appear for freshly-migrated environments.
 		$showByUserOnboarding = false;
 		if ($userOnboarding && isset($userOnboarding->status)) {
-			$showByUserOnboarding = $userOnboarding->status !== 'skipped';
+			$showByUserOnboarding = in_array($userOnboarding->status, ['pending', 'in_progress'], true);
+		} else {
+			// no onboarding record — treat as new user and show the modal
+			$showByUserOnboarding = true;
 		}
 
 		// Determine whether the current user may complete system onboarding

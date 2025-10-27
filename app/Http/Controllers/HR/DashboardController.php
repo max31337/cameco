@@ -29,9 +29,13 @@ class DashboardController extends Controller
             $userOnboarding = null;
         }
 
+        // Show the setup modal for new users or when onboarding is pending/in_progress.
         $showModal = false;
         if ($userOnboarding && isset($userOnboarding->status)) {
-            $showModal = $userOnboarding->status !== 'skipped';
+            $showModal = in_array($userOnboarding->status, ['pending', 'in_progress'], true);
+        } else {
+            // No onboarding record — show modal for freshly-created accounts
+            $showModal = true;
         }
 
         $canCompleteOnboarding = false;
