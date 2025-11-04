@@ -79,7 +79,7 @@ app/
 │   └── Shared/              # Cross-module Models (User, Department, etc.)
 │
 ├── Repositories/
-│   ├── Interfaces/
+│   ├── Contracts/
 │   │   ├── HR/              # HR Repository Interfaces
 │   │   ├── Timekeeping/     # Timekeeping Repository Interfaces
 │   │   └── Payroll/         # Payroll Repository Interfaces
@@ -335,8 +335,8 @@ composer require spatie/laravel-activitylog
 - **Models**: Singular, PascalCase (Employee, LeaveRequest)
 - **Controllers**: PascalCase with Controller suffix (EmployeeController)
 - **Services**: PascalCase with Service suffix (EmployeeService)
-- **Repositories**: PascalCase with Repository suffix (EloquentEmployeeRepository)
-- **Interfaces**: PascalCase with Interface suffix (EmployeeRepositoryInterface)
+- **Eloquent**: PascalCase with Repository suffix (EloquentEmployeeRepository)
+- **Contracts**: PascalCase with Interface suffix (EmployeeRepositoryInterface)
 - **Actions**: PascalCase with Action suffix (GenerateContractAction)
 
 ### Error Handling Strategy
