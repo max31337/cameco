@@ -1,4 +1,5 @@
 <?php
+// Legacy SystemOnBoardingService see app/Services/System for refactored workflow
 
 namespace App\Services;
 
