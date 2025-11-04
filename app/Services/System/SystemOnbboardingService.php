@@ -2,47 +2,34 @@
 
 namespace App\Services\System;
 
-use App\Repositories\SystemOnboardingRepository;
+use App\Repositories\Contracts\SystemOnboardingRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
  * SYSTEM ONBOARDING WORKFLOW ORCHESTRATOR
  *
- * This service drives the full onboarding domain flow:
+ * Drives end-to-end onboarding phases:
  *
- * PHASE 1: Super Admin configures core system identity
- *   - Authentication + access control
- *   - Module licensing/enablement
- *   - Global identifiers (company name, timezone, currency)
- *   Role: super_admin → always the starting owner
+ * PHASE 1: Super Admin → System identity + global access config
+ * PHASE 2: Office Admin → Organization structure setup
+ * PHASE 3: HR Manager → Workforce + payroll configuration
+ * PHASE 4: Completion → System becomes operational
  *
- * PHASE 2: Office Admin configures organization structure
- *   - Departments, sites, business units
- *   - Office-level settings (work hours, calendars)
- *   Role transitions enforced by SystemRoleDelegationService
- *
- * PHASE 3: HR Manager completes workforce setup
- *   - HR policies, employment settings
- *   - Payroll + leave configurations
- *
- * PHASE 4: Onboarding complete
- *   - System locked into operational mode
- *   - Live HRIS usage enabled
- *
- * This class:
- *   - Creates onboarding record
- *   - Delegates role transitions
- *   - Delegates configuration storage
- *   - Marks workflow complete
+ * Responsibilities:
+ * - Create workflow entry
+ * - Apply initial config
+ * - Delegate role transitions
+ * - Mark workflow complete
  */
+
 class SystemOnboardingService
 {
-    protected SystemOnboardingRepository $repo;
+    protected SystemOnboardingRepositoryInterface $repo;
     protected SystemConfigService $config;
     protected SystemRoleDelegationService $delegation;
 
     public function __construct(
-        SystemOnboardingRepository $repo,
+        SystemOnboardingRepositoryInterface $repo,
         SystemConfigService $config,
         SystemRoleDelegationService $delegation
     ) {
@@ -52,8 +39,9 @@ class SystemOnboardingService
     }
 
     /**
-     * Create onboarding entry and store minimal system settings.
-     * Must be called by Super Admin only.
+     * Create a new onboarding workflow (Super Admin only).
+     *
+     * @return int Onboarding record ID
      */
     public function initializeSystem(array $payload, int $userId): int
     {
@@ -66,17 +54,24 @@ class SystemOnboardingService
                 'started_at'          => now(),
             ]);
 
+            // Apply initial foundation settings (identity, region, core modules)
             $this->config->applyInitialSystemSettings($payload);
 
             return $id;
         });
     }
 
+    /**
+     * Move onboarding forward by delegating workflow owner change.
+     */
     public function transition(int $id, string $nextRole): void
     {
         $this->delegation->transitionToRole($id, $nextRole);
     }
 
+    /**
+     * Lock workflows and enable operational mode.
+     */
     public function complete(int $id): void
     {
         $this->repo->update($id, [
