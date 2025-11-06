@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Server, Database, HardDrive, Shield, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Activity, Server, Database, HardDrive, Shield, Clock, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 
 interface ServerMetrics {
     cpu_usage: number;
@@ -49,15 +50,6 @@ interface SystemHealthWidgetsProps {
     health: SystemHealthData;
 }
 
-const getStatusColor = (status: 'healthy' | 'warning' | 'critical') => {
-    switch (status) {
-        case 'healthy': return 'bg-green-500';
-        case 'warning': return 'bg-yellow-500';
-        case 'critical': return 'bg-red-500';
-        default: return 'bg-gray-500';
-    }
-};
-
 const getStatusTextColor = (status: 'healthy' | 'warning' | 'critical') => {
     switch (status) {
         case 'healthy': return 'text-green-600 dark:text-green-400';
@@ -78,46 +70,52 @@ const getStatusBadgeVariant = (status: 'healthy' | 'warning' | 'critical') => {
 
 export function ServerHealthCard({ server }: { server: ServerMetrics }) {
     return (
-        <Card className="border-l-4" style={{ borderLeftColor: server.cpu_usage > 70 ? '#EF4444' : '#10B981' }}>
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Server className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-base">Server Health</CardTitle>
+        <Card className="border-l-4 cursor-pointer hover:shadow-lg transition-shadow" style={{ borderLeftColor: server.cpu_usage > 70 ? '#EF4444' : '#10B981' }}>
+            <Link href="/system/health" className="flex flex-col h-full">
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Server className="h-5 w-5 text-primary" />
+                            <CardTitle className="text-base">Server Health</CardTitle>
+                        </div>
+                        <Badge variant={getStatusBadgeVariant(server.status)}>
+                            {server.status}
+                        </Badge>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(server.status)}>
-                        {server.status}
-                    </Badge>
-                </div>
-                <CardDescription>System resources monitoring</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">CPU Usage</span>
-                    <span className={`font-semibold ${server.cpu_usage > 70 ? 'text-red-600' : 'text-green-600'}`}>
-                        {server.cpu_usage.toFixed(1)}%
-                    </span>
-                </div>
-                <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Memory Usage</span>
-                    <span className={`font-semibold ${server.memory_usage > 75 ? 'text-red-600' : 'text-green-600'}`}>
-                        {server.memory_usage.toFixed(1)}%
-                    </span>
-                </div>
-                {server.load_average && (
+                    <CardDescription>System resources monitoring</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-between space-y-3">
                     <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Load Average</span>
-                        <span className="font-mono text-sm">{server.load_average}</span>
+                        <span className="text-sm text-muted-foreground">CPU Usage</span>
+                        <span className={`font-semibold ${server.cpu_usage > 70 ? 'text-red-600' : 'text-green-600'}`}>
+                            {server.cpu_usage.toFixed(1)}%
+                        </span>
                     </div>
-                )}
-                <div className="flex justify-between items-center pt-2 border-t">
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        <span>Uptime</span>
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Memory Usage</span>
+                        <span className={`font-semibold ${server.memory_usage > 75 ? 'text-red-600' : 'text-green-600'}`}>
+                            {server.memory_usage.toFixed(1)}%
+                        </span>
                     </div>
-                    <span className="font-medium text-sm">{server.uptime_formatted}</span>
-                </div>
-            </CardContent>
+                    {server.load_average && (
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Load Average</span>
+                            <span className="font-mono text-sm">{server.load_average}</span>
+                        </div>
+                    )}
+                    <div className="flex justify-between items-center pt-2 border-t">
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>Uptime</span>
+                        </div>
+                        <span className="font-medium text-sm">{server.uptime_formatted}</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-1 text-xs text-primary pt-3 mt-auto">
+                        <span>View Details</span>
+                        <ArrowRight className="h-3 w-3" />
+                    </div>
+                </CardContent>
+            </Link>
         </Card>
     );
 }
@@ -127,49 +125,55 @@ export function StorageHealthCard({ storage }: { storage: StorageMetrics }) {
                           storage.usage_percentage > 80 ? 'bg-yellow-500' : 'bg-green-500';
 
     return (
-        <Card className="border-l-4" style={{ borderLeftColor: storage.usage_percentage > 80 ? '#EF4444' : '#10B981' }}>
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <HardDrive className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-base">Storage</CardTitle>
+        <Card className="border-l-4 cursor-pointer hover:shadow-lg transition-shadow" style={{ borderLeftColor: storage.usage_percentage > 80 ? '#EF4444' : '#10B981' }}>
+            <Link href="/system/storage" className="flex flex-col h-full">
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <HardDrive className="h-5 w-5 text-primary" />
+                            <CardTitle className="text-base">Storage</CardTitle>
+                        </div>
+                        <Badge variant={getStatusBadgeVariant(storage.status)}>
+                            {storage.status}
+                        </Badge>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(storage.status)}>
-                        {storage.status}
-                    </Badge>
-                </div>
-                <CardDescription>Disk space utilization</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                <div>
-                    <div className="flex justify-between mb-2">
-                        <span className="text-sm text-muted-foreground">Disk Usage</span>
-                        <span className={`font-semibold ${getStatusTextColor(storage.status)}`}>
-                            {storage.usage_percentage.toFixed(1)}%
-                        </span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div 
-                            className={`${progressColor} h-2 rounded-full transition-all`}
-                            style={{ width: `${storage.usage_percentage}%` }}
-                        />
-                    </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 pt-2">
+                    <CardDescription>Disk space utilization</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-between space-y-3">
                     <div>
-                        <p className="text-xs text-muted-foreground">Used</p>
-                        <p className="font-semibold text-sm">{storage.used_formatted}</p>
+                        <div className="flex justify-between mb-2">
+                            <span className="text-sm text-muted-foreground">Disk Usage</span>
+                            <span className={`font-semibold ${getStatusTextColor(storage.status)}`}>
+                                {storage.usage_percentage.toFixed(1)}%
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div 
+                                className={`${progressColor} h-2 rounded-full transition-all`}
+                                style={{ width: `${storage.usage_percentage}%` }}
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Free</p>
-                        <p className="font-semibold text-sm">{storage.free_formatted}</p>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                        <div>
+                            <p className="text-xs text-muted-foreground">Used</p>
+                            <p className="font-semibold text-sm">{storage.used_formatted}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Free</p>
+                            <p className="font-semibold text-sm">{storage.free_formatted}</p>
+                        </div>
                     </div>
-                </div>
-                <div className="pt-2 border-t">
-                    <p className="text-xs text-muted-foreground">Total Capacity</p>
-                    <p className="font-medium text-sm">{storage.total_formatted}</p>
-                </div>
-            </CardContent>
+                    <div className="pt-2 border-t">
+                        <p className="text-xs text-muted-foreground">Total Capacity</p>
+                        <p className="font-medium text-sm">{storage.total_formatted}</p>
+                    </div>
+                    <div className="flex items-center justify-end gap-1 text-xs text-primary pt-3 mt-auto">
+                        <span>View Details</span>
+                        <ArrowRight className="h-3 w-3" />
+                    </div>
+                </CardContent>
+            </Link>
         </Card>
     );
 }
@@ -178,98 +182,110 @@ export function BackupStatusCard({ backup }: { backup: BackupSummary }) {
     const latestBackup = backup.latest_backup;
 
     return (
-        <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Database className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-base">Backups</CardTitle>
+        <Card className="border-l-4 border-l-blue-500 cursor-pointer hover:shadow-lg transition-shadow">
+            <Link href="/system/backups" className="flex flex-col h-full">
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Database className="h-5 w-5 text-primary" />
+                            <CardTitle className="text-base">Backups</CardTitle>
+                        </div>
+                        <Badge variant={getStatusBadgeVariant(backup.status)}>
+                            {backup.success_rate.toFixed(0)}% success
+                        </Badge>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(backup.status)}>
-                        {backup.success_rate.toFixed(0)}% success
-                    </Badge>
-                </div>
-                <CardDescription>Backup system status</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                {latestBackup ? (
-                    <>
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Last Backup</span>
-                            <span className="text-xs text-muted-foreground">
-                                {new Date(latestBackup.created_at).toLocaleDateString()}
-                            </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Type</span>
-                            <Badge variant="outline" className="capitalize">
-                                {latestBackup.backup_type}
-                            </Badge>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Status</span>
-                            <div className="flex items-center gap-1">
-                                {latestBackup.status === 'completed' ? (
-                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                ) : (
-                                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                                )}
-                                <span className="text-sm capitalize">{latestBackup.status}</span>
+                    <CardDescription>Backup system status</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-between space-y-3">
+                    {latestBackup ? (
+                        <>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Last Backup</span>
+                                <span className="text-xs text-muted-foreground">
+                                    {new Date(latestBackup.created_at).toLocaleDateString()}
+                                </span>
                             </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Type</span>
+                                <Badge variant="outline" className="capitalize">
+                                    {latestBackup.backup_type}
+                                </Badge>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Status</span>
+                                <div className="flex items-center gap-1">
+                                    {latestBackup.status === 'completed' ? (
+                                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                    ) : (
+                                        <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                                    )}
+                                    <span className="text-sm capitalize">{latestBackup.status}</span>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="text-center py-4">
+                            <p className="text-sm text-muted-foreground">No backups found</p>
                         </div>
-                    </>
-                ) : (
-                    <div className="text-center py-4">
-                        <p className="text-sm text-muted-foreground">No backups found</p>
+                    )}
+                    <div className="flex items-center justify-end gap-1 text-xs text-primary pt-3 mt-auto">
+                        <span>View All Backups</span>
+                        <ArrowRight className="h-3 w-3" />
                     </div>
-                )}
-            </CardContent>
+                </CardContent>
+            </Link>
         </Card>
     );
 }
 
 export function SecurityAuditCard({ security }: { security: SecurityOverview }) {
     return (
-        <Card className="border-l-4" style={{ borderLeftColor: security.status === 'critical' ? '#EF4444' : security.status === 'warning' ? '#F59E0B' : '#10B981' }}>
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-base">Security</CardTitle>
+        <Card className="border-l-4 cursor-pointer hover:shadow-lg transition-shadow" style={{ borderLeftColor: security.status === 'critical' ? '#EF4444' : security.status === 'warning' ? '#F59E0B' : '#10B981' }}>
+            <Link href="/system/security/audit" className="flex flex-col h-full">
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Shield className="h-5 w-5 text-primary" />
+                            <CardTitle className="text-base">Security</CardTitle>
+                        </div>
+                        <Badge variant={getStatusBadgeVariant(security.status)}>
+                            {security.status}
+                        </Badge>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(security.status)}>
-                        {security.status}
-                    </Badge>
-                </div>
-                <CardDescription>24-hour security overview</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Critical Events</span>
-                    <span className={`font-semibold ${security.critical_events_24h > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {security.critical_events_24h}
-                    </span>
-                </div>
-                <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Failed Logins</span>
-                    <span className={`font-semibold ${security.failed_logins_24h > 5 ? 'text-yellow-600' : 'text-green-600'}`}>
-                        {security.failed_logins_24h}
-                    </span>
-                </div>
-                <div className="pt-2 border-t">
-                    {security.critical_events_24h === 0 && security.failed_logins_24h < 5 ? (
-                        <div className="flex items-center gap-2 text-green-600">
-                            <CheckCircle2 className="h-4 w-4" />
-                            <span className="text-sm">No security concerns</span>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-2 text-yellow-600">
-                            <AlertTriangle className="h-4 w-4" />
-                            <span className="text-sm">Review security logs</span>
-                        </div>
-                    )}
-                </div>
-            </CardContent>
+                    <CardDescription>24-hour security overview</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-between space-y-3">
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Critical Events</span>
+                        <span className={`font-semibold ${security.critical_events_24h > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            {security.critical_events_24h}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Failed Logins</span>
+                        <span className={`font-semibold ${security.failed_logins_24h > 5 ? 'text-yellow-600' : 'text-green-600'}`}>
+                            {security.failed_logins_24h}
+                        </span>
+                    </div>
+                    <div className="pt-2 border-t">
+                        {security.critical_events_24h === 0 && security.failed_logins_24h < 5 ? (
+                            <div className="flex items-center gap-2 text-green-600">
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span className="text-sm">No security concerns</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 text-yellow-600">
+                                <AlertTriangle className="h-4 w-4" />
+                                <span className="text-sm">Review security logs</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex items-center justify-end gap-1 text-xs text-primary pt-3 mt-auto">
+                        <span>View Audit Logs</span>
+                        <ArrowRight className="h-3 w-3" />
+                    </div>
+                </CardContent>
+            </Link>
         </Card>
     );
 }

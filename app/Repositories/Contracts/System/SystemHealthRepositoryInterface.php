@@ -55,6 +55,11 @@ interface SystemHealthRepositoryInterface
     public function getHealthHistory(int $days = 7): array;
 
     /**
+     * Get health logs collection (last N days)
+     */
+    public function getHealthLogs(int $days = 7): \Illuminate\Database\Eloquent\Collection;
+
+    /**
      * Get backup history (last N days)
      */
     public function getBackupHistory(int $days = 30): array;

@@ -42,4 +42,28 @@ Route::middleware(['auth'])->group(function () {
     // System/Vendor dashboards
     Route::get('/system/dashboard', [\App\Http\Controllers\System\DashboardController::class, 'index'])->name('system.dashboard');
     Route::get('/system/vendor/dashboard', [\App\Http\Controllers\System\Vendor\DashboardController::class, 'index'])->name('system.vendor.dashboard');
+
+    // System Health Monitoring Detail Pages
+    Route::get('/system/health', action: [\App\Http\Controllers\System\HealthController::class, 'index'])->name('system.health');
+    Route::post('/system/health/refresh', [\App\Http\Controllers\System\HealthController::class, 'refresh'])->name('system.health.refresh');
+
+    // Backup Management
+    Route::get('/system/backups', [\App\Http\Controllers\System\BackupController::class, 'index'])->name('system.backups');
+    Route::get('/system/backups/{backup}', [\App\Http\Controllers\System\BackupController::class, 'show'])->name('system.backups.show');
+
+    // Patch Management
+    Route::get('/system/patches', [\App\Http\Controllers\System\PatchController::class, 'index'])->name('system.patches');
+    Route::get('/system/patches/{patch}', [\App\Http\Controllers\System\PatchController::class, 'show'])->name('system.patches.show');
+    Route::post('/system/patches/{patch}/approve', [\App\Http\Controllers\System\PatchController::class, 'approve'])->name('system.patches.approve');
+    Route::post('/system/patches/{patch}/reject', [\App\Http\Controllers\System\PatchController::class, 'reject'])->name('system.patches.reject');
+    Route::post('/system/patches/{patch}/deploy', [\App\Http\Controllers\System\PatchController::class, 'markDeployed'])->name('system.patches.deploy');
+
+    // Security Audit Logs
+    Route::get('/system/security/audit', [\App\Http\Controllers\System\SecurityAuditController::class, 'index'])->name('system.security.audit');
+    Route::get('/system/security/audit/{log}', [\App\Http\Controllers\System\SecurityAuditController::class, 'show'])->name('system.security.audit.show');
+    Route::get('/system/security/audit/export', [\App\Http\Controllers\System\SecurityAuditController::class, 'export'])->name('system.security.audit.export');
+
+    // Storage Management
+    Route::get('/system/storage', [\App\Http\Controllers\System\StorageController::class, 'index'])->name('system.storage');
+    Route::post('/system/storage/cleanup', [\App\Http\Controllers\System\StorageController::class, 'cleanup'])->name('system.storage.cleanup');
 });

@@ -437,4 +437,35 @@ class SystemHealthService
         Cache::forget('system_health_dashboard_metrics');
         return $this->getDashboardMetrics();
     }
+
+    /**
+     * Get historical health data for charts
+     */
+    public function getHistoricalHealthData(int $days = 7): array
+    {
+        $healthLogs = $this->repository->getHealthLogs($days);
+
+        return [
+            'timeline' => $healthLogs->map(fn($log) => [
+                'timestamp' => $log->created_at->format('Y-m-d H:i'),
+                'cpu_usage' => $log->cpu_usage,
+                'memory_usage' => $log->memory_usage,
+                'disk_usage' => $log->disk_usage,
+                'database_response_ms' => $log->database_response_ms,
+                'status' => $log->status,
+            ])->toArray(),
+            'averages' => [
+                'cpu' => round($healthLogs->avg('cpu_usage'), 2),
+                'memory' => round($healthLogs->avg('memory_usage'), 2),
+                'disk' => round($healthLogs->avg('disk_usage'), 2),
+                'database' => round($healthLogs->avg('database_response_ms'), 2),
+            ],
+            'peaks' => [
+                'cpu' => round($healthLogs->max('cpu_usage'), 2),
+                'memory' => round($healthLogs->max('memory_usage'), 2),
+                'disk' => round($healthLogs->max('disk_usage'), 2),
+                'database' => round($healthLogs->max('database_response_ms'), 2),
+            ],
+        ];
+    }
 }

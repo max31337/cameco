@@ -64,7 +64,13 @@ interface SystemHealthData {
         status: 'healthy' | 'warning' | 'critical';
     };
     backup: {
-        latest_backup: any;
+        latest_backup: {
+            backup_type: string;
+            status: string;
+            created_at: string;
+            completed_at?: string;
+            size_bytes?: number;
+        } | null;
         success_rate: number;
         status: 'healthy' | 'warning' | 'critical';
     };
@@ -76,7 +82,12 @@ interface SystemHealthData {
     security: {
         critical_events_24h: number;
         failed_logins_24h: number;
-        recent_events: any[];
+        recent_events: Array<{
+            id: number;
+            event_type: string;
+            severity: string;
+            created_at: string;
+        }>;
         status: 'healthy' | 'warning' | 'critical';
     };
     overall_status: 'healthy' | 'warning' | 'critical';

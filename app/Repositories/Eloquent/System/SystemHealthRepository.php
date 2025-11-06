@@ -119,6 +119,16 @@ class SystemHealthRepository implements SystemHealthRepositoryInterface
     }
 
     /**
+     * Get health logs collection (last N days)
+     */
+    public function getHealthLogs(int $days = 7): \Illuminate\Database\Eloquent\Collection
+    {
+        return SystemHealthLog::where('created_at', '>=', now()->subDays($days))
+            ->orderBy('created_at', 'asc')
+            ->get();
+    }
+
+    /**
      * Get backup history (last N days)
      */
     public function getBackupHistory(int $days = 30): array
