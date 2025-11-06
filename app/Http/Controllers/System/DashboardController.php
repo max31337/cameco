@@ -52,51 +52,102 @@ class DashboardController extends Controller
 			$userOnboarding = null;
 		}
 
-		// If no per-user onboarding row exists or it lacks a checklist, generate a checklist from profile
-		// so fresh users see meaningful onboarding items. Do not force this for Superadmins (they manage system onboarding).
-		try {
+		// If no per-user onboarding row exists, generate placeholder checklist for Superadmin
+		// This allows fresh Superadmin users to see meaningful onboarding items
+		if (!$userOnboarding || empty($userOnboarding->checklist_json)) {
 			$currentUser = $request->user();
-			if ($currentUser && ! $currentUser->isSuperadmin()) {
-				$service = app(UserOnboardingService::class);
-				if (! $userOnboarding) {
-					$generated = $service->generateChecklistForUser($currentUser);
-					$userOnboarding = (object) [
-						'id' => null,
-						'user_id' => $currentUser->id,
-						'status' => 'pending',
-						'checklist_json' => $generated,
-					];
-				} else {
-					// ensure checklist_json is available as decoded array
-					if (empty($userOnboarding->checklist_json)) {
-						$userOnboarding->checklist_json = $service->generateChecklistForUser($currentUser);
-					} elseif (is_string($userOnboarding->checklist_json)) {
-						$decoded = json_decode($userOnboarding->checklist_json, true);
-						if (json_last_error() === JSON_ERROR_NONE) {
-							$userOnboarding->checklist_json = $decoded;
-						}
-					}
+			
+			// Helper function to safely get route or return fallback
+			$safeRoute = function($routeName, $fallback = '#') {
+				try {
+					return \Illuminate\Support\Facades\Route::has($routeName) 
+						? route($routeName) 
+						: $fallback;
+				} catch (\Exception $e) {
+					return $fallback;
 				}
-			}
-		} catch (\Throwable $e) {
-			// ignore generation errors and fall back to existing behavior
+			};
+			
+			// Generate placeholder checklist for demonstration
+			$placeholderChecklist = [
+				[
+					'id' => 'profile_complete',
+					'title' => 'Complete Your Profile',
+					'description' => 'Add your full name, contact information, and emergency contact details',
+					'completed' => !empty($currentUser->profile),
+					'action_url' => $safeRoute('profile.show', '/settings/profile'),
+					'action_label' => 'Update Profile',
+					'required' => true,
+				],
+				[
+					'id' => 'password_set',
+					'title' => 'Set a Strong Password',
+					'description' => 'Ensure your account is secured with a strong password',
+					'completed' => !empty($currentUser->password),
+					'action_url' => $safeRoute('password.show', '/settings/password'),
+					'action_label' => 'Change Password',
+					'required' => true,
+				],
+				[
+					'id' => 'two_factor_enabled',
+					'title' => 'Enable Two-Factor Authentication',
+					'description' => 'Add an extra layer of security to your Superadmin account',
+					'completed' => $currentUser->two_factor_secret !== null,
+					'action_url' => $safeRoute('two-factor.show', '/settings/two-factor'),
+					'action_label' => 'Enable 2FA',
+					'required' => true,
+				],
+				[
+					'id' => 'email_verified',
+					'title' => 'Verify Your Email Address',
+					'description' => 'Confirm your email address to receive system notifications',
+					'completed' => $currentUser->email_verified_at !== null,
+					'action_url' => $safeRoute('verification.notice', '#'),
+					'action_label' => 'Verify Email',
+					'required' => true,
+				],
+				[
+					'id' => 'system_tour',
+					'title' => 'Take the System Tour',
+					'description' => 'Learn about the Superadmin dashboard and available features',
+					'completed' => false,
+					'action_url' => '#',
+					'action_label' => 'Start Tour',
+					'required' => false,
+				],
+				[
+					'id' => 'security_review',
+					'title' => 'Review Security Settings',
+					'description' => 'Configure password policies, session timeouts, and IP restrictions',
+					'completed' => false,
+					'action_url' => '#',
+					'action_label' => 'Review Settings',
+					'required' => false,
+				],
+			];
+
+			// Calculate completion percentage
+			$completedCount = count(array_filter($placeholderChecklist, fn($item) => $item['completed']));
+			$totalCount = count($placeholderChecklist);
+			$completionPercentage = $totalCount > 0 ? round(($completedCount / $totalCount) * 100) : 0;
+
+			$userOnboarding = (object) [
+				'id' => null,
+				'user_id' => $currentUser->id,
+				'status' => $completionPercentage === 100 ? 'completed' : 'pending',
+				'checklist_json' => $placeholderChecklist,
+				'completion_percentage' => $completionPercentage,
+			];
 		}
 
-		// Show the setup modal when the user hasn't skipped onboarding.
-		// For Superadmins we do not show the per-user onboarding modal (they have system onboarding responsibilities).
+		// Show the setup modal when the user hasn't completed onboarding
+		// For Superadmins, we show profile onboarding (not system onboarding)
 		$showByUserOnboarding = false;
 		try {
 			$u = $request->user();
-			if ($u && $u->isSuperadmin()) {
-				$showByUserOnboarding = false;
-			} else {
-				if ($userOnboarding && isset($userOnboarding->status)) {
-					// Show modal for pending, in_progress or skipped so users who skipped
-					// are reminded to continue onboarding on next login.
-					$showByUserOnboarding = in_array($userOnboarding->status, ['pending', 'in_progress', 'skipped'], true);
-				} else {
-					$showByUserOnboarding = true;
-				}
+			if ($u && $userOnboarding && isset($userOnboarding->status)) {
+				// Show for Superadmins with incomplete profiles
+				$showByUserOnboarding = in_array($userOnboarding->status, ['pending', 'in_progress'], true);
 			}
 		} catch (\Throwable $e) {
 			$showByUserOnboarding = false;

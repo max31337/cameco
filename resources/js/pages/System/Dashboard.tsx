@@ -3,6 +3,17 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import SuperadminOnboardingCard from '@/components/superadmin-onboarding-card';
+
+interface ChecklistItem {
+    id: string;
+    title: string;
+    description: string;
+    completed: boolean;
+    action_url?: string;
+    action_label?: string;
+    required: boolean;
+}
 
 interface SystemOnboarding {
     id: number;
@@ -14,7 +25,8 @@ interface UserOnboarding {
     id: number | null;
     user_id: number;
     status: string;
-    checklist_json?: string | Record<string, unknown>[];
+    checklist_json?: ChecklistItem[];
+    completion_percentage?: number;
 }
 
 interface SystemDashboardProps {
@@ -44,6 +56,8 @@ export default function Dashboard({
     company,
     onboardingStatus,
     welcomeText,
+    userOnboarding,
+    showSetupModal,
 }: SystemDashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -55,6 +69,15 @@ export default function Dashboard({
                     </h1>
                     <p className="text-muted-foreground">{welcomeText}</p>
                 </div>
+
+                {/* User Onboarding Section - Show if profile is incomplete */}
+                {userOnboarding && showSetupModal && (
+                    <SuperadminOnboardingCard 
+                        onboarding={userOnboarding}
+                        compact={false}
+                        dismissible={false}
+                    />
+                )}
 
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     <Card>
