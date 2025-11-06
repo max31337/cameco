@@ -4,7 +4,7 @@ namespace App\Http\Controllers\System;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Repositories\SystemOnboardingRepository;
+use App\Services\System\SystemHealthService;
 use App\Services\UserOnboardingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +13,10 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+	public function __construct(
+		protected SystemHealthService $healthService
+	) {}
+
 	/**
 	 * Show the superadmin dashboard.
 	 */
@@ -33,16 +37,8 @@ class DashboardController extends Controller
 			$companyName = null;
 		}
 
-		// Get onboarding status from repository if available
-		$repo = app(SystemOnboardingRepositoryInterface::class);
-		$onboarding = null;
-		try {
-			$onboarding = $repo->findLatest();
-		} catch (\Exception $e) {
-			$onboarding = null;
-		}
-
-		$onboardingStatus = $onboarding->status ?? 'not_configured';
+		// System onboarding removed - focusing on system health monitoring
+		$onboardingStatus = 'completed';
 
 		// Per-user onboarding (profile) — show modal when user's onboarding is not skipped
 		$userOnboarding = null;
@@ -158,26 +154,32 @@ class DashboardController extends Controller
 		try {
 			$u = $request->user();
 			if ($u) {
-				$canCompleteOnboarding = $u->hasRole('Superadmin') || $u->hasRole('Admin') || $u->can('system.onboarding.manage');
+				$canCompleteOnboarding = $u->hasRole('Superadmin') || $u->hasRole('Admin');
 			}
 		} catch (\Throwable $e) {
 			$canCompleteOnboarding = false;
 		}
 
-		// Get SLA metrics from the service
-		// Removed: SLA functionality moved to System\Vendor\DashboardController
+		// Get system health metrics
+		$systemHealth = null;
+		try {
+			$systemHealth = $this->healthService->getDashboardMetrics();
+		} catch (\Exception $e) {
+			$systemHealth = null;
+		}
 
 		$data = [
 			'counts' => $counts,
 			'company' => [
 				'name' => $companyName,
 			],
-			'systemOnboarding' => $onboarding,
+			'systemOnboarding' => null,
 			'userOnboarding' => $userOnboarding,
 			'onboardingStatus' => $onboardingStatus,
 			'showSetupModal' => $showByUserOnboarding,
 			'canCompleteOnboarding' => $canCompleteOnboarding,
 			'welcomeText' => 'Welcome to the Superadmin dashboard — manage platform settings and users from here.',
+			'systemHealth' => $systemHealth,
 		];
 
 		return Inertia::render('System/Dashboard', $data);

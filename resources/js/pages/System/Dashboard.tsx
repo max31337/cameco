@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import SuperadminOnboardingCard from '@/components/superadmin-onboarding-card';
+import { SystemHealthWidgets } from '@/components/system-health-widgets';
 
 interface ChecklistItem {
     id: string;
@@ -29,6 +30,58 @@ interface UserOnboarding {
     completion_percentage?: number;
 }
 
+interface SystemHealthData {
+    server: {
+        cpu_usage: number;
+        memory_usage: number;
+        load_average: string | null;
+        uptime: number;
+        uptime_formatted: string;
+        status: 'healthy' | 'warning' | 'critical';
+    };
+    database: {
+        status: string;
+        response_time_ms: number;
+        connection_status: string;
+    };
+    cache: {
+        driver: string;
+        status: string;
+    };
+    queue: {
+        pending_jobs: number;
+        failed_jobs: number;
+        status: string;
+    };
+    storage: {
+        total_bytes: number;
+        used_bytes: number;
+        free_bytes: number;
+        usage_percentage: number;
+        total_formatted: string;
+        used_formatted: string;
+        free_formatted: string;
+        status: 'healthy' | 'warning' | 'critical';
+    };
+    backup: {
+        latest_backup: any;
+        success_rate: number;
+        status: 'healthy' | 'warning' | 'critical';
+    };
+    patches: {
+        pending_total: number;
+        security_pending: number;
+        status: string;
+    };
+    security: {
+        critical_events_24h: number;
+        failed_logins_24h: number;
+        recent_events: any[];
+        status: 'healthy' | 'warning' | 'critical';
+    };
+    overall_status: 'healthy' | 'warning' | 'critical';
+}
+
 interface SystemDashboardProps {
     counts: {
         users: number;
@@ -42,6 +95,7 @@ interface SystemDashboardProps {
     showSetupModal: boolean;
     canCompleteOnboarding: boolean;
     welcomeText: string;
+    systemHealth: SystemHealthData | null;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -58,6 +112,7 @@ export default function Dashboard({
     welcomeText,
     userOnboarding,
     showSetupModal,
+    systemHealth,
 }: SystemDashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -77,6 +132,11 @@ export default function Dashboard({
                         compact={false}
                         dismissible={false}
                     />
+                )}
+
+                {/* System Health Monitoring */}
+                {systemHealth && (
+                    <SystemHealthWidgets health={systemHealth} />
                 )}
 
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
@@ -114,3 +174,4 @@ export default function Dashboard({
         </AppLayout>
     );
 }
+
