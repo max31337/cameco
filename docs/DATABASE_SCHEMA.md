@@ -2001,7 +2001,8 @@ foreach ($permissions as $permission) {
 ## HR Module Tables (see HR_MODULE_ARCHITECTURE.md for full schema and details)
 ### employees
 ```sql
-CREATE TABLE employees (
+
+ (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NULL,
     profile_id BIGINT UNSIGNED NOT NULL, -- Personal information lives in profiles; employees reference profiles

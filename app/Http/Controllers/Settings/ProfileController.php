@@ -37,6 +37,40 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        // Persist profile-related fields into the profiles table. Only save the
+        // attributes that the request validated to avoid overwriting with nulls.
+        try {
+            $profileData = array_filter($request->only([
+                'first_name',
+                'last_name',
+                'middle_name',
+                'contact_number',
+                'address',
+                'emergency_contact',
+            ]), function ($v) {
+                return $v !== null;
+            });
+
+            if (! empty($profileData)) {
+                $request->user()->profile()->updateOrCreate(
+                    ['user_id' => $request->user()->id],
+                    $profileData
+                );
+            }
+        } catch (\Throwable $e) {
+            // best-effort: don't prevent profile save on profile persistence errors
+        }
+        // After saving basic profile info, regenerate the user's onboarding
+        // checklist so the onboarding UI reflects authoritative profile data.
+        try {
+            $service = app(\App\Services\UserOnboardingService::class);
+            $checklist = $service->generateChecklistForUser($request->user());
+            // Persist the regenerated checklist (service will JSON-encode as needed)
+            $service->start($request->user()->id, ['checklist_json' => $checklist]);
+        } catch (\Throwable $e) {
+            // best-effort: don't prevent profile save on onboarding errors
+        }
+
         return to_route('profile.edit');
     }
 

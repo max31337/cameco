@@ -69,6 +69,32 @@ export default function Profile({
                                     />
                                 </div>
 
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    <div>
+                                        <Label htmlFor="first_name">First name</Label>
+                                        <Input
+                                            id="first_name"
+                                            className="mt-1 block w-full"
+                                            defaultValue={auth.user?.profile?.first_name ?? ''}
+                                            name="first_name"
+                                            placeholder="First name"
+                                        />
+                                        <InputError className="mt-2" message={errors.first_name} />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="last_name">Last name</Label>
+                                        <Input
+                                            id="last_name"
+                                            className="mt-1 block w-full"
+                                            defaultValue={auth.user?.profile?.last_name ?? ''}
+                                            name="last_name"
+                                            placeholder="Last name"
+                                        />
+                                        <InputError className="mt-2" message={errors.last_name} />
+                                    </div>
+                                </div>
+
                                 <div className="grid gap-2">
                                     <Label htmlFor="email">Email address</Label>
 
