@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import SuperadminOnboardingCard from '@/components/superadmin-onboarding-card';
+import SLAWidgets from '@/components/sla-widgets';
 
 interface ChecklistItem {
     id: string;
@@ -29,6 +30,35 @@ interface UserOnboarding {
     completion_percentage?: number;
 }
 
+interface SLAMetrics {
+    uptime: {
+        current_uptime_hours: number;
+        uptime_percentage: number;
+        last_downtime: string | null;
+        total_downtime_hours_this_month: number;
+    };
+    incidents: {
+        open_critical: number;
+        open_major: number;
+        open_minor: number;
+        avg_response_time_critical: string;
+        avg_resolution_time_critical: string;
+        incidents_this_month: number;
+    };
+    patches: {
+        current_version: string;
+        latest_patch_date: string;
+        pending_patches: number;
+        next_scheduled_patch: string;
+    };
+    support: {
+        status: 'available' | 'offline';
+        hours: string;
+        days_until_support_end: number;
+        support_end_date: string;
+    };
+}
+
 interface SystemDashboardProps {
     counts: {
         users: number;
@@ -42,6 +72,7 @@ interface SystemDashboardProps {
     showSetupModal: boolean;
     canCompleteOnboarding: boolean;
     welcomeText: string;
+    sla?: SLAMetrics;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -58,6 +89,7 @@ export default function Dashboard({
     welcomeText,
     userOnboarding,
     showSetupModal,
+    sla,
 }: SystemDashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -77,6 +109,19 @@ export default function Dashboard({
                         compact={false}
                         dismissible={false}
                     />
+                )}
+
+                {/* SLA Monitoring Widgets */}
+                {sla && (
+                    <div className="space-y-4">
+                        <div>
+                            <h2 className="text-lg font-semibold">Service Level Agreement (SLA)</h2>
+                            <p className="text-sm text-muted-foreground">
+                                Monitor system health, incidents, and support status
+                            </p>
+                        </div>
+                        <SLAWidgets sla={sla} />
+                    </div>
                 )}
 
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
