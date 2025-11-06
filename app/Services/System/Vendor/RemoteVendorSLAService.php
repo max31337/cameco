@@ -1,14 +1,19 @@
 <?php
 
-namespace App\Services\System;
+namespace App\Services\System\Vendor;
 
-use App\Repositories\Contracts\SLAMonitoringRepositoryInterface;
+use App\Repositories\Contracts\System\Vendor\RemoteVendorSLARepositoryInterface;
 use Illuminate\Support\Facades\Cache;
 
-class SLAMonitoringService
+/**
+ * Remote Vendor SLA Service
+ * 
+ * Business logic for remote vendor SLA monitoring and metrics aggregation.
+ */
+class RemoteVendorSLAService
 {
     public function __construct(
-        protected SLAMonitoringRepositoryInterface $repository
+        protected RemoteVendorSLARepositoryInterface $repository
     ) {}
 
     /**

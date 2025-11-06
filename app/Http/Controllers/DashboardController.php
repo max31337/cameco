@@ -20,6 +20,17 @@ class DashboardController extends Controller
 
         // Prefer Spatie role checks. If you add more dashboards create their Inertia pages
         // and return them here.
+
+        if ($user->hasRole('Vendor')) {
+            // Delegate to the Vendor dashboard controller to keep behavior consistent
+            $vendorController = '\App\Http\Controllers\System\Vendor\DashboardController';
+            if (class_exists($vendorController)) {
+                return app($vendorController)->index($request);
+            }
+            // Fallback if the controller isn't available.
+            abort(404, 'Vendor dashboard controller not found.');
+        }
+
         if ($user->hasRole('Superadmin')) {
             // Delegate to the Superadmin dashboard controller to keep behavior consistent
             $systemController = '\App\Http\Controllers\System\DashboardController';

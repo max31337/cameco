@@ -7,9 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SystemPatch extends Model
+/**
+ * Remote Vendor Patch Model
+ * 
+ * Tracks patches/updates provided by external vendors.
+ * Used for monitoring vendor patch deployment schedules and compliance.
+ */
+class RemoteVendorPatch extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected $table = 'remote_vendor_patches';
 
     protected $fillable = [
         'version',

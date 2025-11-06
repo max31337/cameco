@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use App\Repositories\Contracts\SLAMonitoringRepositoryInterface;
-use App\Repositories\Eloquent\System\SLAMonitoringRepository;
+use App\Repositories\Contracts\System\Vendor\RemoteVendorSLARepositoryInterface;
+use App\Repositories\Eloquent\System\Vendor\RemoteVendorSLARepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,10 +13,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Bind SLA Monitoring Repository
+        // Bind Remote Vendor SLA Repository
         $this->app->bind(
-            SLAMonitoringRepositoryInterface::class,
-            SLAMonitoringRepository::class
+            RemoteVendorSLARepositoryInterface::class,
+            RemoteVendorSLARepository::class
         );
     }
 

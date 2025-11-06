@@ -1,10 +1,16 @@
 <?php
 
-namespace App\Repositories\Contracts;
+namespace App\Repositories\Contracts\System\Vendor;
 
 use Illuminate\Support\Collection;
 
-interface SLAMonitoringRepositoryInterface
+/**
+ * Remote Vendor SLA Repository Interface
+ * 
+ * Defines contract for querying remote vendor SLA data (incidents, uptime, patches).
+ * Used for tracking external vendor service level agreements and compliance.
+ */
+interface RemoteVendorSLARepositoryInterface
 {
     /**
      * Get open incidents grouped by severity.
@@ -34,9 +40,9 @@ interface SLAMonitoringRepositoryInterface
     /**
      * Get the latest uptime log entry.
      *
-     * @return \App\Models\SystemUptimeLog|null
+     * @return \App\Models\RemoteVendorUptimeLog|null
      */
-    public function getLatestUptimeLog(): ?\App\Models\SystemUptimeLog;
+    public function getLatestUptimeLog();
 
     /**
      * Get current uptime in hours (time since last downtime).
@@ -48,9 +54,9 @@ interface SLAMonitoringRepositoryInterface
     /**
      * Get the latest deployed patch.
      *
-     * @return \App\Models\SystemPatch|null
+     * @return \App\Models\RemoteVendorPatch|null
      */
-    public function getLatestDeployedPatch(): ?\App\Models\SystemPatch;
+    public function getLatestDeployedPatch();
 
     /**
      * Get count of pending patches.
@@ -62,9 +68,9 @@ interface SLAMonitoringRepositoryInterface
     /**
      * Get the next scheduled patch.
      *
-     * @return \App\Models\SystemPatch|null
+     * @return \App\Models\RemoteVendorPatch|null
      */
-    public function getNextScheduledPatch(): ?\App\Models\SystemPatch;
+    public function getNextScheduledPatch();
 
     /**
      * Get all pending patches.

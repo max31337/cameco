@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // System Incidents Table - Track system issues and SLA response times
-        Schema::create('system_incidents', function (Blueprint $table) {
+        // Remote Vendor Incidents Table - Track support tickets/incidents with external vendors
+        Schema::create('remote_vendor_incidents', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
@@ -36,8 +36,8 @@ return new class extends Migration
             $table->index('assigned_to');
         });
 
-        // System Uptime Logs Table - Periodic health checks for uptime calculation
-        Schema::create('system_uptime_logs', function (Blueprint $table) {
+        // Remote Vendor Uptime Logs Table - Track uptime/availability of external vendor services
+        Schema::create('remote_vendor_uptime_logs', function (Blueprint $table) {
             $table->id();
             $table->timestamp('checked_at');
             $table->boolean('is_healthy')->default(true);
@@ -52,8 +52,8 @@ return new class extends Migration
             $table->index(['is_healthy', 'checked_at']);
         });
 
-        // System Patches Table - Track software patches and deployments
-        Schema::create('system_patches', function (Blueprint $table) {
+        // Remote Vendor Patches Table - Track patches/updates provided by external vendors
+        Schema::create('remote_vendor_patches', function (Blueprint $table) {
             $table->id();
             $table->string('version'); // e.g., 1.2.3
             $table->string('patch_number')->nullable(); // e.g., PATCH-2024-001
@@ -83,8 +83,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('system_patches');
-        Schema::dropIfExists('system_uptime_logs');
-        Schema::dropIfExists('system_incidents');
+        Schema::dropIfExists('remote_vendor_patches');
+        Schema::dropIfExists('remote_vendor_uptime_logs');
+        Schema::dropIfExists('remote_vendor_incidents');
     }
 };

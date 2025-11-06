@@ -63,5 +63,14 @@ class DatabaseSeeder extends Seeder
                 }
             }
         }
+
+        // Seed vendor account and remote vendor SLA data
+        if (class_exists(\Database\Seeders\VendorAccountSeeder::class)) {
+            $this->call(\Database\Seeders\VendorAccountSeeder::class);
+        }
+
+        if (class_exists(\Database\Seeders\RemoteVendorSLASeeder::class)) {
+            $this->call(\Database\Seeders\RemoteVendorSLASeeder::class);
+        }
     }
 }

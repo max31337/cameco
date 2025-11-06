@@ -7,9 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SystemIncident extends Model
+/**
+ * Remote Vendor Incident Model
+ * 
+ * Tracks support incidents/tickets with external vendors (SaaS providers, third-party services).
+ * Used for monitoring vendor SLA compliance, response times, and resolution tracking.
+ */
+class RemoteVendorIncident extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected $table = 'remote_vendor_incidents';
 
     protected $fillable = [
         'title',

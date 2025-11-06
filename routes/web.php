@@ -38,4 +38,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/onboarding', [\App\Http\Controllers\UserOnboardingController::class, 'page'])->name('onboarding.page');
     Route::post('/onboarding/step', [\App\Http\Controllers\UserOnboardingController::class, 'completeStep'])->name('onboarding.step');
     Route::post('/onboarding/complete', [\App\Http\Controllers\UserOnboardingController::class, 'complete'])->name('onboarding.complete');
+
+    // System/Vendor dashboards
+    Route::get('/system/dashboard', [\App\Http\Controllers\System\DashboardController::class, 'index'])->name('system.dashboard');
+    Route::get('/system/vendor/dashboard', [\App\Http\Controllers\System\Vendor\DashboardController::class, 'index'])->name('system.vendor.dashboard');
 });

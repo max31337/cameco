@@ -1,22 +1,27 @@
 <?php
 
-namespace App\Repositories\Eloquent\System;
+namespace App\Repositories\Eloquent\System\Vendor;
 
-use App\Models\SystemIncident;
-use App\Models\SystemPatch;
-use App\Models\SystemUptimeLog;
-use App\Repositories\Contracts\SLAMonitoringRepositoryInterface;
+use App\Models\RemoteVendorIncident;
+use App\Models\RemoteVendorPatch;
+use App\Models\RemoteVendorUptimeLog;
+use App\Repositories\Contracts\System\Vendor\RemoteVendorSLARepositoryInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
+/**
+ * Remote Vendor SLA Repository
+ * 
+ * Handles data access for remote vendor SLA monitoring (incidents, uptime, patches).
+ */
+class RemoteVendorSLARepository implements RemoteVendorSLARepositoryInterface
 {
     /**
      * Get open incidents grouped by severity.
      */
     public function getOpenIncidentsBySeverity(): array
     {
-        $incidents = SystemIncident::open()
+        $incidents = RemoteVendorIncident::open()
             ->select('severity', DB::raw('count(*) as count'))
             ->groupBy('severity')
             ->get()
@@ -35,7 +40,7 @@ class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
      */
     public function getIncidentMetrics(\DateTime $startDate, \DateTime $endDate): array
     {
-        $incidents = SystemIncident::inDateRange($startDate, $endDate)->get();
+        $incidents = RemoteVendorIncident::inDateRange($startDate, $endDate)->get();
 
         $total = $incidents->count();
         
@@ -69,7 +74,7 @@ class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
      */
     public function calculateUptimePercentage(\DateTime $startDate, \DateTime $endDate): array
     {
-        $logs = SystemUptimeLog::inDateRange($startDate, $endDate)->get();
+        $logs = RemoteVendorUptimeLog::inDateRange($startDate, $endDate)->get();
 
         $totalChecks = $logs->count();
         
@@ -111,9 +116,9 @@ class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
     /**
      * Get the latest uptime log entry.
      */
-    public function getLatestUptimeLog(): ?SystemUptimeLog
+    public function getLatestUptimeLog(): ?RemoteVendorUptimeLog
     {
-        return SystemUptimeLog::latest('checked_at')->first();
+        return RemoteVendorUptimeLog::latest('checked_at')->first();
     }
 
     /**
@@ -121,13 +126,13 @@ class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
      */
     public function getCurrentUptimeHours(): ?float
     {
-        $lastDowntime = SystemUptimeLog::downtime()
+        $lastDowntime = RemoteVendorUptimeLog::downtime()
             ->latest('checked_at')
             ->first();
 
         if (!$lastDowntime) {
             // No downtime recorded, check first log entry
-            $firstLog = SystemUptimeLog::oldest('checked_at')->first();
+            $firstLog = RemoteVendorUptimeLog::oldest('checked_at')->first();
             
             if (!$firstLog) {
                 return null;
@@ -142,9 +147,9 @@ class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
     /**
      * Get the latest deployed patch.
      */
-    public function getLatestDeployedPatch(): ?SystemPatch
+    public function getLatestDeployedPatch(): ?RemoteVendorPatch
     {
-        return SystemPatch::latestDeployed()->first();
+        return RemoteVendorPatch::latestDeployed()->first();
     }
 
     /**
@@ -152,15 +157,15 @@ class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
      */
     public function getPendingPatchesCount(): int
     {
-        return SystemPatch::pending()->count();
+        return RemoteVendorPatch::pending()->count();
     }
 
     /**
      * Get the next scheduled patch.
      */
-    public function getNextScheduledPatch(): ?SystemPatch
+    public function getNextScheduledPatch(): ?RemoteVendorPatch
     {
-        return SystemPatch::scheduled()
+        return RemoteVendorPatch::scheduled()
             ->where('scheduled_at', '>', now())
             ->orderBy('scheduled_at', 'asc')
             ->first();
@@ -171,7 +176,7 @@ class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
      */
     public function getPendingPatches(): Collection
     {
-        return SystemPatch::pending()
+        return RemoteVendorPatch::pending()
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -181,7 +186,7 @@ class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
      */
     public function getOpenIncidents(): Collection
     {
-        return SystemIncident::open()
+        return RemoteVendorIncident::open()
             ->with(['reporter', 'assignee'])
             ->orderBy('severity', 'asc')
             ->orderBy('detected_at', 'desc')
@@ -193,7 +198,7 @@ class SLAMonitoringRepository implements SLAMonitoringRepositoryInterface
      */
     public function getRecentDowntimeEvents(int $limit = 10): Collection
     {
-        return SystemUptimeLog::downtime()
+        return RemoteVendorUptimeLog::downtime()
             ->latest('checked_at')
             ->limit($limit)
             ->get();

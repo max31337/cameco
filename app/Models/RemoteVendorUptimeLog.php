@@ -5,9 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SystemUptimeLog extends Model
+/**
+ * Remote Vendor Uptime Log Model
+ * 
+ * Tracks uptime/downtime of external vendor services.
+ * Used for monitoring vendor SLA compliance and service availability.
+ */
+class RemoteVendorUptimeLog extends Model
 {
     use HasFactory;
+
+    protected $table = 'remote_vendor_uptime_logs';
 
     protected $fillable = [
         'checked_at',

@@ -2,14 +2,19 @@
 
 namespace Database\Seeders;
 
-use App\Models\SystemIncident;
-use App\Models\SystemPatch;
-use App\Models\SystemUptimeLog;
+use App\Models\RemoteVendorIncident;
+use App\Models\RemoteVendorPatch;
+use App\Models\RemoteVendorUptimeLog;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class SLADataSeeder extends Seeder
+/**
+ * Remote Vendor SLA Seeder
+ * 
+ * Seeds sample data for remote vendor SLA monitoring (incidents, uptime logs, patches).
+ */
+class RemoteVendorSLASeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -37,7 +42,7 @@ class SLADataSeeder extends Seeder
             // Randomly insert a few downtime events
             $isHealthy = rand(1, 1000) > 1; // 99.9% chance of being healthy
 
-            SystemUptimeLog::create([
+            RemoteVendorUptimeLog::create([
                 'checked_at' => $currentDate,
                 'is_healthy' => $isHealthy,
                 'response_time_ms' => $isHealthy ? rand(50, 200) : rand(5000, 30000),
@@ -67,7 +72,7 @@ class SLADataSeeder extends Seeder
         $userId = $superadmin?->id ?? 1;
 
         // Create a few resolved incidents
-        SystemIncident::create([
+        RemoteVendorIncident::create([
             'title' => 'Database Connection Timeout',
             'description' => 'Users experienced slow response times due to database connection pooling issues.',
             'severity' => 'major',
@@ -81,7 +86,7 @@ class SLADataSeeder extends Seeder
             'resolution_notes' => 'Increased connection pool size from 10 to 50 connections.',
         ]);
 
-        SystemIncident::create([
+        RemoteVendorIncident::create([
             'title' => 'Email Service Outage',
             'description' => 'SMTP server was unreachable, preventing email notifications.',
             'severity' => 'minor',
@@ -97,7 +102,7 @@ class SLADataSeeder extends Seeder
         ]);
 
         // Create a few open incidents
-        SystemIncident::create([
+        RemoteVendorIncident::create([
             'title' => 'Slow Report Generation',
             'description' => 'Payroll reports are taking longer than expected to generate.',
             'severity' => 'minor',
@@ -109,7 +114,7 @@ class SLADataSeeder extends Seeder
             'investigating_started_at' => now()->subDays(1),
         ]);
 
-        SystemIncident::create([
+        RemoteVendorIncident::create([
             'title' => 'Cache Invalidation Issue',
             'description' => 'Some users seeing stale data after recent updates.',
             'severity' => 'minor',
@@ -132,7 +137,7 @@ class SLADataSeeder extends Seeder
         $userId = $superadmin?->id ?? 1;
 
         // Previously deployed patches
-        SystemPatch::create([
+        RemoteVendorPatch::create([
             'version' => '1.0.0',
             'patch_number' => 'PATCH-2024-001',
             'type' => 'feature',
@@ -146,7 +151,7 @@ class SLADataSeeder extends Seeder
             'affected_components' => ['core', 'auth', 'hr'],
         ]);
 
-        SystemPatch::create([
+        RemoteVendorPatch::create([
             'version' => '1.1.0',
             'patch_number' => 'PATCH-2024-002',
             'type' => 'feature',
@@ -160,7 +165,7 @@ class SLADataSeeder extends Seeder
             'affected_components' => ['onboarding', 'documents'],
         ]);
 
-        SystemPatch::create([
+        RemoteVendorPatch::create([
             'version' => '1.2.0',
             'patch_number' => 'PATCH-2025-001',
             'type' => 'security',
@@ -175,7 +180,7 @@ class SLADataSeeder extends Seeder
         ]);
 
         // Upcoming scheduled patch
-        SystemPatch::create([
+        RemoteVendorPatch::create([
             'version' => '1.3.0',
             'patch_number' => 'PATCH-2025-002',
             'type' => 'feature',
