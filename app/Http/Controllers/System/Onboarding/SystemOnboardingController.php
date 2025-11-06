@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\System;
+namespace App\Http\Controllers\System\Onboarding;
 
 use App\Http\Controllers\Controller;
 use App\Services\System\SystemOnboardingService;

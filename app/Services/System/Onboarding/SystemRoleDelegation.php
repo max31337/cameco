@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services\System;
+namespace App\Services\System\Onboarding;
 
-use App\Repositories\SystemOnboardingRepository;
+use App\Repositories\Contracts\System\Onboarding\SystemOnboardingRepositoryInterface;
 use App\Services\System\Exceptions\InvalidRoleTransitionException;
 
 /**
@@ -20,7 +20,7 @@ use App\Services\System\Exceptions\InvalidRoleTransitionException;
  */
 class SystemRoleDelegation
 {
-    protected SystemOnboardingRepository $repo;
+    protected SystemOnboardingRepositoryInterface $repo;
 
     protected array $allowedTransitions = [
         'super_admin'   => 'office_admin',
@@ -28,7 +28,7 @@ class SystemRoleDelegation
         'hr_manager'    => 'completed',
     ];
 
-    public function __construct(SystemOnboardingRepository $repo)
+    public function __construct(SystemOnboardingRepositoryInterface $repo)
     {
         $this->repo = $repo;
     }

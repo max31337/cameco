@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\System;
+namespace App\Services\System\Onboarding;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;

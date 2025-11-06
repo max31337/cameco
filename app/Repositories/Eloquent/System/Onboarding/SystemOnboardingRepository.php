@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Repositories\Eloquent;
+namespace App\Repositories\Eloquent\System\Onboarding;
 
-use App\Repositories\Contracts\SystemOnboardingRepositoryInterface;
+use App\Repositories\Contracts\System\Onboarding\SystemOnboardingRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
 class SystemOnboardingRepository implements SystemOnboardingRepositoryInterface
