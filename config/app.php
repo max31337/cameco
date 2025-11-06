@@ -123,4 +123,18 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Application Service Providers
+    |--------------------------------------------------------------------------
+    |
+    | These providers bootstrap the core domain logic and infrastructure bindings.
+    | Each bounded context may use its own dedicated provider for scalability.
+    |
+    */
+    
+    App\Providers\SystemServiceProvider::class,
+
+
 ];

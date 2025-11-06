@@ -1,4 +1,7 @@
 <?php
+/* This is Legacy SystemOnboardingService
+ *See refactored workflow: app/Services/System/SystemOnboardingService.php
+*/
 
 namespace App\Services;
 
