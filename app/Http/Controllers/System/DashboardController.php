@@ -5,14 +5,19 @@ namespace App\Http\Controllers\System;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Repositories\SystemOnboardingRepository;
+use App\Services\System\SLAMonitoringService;
+use App\Services\UserOnboardingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
-use App\Services\UserOnboardingService;
 
 class DashboardController extends Controller
 {
+	public function __construct(
+		protected SLAMonitoringService $slaService
+	) {}
+
 	/**
 	 * Show the superadmin dashboard.
 	 */
@@ -164,8 +169,14 @@ class DashboardController extends Controller
 			$canCompleteOnboarding = false;
 		}
 
-		// Generate placeholder SLA metrics for demonstration
-		$slaMetrics = $this->generatePlaceholderSLAMetrics();
+		// Get SLA metrics from the service
+		$slaMetrics = null;
+		try {
+			$slaMetrics = $this->slaService->getDashboardMetrics();
+		} catch (\Exception $e) {
+			// Fallback to placeholder data if service fails
+			$slaMetrics = $this->generatePlaceholderSLAMetrics();
+		}
 
 		$data = [
 			'counts' => $counts,
