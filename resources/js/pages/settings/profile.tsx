@@ -75,7 +75,7 @@ export default function Profile({
                                         <Input
                                             id="first_name"
                                             className="mt-1 block w-full"
-                                            defaultValue={auth.user?.profile?.first_name ?? ''}
+                                            defaultValue={(auth.user?.profile as any)?.first_name ?? ''}
                                             name="first_name"
                                             placeholder="First name"
                                         />
@@ -87,7 +87,7 @@ export default function Profile({
                                         <Input
                                             id="last_name"
                                             className="mt-1 block w-full"
-                                            defaultValue={auth.user?.profile?.last_name ?? ''}
+                                            defaultValue={(auth.user?.profile as any)?.last_name ?? ''}
                                             name="last_name"
                                             placeholder="Last name"
                                         />

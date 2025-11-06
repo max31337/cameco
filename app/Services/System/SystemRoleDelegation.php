@@ -18,7 +18,7 @@ use App\Services\System\Exceptions\InvalidRoleTransitionException;
  * Anything else is illegal and dangerous to business integrity.
  * This enforces correct business rule ordering.
  */
-class SystemRoleDelegationService
+class SystemRoleDelegation
 {
     protected SystemOnboardingRepository $repo;
 
