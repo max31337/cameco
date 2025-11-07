@@ -12,12 +12,12 @@
  * - Cache without context scoping (multi-vendor / multi-tenant risk)
  *
  * REFACTOR PLAN (Future Integration Targets):
- * ✅ Extract SLA calculation rules into a VendorSLADomainService
- * ✅ Replace hard-coded dates/business hours with config-driven values
- * ✅ Move output formatting into transformers / casted DTOs
- * ✅ Namespace cache keys per vendor / tenant (e.g. 'vendor_sla:{vendor_id}:dashboard')
- * ✅ Add parameterized date ranges across all relevant methods
- * ✅ Validate repository responses and normalize shapes
+ * - Extract SLA calculation rules into a VendorSLADomainService
+ * - Replace hard-coded dates/business hours with config-driven values
+ * - Move output formatting into transformers / casted DTOs
+ * - Namespace cache keys per vendor / tenant (e.g. 'vendor_sla:{vendor_id}:dashboard')
+ * - Add parameterized date ranges across all relevant methods
+ * - Validate repository responses and normalize shapes
  *
  * OBS: Long-term plan is to unify SLA telemetry with a proper observability backend
  *      (SigNoz or compatible OpenTelemetry signals), replacing ad-hoc DB lookups.
