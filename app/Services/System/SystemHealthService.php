@@ -1,5 +1,30 @@
 <?php
-// this shit is ugly, only made it to see how it would look like in the frontend, i am gonna be using SigNoz for metrics gathering, this shit is brittle af
+/*
+* dev note:
+* this shit is ugly, only made it to see how it would look like in the frontend,
+* i am gonna be using SigNoz for metrics gathering, this shit is brittle af
+*/
+/**
+ * NOTE – OBSERVABILITY PLATFORM INTEGRATION / FUTURE REFACTOR
+ *
+ * This service currently computes and caches a variety of system health metrics
+ * (server CPU/memory, database latency, queue/pending jobs, storage usage, backups,
+ * security events, cron metrics) within the application layer for on-prem deployment.
+ *
+ * Once an observability solution such as SigNoz (or Grafana/Prometheus + Loki) is fully
+ * deployed, the preferred design will be:
+ *   • Host and infrastructure metrics forwarded by exporters/agents (OpenTelemetry, Prometheus)
+ *   • Application and domain-specific metrics emitted directly (e.g., backup success rate, failed logins, attendance events)
+ *   • Logs/traces shipped to the observability backend and dashboards built there
+ *
+ * At that stage:
+ *   – Replace manual OS-level metric gathering (getCpuUsage, getMemoryUsage, getLoadAverage, getUptime) with telemetry agent data
+ *   – Remove hard-coded thresholds and status logic embedded here in favour of alerting and dashboards in the observability tool
+ *   – Possibly deprecate or shrink this service to only provide business-domain health metrics, not full infrastructure monitoring
+ *   – Only keep cached summary method (getDashboardMetrics) as a lightweight wrap for business metrics if needed
+ *
+ * This file is transitional. Plan to refactor once the monitoring stack is operational.
+ */
 
 namespace App\Services\System;
 
