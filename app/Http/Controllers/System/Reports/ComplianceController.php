@@ -35,7 +35,7 @@ class ComplianceController extends Controller
         $complianceSummary = $this->getComplianceSummary($from, $to);
 
         $breadcrumbs = [
-            ['title' => 'System', 'href' => '/system/dashboard'],
+            ['title' => 'Dashboard', 'href' => '/system/dashboard'],
             ['title' => 'Reports', 'href' => '#'],
             ['title' => 'Compliance', 'href' => '#'],
         ];

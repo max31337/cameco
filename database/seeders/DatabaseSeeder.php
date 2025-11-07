@@ -82,5 +82,10 @@ class DatabaseSeeder extends Seeder
         if (class_exists(\Database\Seeders\SecurityPolicySeeder::class)) {
             $this->call(\Database\Seeders\SecurityPolicySeeder::class);
         }
+
+        // Seed default security logs
+        if (class_exists(\Database\Seeders\SecurityAuditLogSeeder::class)) {
+            $this->call(\Database\Seeders\SecurityAuditLogSeeder::class);
+        }
     }
 }

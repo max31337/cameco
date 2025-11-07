@@ -34,7 +34,7 @@ class PayrollController extends Controller
         $payrollSummary = $this->getPayrollSummary($from, $to);
 
         $breadcrumbs = [
-            ['title' => 'System', 'href' => '/system/dashboard'],
+            ['title' => 'Dashboard', 'href' => '/system/dashboard'],
             ['title' => 'Reports', 'href' => '#'],
             ['title' => 'Payroll Logs', 'href' => '#'],
         ];
@@ -55,8 +55,8 @@ class PayrollController extends Controller
      */
     private function getPayrollRunHistory(Carbon $from, Carbon $to): array
     {
-        // Query scheduled jobs related to payroll
-        $runs = DB::table('scheduled_jobs')
+        // Query payroll execution history
+        $runs = DB::table('payroll_execution_histories')
             ->where('job_type', 'payroll_generation')
             ->whereBetween('executed_at', [$from, $to])
             ->orderBy('executed_at', 'desc')

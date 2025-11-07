@@ -100,7 +100,7 @@ export default function SecurityReports({
   };
 
   const breadcrumbItems = [
-    { title: 'System', href: '/system/dashboard' },
+    { title: 'Dashboard', href: '/dashboard' },
     { title: 'Reports', href: '#' },
     { title: 'Security Reports', href: '#' },
   ];

@@ -89,7 +89,7 @@ export default function UsageAnalytics({
   };
 
   const breadcrumbItems: BreadcrumbItem[] = [
-    { title: 'System', href: '/system/dashboard' },
+    { title: 'Dashboard', href: '/dashboard' },
     { title: 'Reports', href: '#' },
     { title: 'Usage Analytics', href: '#' },
   ];
