@@ -1,5 +1,25 @@
 <?php
 
+/**
+ * TODO: CONFIG EXTRACT AND BADGE DEC0UPLING
+ *
+ * This service currently acts as a hard-coded module registry mixed with UI state
+ * (badge counts, enabled flags, route metadata). This is not domain logic and should
+ * not live in a service layer long-term.
+ *
+ * Refactor plan:
+ *  - Move module definitions (id/title/description/icon/route/category/enabled)
+ *    into a database table or dedicated configuration structure
+ *  - Expose a lightweight endpoint to retrieve module metadata without counts
+ *  - Fetch badge/alert metrics separately (async) via dedicated stats endpoints
+ *  - Scope cache keys per tenant/org once multi-tenancy is enabled
+ *  - Eventually remove ModuleService entirely and replace with
+ *    ModulesConfigRepository + ModuleMetricsService
+ *
+ * This file is temporary to keep UI functional during early development.
+ * will rip it out once feature flags and dynamic module management exist.
+ */
+
 namespace App\Services\System;
 
 use App\Repositories\Contracts\System\ModuleRepositoryInterface;
