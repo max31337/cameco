@@ -58,10 +58,20 @@ export function NavSystemAdmin() {
             icon: Lock,
             href: '/system/security/roles',
         },
+        {
+            title: 'Security Policies',
+            icon: Shield,
+            href: '/system/security/policies',
+        },
+        {
+            title: 'IP Allowlist/Blocklist',
+            icon: Lock,
+            href: '/system/security/ip-rules',
+        },
     ];
 
-    const isSystemAdminActive = page.url.startsWith('/system/') && !page.url.startsWith('/system/users') && !page.url.startsWith('/system/security/roles');
-    const isSecurityAccessActive = page.url.startsWith('/system/users') || page.url.startsWith('/system/security/roles');
+    const isSystemAdminActive = page.url.startsWith('/system/') && !page.url.startsWith('/system/users') && !page.url.startsWith('/system/security/roles') && !page.url.startsWith('/system/security/policies') && !page.url.startsWith('/system/security/ip-rules');
+    const isSecurityAccessActive = page.url.startsWith('/system/users') || page.url.startsWith('/system/security/roles') || page.url.startsWith('/system/security/policies') || page.url.startsWith('/system/security/ip-rules');
 
     return (
         <>

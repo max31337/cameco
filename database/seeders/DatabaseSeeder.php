@@ -77,5 +77,10 @@ class DatabaseSeeder extends Seeder
         if (class_exists(\Database\Seeders\CronJobSeeder::class)) {
             $this->call(\Database\Seeders\CronJobSeeder::class);
         }
+
+        // Seed default security policies
+        if (class_exists(\Database\Seeders\SecurityPolicySeeder::class)) {
+            $this->call(\Database\Seeders\SecurityPolicySeeder::class);
+        }
     }
 }
