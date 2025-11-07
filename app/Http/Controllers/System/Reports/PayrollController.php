@@ -34,7 +34,7 @@ class PayrollController extends Controller
         $payrollSummary = $this->getPayrollSummary($from, $to);
 
         $breadcrumbs = [
-            ['title' => 'Dashboard', 'href' => '/system/dashboard'],
+            ['title' => 'Dashboard', 'href' => '/dashboard'],
             ['title' => 'Reports', 'href' => '#'],
             ['title' => 'Payroll Logs', 'href' => '#'],
         ];
@@ -91,7 +91,7 @@ class PayrollController extends Controller
      */
     private function getErrorLogs(Carbon $from, Carbon $to): array
     {
-        $errors = DB::table('scheduled_jobs')
+        $errors = DB::table('payroll_execution_histories')
             ->where('job_type', 'payroll_generation')
             ->where('status', 'failed')
             ->whereBetween('executed_at', [$from, $to])
@@ -134,9 +134,9 @@ class PayrollController extends Controller
      */
     private function getPaymentBatches(Carbon $from, Carbon $to): array
     {
-        // Query payment-related data from scheduled jobs
-        $batches = DB::table('scheduled_jobs')
-            ->where('job_type', 'payroll_generation')
+        // Query payment-related data from payroll execution histories
+        $batches = DB::table('payroll_execution_histories')
+            ->where('job_type', 'payment_batch')
             ->where('status', 'completed')
             ->whereBetween('executed_at', [$from, $to])
             ->orderBy('executed_at', 'desc')

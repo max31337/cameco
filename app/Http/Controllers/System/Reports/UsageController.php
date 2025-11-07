@@ -41,7 +41,7 @@ class UsageController extends Controller
         $activityByType = $this->analyticsService->getActivityByActionType($from, $to);
 
         $breadcrumbs = [
-            ['title' => 'System', 'href' => '/system/dashboard'],
+            ['title' => 'Dashboard', 'href' => '/dashboard'],
             ['title' => 'Reports', 'href' => '#'],
             ['title' => 'Usage Analytics', 'href' => '#'],
         ];
