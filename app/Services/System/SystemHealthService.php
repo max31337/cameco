@@ -165,6 +165,53 @@ class SystemHealthService
     }
 
     /**
+     * Get cron job metrics
+     */
+    public function getCronMetrics(): array
+    {
+        return Cache::remember('system_health_cron_metrics', now()->addMinutes(5), function () {
+            try {
+                // Get metrics from CronRepository via SystemCronService
+                $cronService = app(\App\Services\System\SystemCronService::class);
+                $metrics = $cronService->getJobMetrics();
+
+                // Determine status based on metrics
+                $status = 'healthy';
+                if ($metrics['overdue_jobs'] > 0) {
+                    $status = 'critical';
+                } elseif ($metrics['recent_failures'] > 0) {
+                    $status = 'warning';
+                } elseif ($metrics['failed_jobs'] > 0) {
+                    $status = 'warning';
+                }
+
+                return [
+                    'total_jobs' => $metrics['total_jobs'],
+                    'enabled_jobs' => $metrics['enabled_jobs'],
+                    'disabled_jobs' => $metrics['disabled_jobs'],
+                    'overdue_jobs' => $metrics['overdue_jobs'],
+                    'recent_failures_24h' => $metrics['recent_failures'],
+                    'overall_success_rate' => $metrics['overall_success_rate'],
+                    'next_job' => $metrics['next_job'],
+                    'status' => $status,
+                ];
+            } catch (\Exception $e) {
+                // If cron service not available, return empty metrics
+                return [
+                    'total_jobs' => 0,
+                    'enabled_jobs' => 0,
+                    'disabled_jobs' => 0,
+                    'overdue_jobs' => 0,
+                    'recent_failures_24h' => 0,
+                    'overall_success_rate' => 0,
+                    'next_job' => null,
+                    'status' => 'unavailable',
+                ];
+            }
+        });
+    }
+
+    /**
      * Determine overall system status
      */
     protected function determineOverallStatus(): string

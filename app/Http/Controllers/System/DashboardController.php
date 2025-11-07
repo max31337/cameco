@@ -5,6 +5,7 @@ namespace App\Http\Controllers\System;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\System\SystemHealthService;
+use App\Services\System\SystemCronService;
 use App\Services\UserOnboardingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,8 @@ use Inertia\Inertia;
 class DashboardController extends Controller
 {
 	public function __construct(
-		protected SystemHealthService $healthService
+		protected SystemHealthService $healthService,
+		protected SystemCronService $cronService
 	) {}
 
 	/**
@@ -168,6 +170,14 @@ class DashboardController extends Controller
 			$systemHealth = null;
 		}
 
+		// Get cron job metrics
+		$cronMetrics = null;
+		try {
+			$cronMetrics = $this->healthService->getCronMetrics();
+		} catch (\Exception $e) {
+			$cronMetrics = null;
+		}
+
 		$data = [
 			'counts' => $counts,
 			'company' => [
@@ -180,6 +190,7 @@ class DashboardController extends Controller
 			'canCompleteOnboarding' => $canCompleteOnboarding,
 			'welcomeText' => 'Welcome to the Superadmin dashboard — manage platform settings and users from here.',
 			'systemHealth' => $systemHealth,
+			'cronMetrics' => $cronMetrics,
 		];
 
 		return Inertia::render('System/Dashboard', $data);

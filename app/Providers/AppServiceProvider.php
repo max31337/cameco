@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\System\CronRepositoryInterface;
 use App\Repositories\Contracts\System\SystemHealthRepositoryInterface;
 use App\Repositories\Contracts\System\Vendor\RemoteVendorSLARepositoryInterface;
+use App\Repositories\Eloquent\System\CronRepository;
 use App\Repositories\Eloquent\System\SystemHealthRepository;
 use App\Repositories\Eloquent\System\Vendor\RemoteVendorSLARepository;
 use Illuminate\Support\ServiceProvider;
@@ -25,6 +27,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             RemoteVendorSLARepositoryInterface::class,
             RemoteVendorSLARepository::class
+        );
+
+        // Bind Cron Repository
+        $this->app->bind(
+            CronRepositoryInterface::class,
+            CronRepository::class
         );
     }
 

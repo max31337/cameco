@@ -38,6 +38,21 @@ interface SecurityOverview {
     status: 'healthy' | 'warning' | 'critical';
 }
 
+interface CronMetrics {
+    total_jobs: number;
+    enabled_jobs: number;
+    disabled_jobs: number;
+    overdue_jobs: number;
+    recent_failures_24h: number;
+    overall_success_rate: number;
+    next_job: {
+        name: string;
+        next_run_at: string;
+        formatted_next_run: string;
+    } | null;
+    status: 'healthy' | 'warning' | 'critical' | 'unavailable';
+}
+
 interface SystemHealthData {
     server: ServerMetrics;
     storage: StorageMetrics;
@@ -282,6 +297,93 @@ export function SecurityAuditCard({ security }: { security: SecurityOverview }) 
                     </div>
                     <div className="flex items-center justify-end gap-1 text-xs text-primary pt-3 mt-auto">
                         <span>View Audit Logs</span>
+                        <ArrowRight className="h-3 w-3" />
+                    </div>
+                </CardContent>
+            </Link>
+        </Card>
+    );
+}
+
+export function CronJobsCard({ cronMetrics }: { cronMetrics: CronMetrics }) {
+    return (
+        <Card className="border-l-4 cursor-pointer hover:shadow-lg transition-shadow" style={{ 
+            borderLeftColor: 
+                cronMetrics.status === 'critical' ? '#EF4444' : 
+                cronMetrics.status === 'warning' ? '#F59E0B' : 
+                '#10B981' 
+        }}>
+            <Link href="/system/cron" className="flex flex-col h-full">
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Clock className="h-5 w-5 text-primary" />
+                            <CardTitle className="text-base">Scheduled Jobs</CardTitle>
+                        </div>
+                        <Badge variant={getStatusBadgeVariant(cronMetrics.status === 'unavailable' ? 'critical' : cronMetrics.status)}>
+                            {cronMetrics.status.toUpperCase()}
+                        </Badge>
+                    </div>
+                    <CardDescription>Cron job monitoring</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-between space-y-3">
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Total Jobs</span>
+                        <span className="font-semibold">{cronMetrics.total_jobs}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Enabled / Disabled</span>
+                        <span className="font-semibold">
+                            <span className="text-green-600">{cronMetrics.enabled_jobs}</span>
+                            {' / '}
+                            <span className="text-gray-500">{cronMetrics.disabled_jobs}</span>
+                        </span>
+                    </div>
+                    
+                    {cronMetrics.recent_failures_24h > 0 && (
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Recent Failures (24h)</span>
+                            <Badge variant="destructive" className="text-xs">
+                                {cronMetrics.recent_failures_24h}
+                            </Badge>
+                        </div>
+                    )}
+                    
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Success Rate</span>
+                        <span className={`font-semibold ${
+                            cronMetrics.overall_success_rate >= 95 ? 'text-green-600' :
+                            cronMetrics.overall_success_rate >= 80 ? 'text-yellow-600' :
+                            'text-red-600'
+                        }`}>
+                            {cronMetrics.overall_success_rate.toFixed(1)}%
+                        </span>
+                    </div>
+                    
+                    {cronMetrics.next_job && (
+                        <div className="pt-2 border-t">
+                            <div className="text-xs text-muted-foreground mb-1">Next Job:</div>
+                            <div className="text-sm font-medium truncate">{cronMetrics.next_job.name}</div>
+                            <div className="text-xs text-muted-foreground">{cronMetrics.next_job.formatted_next_run}</div>
+                        </div>
+                    )}
+                    
+                    <div className="pt-2 border-t">
+                        {cronMetrics.overdue_jobs > 0 ? (
+                            <div className="flex items-center gap-2 text-red-600">
+                                <AlertTriangle className="h-4 w-4" />
+                                <span className="text-sm">{cronMetrics.overdue_jobs} overdue job{cronMetrics.overdue_jobs > 1 ? 's' : ''}</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 text-green-600">
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span className="text-sm">All jobs on schedule</span>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="flex items-center justify-end gap-1 text-xs text-primary pt-3 mt-auto">
+                        <span>View All Jobs</span>
                         <ArrowRight className="h-3 w-3" />
                     </div>
                 </CardContent>

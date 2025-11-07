@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+use App\Http\Controllers\System\CronController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -21,23 +22,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/settings.php';
 
-use App\Http\Controllers\System\SystemOnboarding;
+use App\Http\Controllers\System\Onboarding\SystemOnboardingController;
 
 // System onboarding endpoints (use existing auth)
 Route::middleware(['auth'])->group(function () {
-    Route::post('/system/onboarding/start', [SystemOnboarding::class, 'start']);
-    Route::post('/system/onboarding/skip', [SystemOnboarding::class, 'skip']);
-    Route::post('/system/onboarding/complete', [SystemOnboarding::class, 'complete'])->name('system.onboarding.complete');
+    Route::post('/system/onboarding/start', [SystemOnboardingController::class, 'start']);
+    Route::post('/system/onboarding/skip', [SystemOnboardingController::class, 'skip']);
+    Route::post('/system/onboarding/complete', [SystemOnboardingController::class, 'complete'])->name('system.onboarding.complete');
 
     // Per-user onboarding endpoints
-    Route::get('/user/onboarding', [\App\Http\Controllers\UserOnboardingController::class, 'show'])->name('user.onboarding.show');
-    Route::patch('/user/onboarding', [\App\Http\Controllers\UserOnboardingController::class, 'update'])->name('user.onboarding.update');
-    Route::post('/user/onboarding/skip', [\App\Http\Controllers\UserOnboardingController::class, 'skip'])->name('user.onboarding.skip');
+    Route::get('/user/onboarding', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'show'])->name('user.onboarding.show');
+    Route::patch('/user/onboarding', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'update'])->name('user.onboarding.update');
+    Route::post('/user/onboarding/skip', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'skip'])->name('user.onboarding.skip');
 
     // Onboarding UX endpoints
-    Route::get('/onboarding', [\App\Http\Controllers\UserOnboardingController::class, 'page'])->name('onboarding.page');
-    Route::post('/onboarding/step', [\App\Http\Controllers\UserOnboardingController::class, 'completeStep'])->name('onboarding.step');
-    Route::post('/onboarding/complete', [\App\Http\Controllers\UserOnboardingController::class, 'complete'])->name('onboarding.complete');
+    Route::get('/onboarding', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'page'])->name('onboarding.page');
+    Route::post('/onboarding/step', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'completeStep'])->name('onboarding.step');
+    Route::post('/onboarding/complete', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'complete'])->name('onboarding.complete');
 
     // System/Vendor dashboards
     Route::get('/system/dashboard', [\App\Http\Controllers\System\DashboardController::class, 'index'])->name('system.dashboard');
@@ -66,4 +67,16 @@ Route::middleware(['auth'])->group(function () {
     // Storage Management
     Route::get('/system/storage', [\App\Http\Controllers\System\StorageController::class, 'index'])->name('system.storage');
     Route::post('/system/storage/cleanup', [\App\Http\Controllers\System\StorageController::class, 'cleanup'])->name('system.storage.cleanup');
+});
+
+// Cron Job Management (Superadmin only)
+Route::middleware(['auth', 'superadmin'])->prefix('system/cron')->group(function () {
+    Route::get('/', [CronController::class, 'index'])->name('system.cron');
+    Route::post('/', [CronController::class, 'store'])->name('system.cron.store');
+    Route::post('/sync', [CronController::class, 'sync'])->name('system.cron.sync');
+    Route::post('/{id}/toggle', [CronController::class, 'toggle'])->name('system.cron.toggle');
+    Route::post('/{id}/run', [CronController::class, 'run'])->name('system.cron.run');
+    Route::get('/{id}/history', [CronController::class, 'history'])->name('system.cron.history');
+    Route::put('/{id}', [CronController::class, 'update'])->name('system.cron.update');
+    Route::delete('/{id}', [CronController::class, 'destroy'])->name('system.cron.destroy');
 });

@@ -4,7 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import SuperadminOnboardingCard from '@/components/superadmin-onboarding-card';
-import { SystemHealthWidgets } from '@/components/system-health-widgets';
+import { SystemHealthWidgets, CronJobsCard } from '@/components/system-health-widgets';
 
 interface ChecklistItem {
     id: string;
@@ -93,6 +93,21 @@ interface SystemHealthData {
     overall_status: 'healthy' | 'warning' | 'critical';
 }
 
+interface CronMetrics {
+    total_jobs: number;
+    enabled_jobs: number;
+    disabled_jobs: number;
+    overdue_jobs: number;
+    recent_failures_24h: number;
+    overall_success_rate: number;
+    next_job: {
+        name: string;
+        next_run_at: string;
+        formatted_next_run: string;
+    } | null;
+    status: 'healthy' | 'warning' | 'critical' | 'unavailable';
+}
+
 interface SystemDashboardProps {
     counts: {
         users: number;
@@ -107,6 +122,7 @@ interface SystemDashboardProps {
     canCompleteOnboarding: boolean;
     welcomeText: string;
     systemHealth: SystemHealthData | null;
+    cronMetrics: CronMetrics | null;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -124,6 +140,7 @@ export default function Dashboard({
     userOnboarding,
     showSetupModal,
     systemHealth,
+    cronMetrics,
 }: SystemDashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -148,6 +165,13 @@ export default function Dashboard({
                 {/* System Health Monitoring */}
                 {systemHealth && (
                     <SystemHealthWidgets health={systemHealth} />
+                )}
+
+                {/* Cron Job Monitoring */}
+                {cronMetrics && (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <CronJobsCard cronMetrics={cronMetrics} />
+                    </div>
                 )}
 
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
