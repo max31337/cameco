@@ -109,6 +109,29 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{rule}', [\App\Http\Controllers\System\Security\IPRuleController::class, 'destroy'])->name('system.security.ip-rules.destroy');
         Route::post('/{rule}/toggle', [\App\Http\Controllers\System\Security\IPRuleController::class, 'toggle'])->name('system.security.ip-rules.toggle');
     });
+
+    // Organization Control - Overview, Departments & Positions (Superadmin only)
+    Route::middleware(['superadmin'])->prefix('system/organization')->group(function () {
+        Route::get('/overview', [\App\Http\Controllers\System\Organization\OverviewController::class, 'index'])->name('system.organization.overview');
+        
+        Route::get('/departments', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'index'])->name('system.organization.departments');
+        Route::post('/departments', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'store'])->name('system.organization.departments.store');
+        Route::get('/departments/{department}', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'show'])->name('system.organization.departments.show');
+        Route::put('/departments/{department}', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'update'])->name('system.organization.departments.update');
+        Route::delete('/departments/{department}', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'destroy'])->name('system.organization.departments.destroy');
+
+        Route::get('/positions', [\App\Http\Controllers\System\Organization\PositionController::class, 'index'])->name('system.organization.positions');
+        Route::post('/positions', [\App\Http\Controllers\System\Organization\PositionController::class, 'store'])->name('system.organization.positions.store');
+        Route::get('/positions/{position}', [\App\Http\Controllers\System\Organization\PositionController::class, 'show'])->name('system.organization.positions.show');
+        Route::put('/positions/{position}', [\App\Http\Controllers\System\Organization\PositionController::class, 'update'])->name('system.organization.positions.update');
+        Route::delete('/positions/{position}', [\App\Http\Controllers\System\Organization\PositionController::class, 'destroy'])->name('system.organization.positions.destroy');
+    });
+
+    // Monitoring & Reporting - Usage Analytics & Security Reports (Superadmin only)
+    Route::middleware(['superadmin'])->prefix('system/reports')->group(function () {
+        Route::get('/usage', [\App\Http\Controllers\System\Reports\UsageController::class, 'index'])->name('system.reports.usage');
+        Route::get('/security', [\App\Http\Controllers\System\Reports\SecurityController::class, 'index'])->name('system.reports.security');
+    });
 });
 
 // Cron Job Management (Superadmin only)

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repositories\Contracts\System\Onboarding;
+namespace App\Repositories\Contracts\System\Organization;
 
 interface SystemOnboardingRepositoryInterface
 {

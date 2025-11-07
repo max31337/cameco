@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Services\System\Onboarding;
+namespace App\Services\System\Organization;
 
-use App\Repositories\Contracts\System\Onboarding\SystemOnboardingRepositoryInterface;
-use App\Services\System\Onboarding\SystemConfigService;
-use App\Services\System\Onboarding\SystemRoleDelegationService;
+use App\Repositories\Contracts\System\Organization\SystemOnboardingRepositoryInterface;
+use App\Services\System\Organization\SystemConfigService;
+use App\Services\System\Organization\SystemRoleDelegationService;
 use Illuminate\Support\Facades\DB;
 
 /**
