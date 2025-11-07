@@ -81,7 +81,7 @@ export default function IPRulesPage({
 	return (
 		<AppLayout
 			breadcrumbs={[
-				{ title: 'System', href: '#' },
+				{ title: 'Dashboard', href: '/dashboard' },
 				{ title: 'Security & Access', href: '#' },
 				{ title: 'IP Allowlist/Blocklist', href: '/system/security/ip-rules' },
 			]}

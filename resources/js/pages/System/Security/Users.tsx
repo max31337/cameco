@@ -74,7 +74,7 @@ export default function UsersPage({
 	return (
 		<AppLayout
 			breadcrumbs={[
-				{ title: 'System', href: '#' },
+				{ title: 'Dashboard', href: '/dashboard' },
 				{ title: 'Security & Access', href: '#' },
 				{ title: 'User Management', href: '/system/users' },
 			]}

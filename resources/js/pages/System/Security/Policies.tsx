@@ -143,7 +143,7 @@ export default function PoliciesPage({ policies, stats }: PoliciesPageProps) {
 
 	return (
 		<AppLayout breadcrumbs={[
-			{ title: 'System', href: '#' },
+			{ title: 'Dashboard', href: '/dashboard' },
 			{ title: 'Security & Access', href: '#' },
 			{ title: 'Security Policies', href: '/system/security/policies' },
 		]}>

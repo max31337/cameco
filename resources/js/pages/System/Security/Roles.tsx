@@ -53,7 +53,7 @@ export default function RolesPage({ roles, stats }: RolesPageProps) {
 
 	return (
 		<AppLayout breadcrumbs={[
-			{ title: 'System', href: '#' },
+			{ title: 'Dashboard', href: '/dashboard' },
 			{ title: 'Security & Access', href: '#' },
 			{ title: 'Roles & Permissions', href: '/system/security/roles' },
 		]}>
