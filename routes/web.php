@@ -54,6 +54,11 @@ Route::middleware(['auth'])->group(function () {
     // Backup Management
     Route::get('/system/backups', [\App\Http\Controllers\System\SystemAdministration\BackupController::class, 'index'])->name('system.backups');
     Route::get('/system/backups/{backup}', [\App\Http\Controllers\System\SystemAdministration\BackupController::class, 'show'])->name('system.backups.show');
+    Route::post('/system/backups/trigger', [\App\Http\Controllers\System\SystemAdministration\BackupController::class, 'trigger'])->name('system.backups.trigger');
+    Route::post('/system/backups/schedule', [\App\Http\Controllers\System\SystemAdministration\BackupController::class, 'updateSchedule'])->name('system.backups.schedule');
+    Route::post('/system/backups/retention', [\App\Http\Controllers\System\SystemAdministration\BackupController::class, 'updateRetention'])->name('system.backups.retention');
+    Route::post('/system/backups/{backup}/restore', [\App\Http\Controllers\System\SystemAdministration\BackupController::class, 'restore'])->name('system.backups.restore');
+    Route::post('/system/backups/cleanup', [\App\Http\Controllers\System\SystemAdministration\BackupController::class, 'cleanup'])->name('system.backups.cleanup');
 
     // Patch Management
     Route::get('/system/patches', [\App\Http\Controllers\System\SystemAdministration\PatchController::class, 'index'])->name('system.patches');
@@ -66,6 +71,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/system/security/audit', [\App\Http\Controllers\System\SystemAdministration\SecurityAuditController::class, 'index'])->name('system.security.audit');
     Route::get('/system/security/audit/{log}', [\App\Http\Controllers\System\SystemAdministration\SecurityAuditController::class, 'show'])->name('system.security.audit.show');
     Route::get('/system/security/audit/export', [\App\Http\Controllers\System\SystemAdministration\SecurityAuditController::class, 'export'])->name('system.security.audit.export');
+
+    // Error Logs
+    Route::get('/system/logs/errors', [\App\Http\Controllers\System\Logs\ErrorLogController::class, 'index'])->name('system.logs.errors');
+    Route::get('/system/logs/errors/{errorLog}', [\App\Http\Controllers\System\Logs\ErrorLogController::class, 'show'])->name('system.logs.errors.show');
+    Route::post('/system/logs/errors/{errorLog}/resolve', [\App\Http\Controllers\System\Logs\ErrorLogController::class, 'resolve'])->name('system.logs.errors.resolve');
+    Route::post('/system/logs/errors/{errorLog}/bulk-resolve', [\App\Http\Controllers\System\Logs\ErrorLogController::class, 'bulkResolve'])->name('system.logs.errors.bulk-resolve');
+    Route::post('/system/logs/errors/cleanup', [\App\Http\Controllers\System\Logs\ErrorLogController::class, 'cleanup'])->name('system.logs.errors.cleanup');
 
     // Storage Management
     Route::get('/system/storage', [\App\Http\Controllers\System\SystemAdministration\StorageController::class, 'index'])->name('system.storage');
