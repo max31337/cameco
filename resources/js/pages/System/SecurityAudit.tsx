@@ -111,7 +111,7 @@ export default function SecurityAudit({ logs, stats, eventTypes, filters }: Prop
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Security Audit Logs</h1>
+                        <h1 className="text-3xl font-bold tracking-tight dark:text-foreground">Security Audit Logs</h1>
                         <p className="text-muted-foreground">Monitor security events and user activity</p>
                     </div>
                     <Button onClick={handleExport} variant="outline">

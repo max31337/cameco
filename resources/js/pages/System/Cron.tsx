@@ -226,7 +226,7 @@ export default function Cron({ jobs, metrics, availableCommands, filters }: Prop
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Scheduled Jobs</h1>
+                        <h1 className="text-3xl font-bold tracking-tight dark:text-foreground">Scheduled Jobs</h1>
                         <p className="text-muted-foreground">Manage and monitor Laravel scheduled tasks</p>
                     </div>
                     <div className="flex items-center gap-2">

@@ -161,7 +161,7 @@ export default function Positions({ positions, departments, levels, stats, filte
 
         <div className="flex justify-between items-center">
             <div>
-                <h1 className="text-3xl font-bold">Positions & Hierarchy</h1>
+                <h1 className="text-3xl font-bold dark:text-foreground">Positions & Hierarchy</h1>
                 <p className="text-muted-foreground mt-2">Manage job titles, reporting relationships, and organizational structure</p>
             </div>
             <Button onClick={() => setShowForm(!showForm)} size="lg">

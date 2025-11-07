@@ -99,7 +99,7 @@ export default function Backups({ backups, stats, filters }: Props) {
             <div className="space-y-6 p-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Backup Management</h1>
+                    <h1 className="text-3xl font-bold tracking-tight dark:text-foreground">Backup Management</h1>
                     <p className="text-muted-foreground">Monitor and manage system backups</p>
                 </div>
 

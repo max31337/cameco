@@ -137,16 +137,16 @@ export default function CompliancePage({
       <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Workforce Compliance Reports</h1>
-          <p className="text-gray-500 mt-2">
+          <h1 className="text-3xl font-bold tracking-tight dark:text-foreground">Workforce Compliance Reports</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">
             Track compliance issues, violations, and regulatory requirements
           </p>
         </div>
 
         {/* Compliance Score */}
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card className="bg-gradient-to-r from-blue-200 to-indigo-200 dark:from-blue-200 dark:to-indigo-200 dark:border-blue-200">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex items-center justify-between dark:text-foreground">
               <span>Overall Compliance Score</span>
               <TrendingUp className="h-5 w-5 text-blue-500" />
             </CardTitle>
@@ -157,16 +157,16 @@ export default function CompliancePage({
                 <p className={`text-5xl font-bold ${getScoreColor(compliance_summary.compliance_score)}`}>
                   {compliance_summary.compliance_score}
                 </p>
-                <p className="text-sm text-gray-600 mt-1">out of 100</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">out of 100</p>
               </div>
               <div className="flex-1 space-y-3">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm dark:text-foreground">
                   <span>Total Issues</span>
                   <span className="font-semibold">{compliance_summary.total_issues}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Period</span>
-                  <span className="text-gray-600">
+                  <span className="dark:text-foreground">Period</span>
+                  <span className="text-gray-600 dark:text-gray-400">
                     {compliance_summary.period_start} to {compliance_summary.period_end}
                   </span>
                 </div>
@@ -247,7 +247,7 @@ export default function CompliancePage({
                 <tbody>
                   {overtime_violations.violations.length > 0 ? (
                     overtime_violations.violations.map((violation) => (
-                      <tr key={violation.id} className="border-b hover:bg-gray-50">
+                      <tr key={violation.id} className="border-b hover:bg-gray-200 dark:hover:bg-neutral-800">
                         <td className="py-3 px-3">{violation.employee_name}</td>
                         <td className="py-3 px-3">{violation.hours_worked}h</td>
                         <td className="py-3 px-3">{violation.max_allowed}h</td>
@@ -255,7 +255,7 @@ export default function CompliancePage({
                           +{violation.excess_hours}h
                         </td>
                         <td className="py-3 px-3">{violation.period}</td>
-                        <td className="py-3 px-3 text-xs text-gray-500">{violation.timestamp}</td>
+                        <td className="py-3 px-3 text-xs text-neutral-900 dark:text-neutral-900">{violation.timestamp}</td>
                         <td className="py-3 px-3">
                           <Badge variant={getSeverityColor(violation.severity)}>
                             {violation.severity}
@@ -289,9 +289,9 @@ export default function CompliancePage({
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-4">
                   {Object.entries(attendance_anomalies.anomalies_by_type).map(([type, count]) => (
-                    <div key={type} className="bg-blue-50 p-3 rounded">
-                      <p className="text-xs text-gray-600 capitalize">{type.replace(/_/g, ' ')}</p>
-                      <p className="text-2xl font-bold text-blue-600">{count}</p>
+                    <div key={type} className="bg-blue-200 p-3 rounded">
+                      <p className="text-xs text-neutral-900 capitalize">{type.replace(/_/g, ' ')}</p>
+                      <p className="text-2xl font-bold text-blue-700">{count}</p>
                     </div>
                   ))}
                 </div>
@@ -310,13 +310,13 @@ export default function CompliancePage({
                     </thead>
                     <tbody>
                       {attendance_anomalies.anomalies.map((anomaly) => (
-                        <tr key={anomaly.id} className="border-b hover:bg-gray-50">
+                        <tr key={anomaly.id} className="border-b hover:bg-gray-200 dark:hover:bg-neutral-800">
                           <td className="py-3 px-3">{anomaly.employee_name}</td>
                           <td className="py-3 px-3 capitalize">{anomaly.anomaly_type.replace(/_/g, ' ')}</td>
                           <td className="py-3 px-3 text-sm">{anomaly.date}</td>
                           <td className="py-3 px-3 text-sm">{anomaly.time}</td>
                           <td className="py-3 px-3">{anomaly.impact_hours}h</td>
-                          <td className="py-3 px-3 text-xs text-gray-600 max-w-xs truncate">
+                          <td className="py-3 px-3 text-xs text-gray-600 dark:text-gray-400 max-w-xs truncate">
                             {anomaly.description}
                           </td>
                         </tr>
@@ -356,7 +356,7 @@ export default function CompliancePage({
                 <tbody>
                   {leave_balance_discrepancies.discrepancies.length > 0 ? (
                     leave_balance_discrepancies.discrepancies.map((discrepancy) => (
-                      <tr key={discrepancy.id} className="border-b hover:bg-gray-50">
+                      <tr key={discrepancy.id} className="border-b hover:bg-gray-200 dark:hover:bg-neutral-800">
                         <td className="py-3 px-3">{discrepancy.employee_name}</td>
                         <td className="py-3 px-3">{discrepancy.leave_type}</td>
                         <td className="py-3 px-3">{discrepancy.expected_balance}</td>
@@ -409,20 +409,20 @@ export default function CompliancePage({
                       key={status}
                       className={`p-3 rounded ${
                         status === 'passed'
-                          ? 'bg-green-50'
+                          ? 'bg-green-2000'
                           : status === 'warning'
-                            ? 'bg-yellow-50'
-                            : 'bg-red-50'
+                            ? 'bg-yellow-200'
+                            : 'bg-red-200'
                       }`}
                     >
-                      <p className="text-xs text-gray-600 capitalize">{status}</p>
+                      <p className="text-xs text-neutral-900 capitalize">{status}</p>
                       <p
                         className={`text-2xl font-bold ${
                           status === 'passed'
                             ? 'text-green-600'
                             : status === 'warning'
-                              ? 'text-yellow-600'
-                              : 'text-red-600'
+                              ? 'text-yellow-900'
+                              : 'text-red-900'
                         }`}
                       >
                         {count}
@@ -445,15 +445,15 @@ export default function CompliancePage({
                     </thead>
                     <tbody>
                       {compliance_checks.checks.map((check) => (
-                        <tr key={check.id} className="border-b hover:bg-gray-50">
+                        <tr key={check.id} className="border-b hover:bg-gray-200 dark:hover:bg-neutral-800">
                           <td className="py-3 px-3">{check.check_type}</td>
                           <td className="py-3 px-3">{check.jurisdiction}</td>
                           <td className="py-3 px-3 text-xs max-w-xs truncate">{check.requirement}</td>
                           <td className="py-3 px-3">
                             <Badge variant={getStatusColor(check.status)}>{check.status}</Badge>
                           </td>
-                          <td className="py-3 px-3 text-xs text-gray-500">{check.checked_date}</td>
-                          <td className="py-3 px-3 text-xs text-gray-500">
+                          <td className="py-3 px-3 text-xs text-gray-500 dark:text-gray-400">{check.checked_date}</td>
+                          <td className="py-3 px-3 text-xs text-gray-500 dark:text-gray-400">
                             {check.remediation_due || 'N/A'}
                           </td>
                         </tr>

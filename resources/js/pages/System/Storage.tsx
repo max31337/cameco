@@ -92,7 +92,7 @@ export default function Storage({ storage, directories, trends }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Storage Management</h1>
+                        <h1 className="text-3xl font-bold tracking-tight dark:text-foreground">Storage Management</h1>
                         <p className="text-muted-foreground">Monitor and manage disk space utilization</p>
                     </div>
                     <Button onClick={handleCleanup} variant="outline">

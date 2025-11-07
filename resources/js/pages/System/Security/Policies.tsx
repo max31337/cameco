@@ -97,7 +97,7 @@ export default function PoliciesPage({ policies, stats }: PoliciesPageProps) {
 				<Toggle
 					pressed={currentToggle}
 					onPressedChange={() => handleToggle(policy.policy_key, currentToggle)}
-					className="data-[state=on]:bg-green-600"
+					className="data-[state=on]:bg-green-300"
 				>
 					{currentToggle ? 'Enabled' : 'Disabled'}
 				</Toggle>
@@ -153,7 +153,7 @@ export default function PoliciesPage({ policies, stats }: PoliciesPageProps) {
 				{/* Header */}
 				<div className="flex items-center justify-between">
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Security Policies</h1>
+						<h1 className="text-3xl font-bold tracking-tight dark:text-foreground">Security Policies</h1>
 						<p className="text-muted-foreground mt-1">
 							Configure system-wide security policies and compliance settings
 						</p>
@@ -230,7 +230,7 @@ export default function PoliciesPage({ policies, stats }: PoliciesPageProps) {
 													{renderPolicyInput(policy)}
 													{(editingPolicies[policy.policy_key] !== undefined ||
 														toggledPolicies[policy.policy_key] !== undefined) && (
-														<Badge variant="outline" className="bg-yellow-50">
+														<Badge variant="outline" className="bg-yellow-300">
 															Modified
 														</Badge>
 													)}

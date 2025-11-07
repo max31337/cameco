@@ -133,7 +133,7 @@ export default function ErrorLogs({ logs, stats, exceptionClasses, errorTrend, f
             <div className="space-y-6 p-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Error Logs</h1>
+                    <h1 className="text-3xl font-bold tracking-tight dark:text-foreground">Error Logs</h1>
                     <p className="text-muted-foreground">Monitor and resolve application errors</p>
                 </div>
 

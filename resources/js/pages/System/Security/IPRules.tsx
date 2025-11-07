@@ -92,7 +92,7 @@ export default function IPRulesPage({
 				{/* Header */}
 				<div className="flex items-center justify-between">
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">IP Allowlist/Blocklist</h1>
+						<h1 className="text-3xl font-bold tracking-tight dark:text-foreground">IP Allowlist/Blocklist</h1>
 						<p className="text-muted-foreground mt-1">
 							Manage IP addresses and ranges for access control
 						</p>

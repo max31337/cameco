@@ -100,8 +100,8 @@ export default function PayrollPage({
       <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Payroll Generation Logs</h1>
-          <p className="text-gray-500 mt-2">Monitor payroll runs, errors, and payment batches</p>
+          <h1 className="text-3xl font-bold tracking-tight dark:text-foreground">Payroll Generation Logs</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Monitor payroll runs, errors, and payment batches</p>
         </div>
 
         {/* Summary Cards */}
@@ -179,10 +179,10 @@ export default function PayrollPage({
                 <tbody>
                   {payroll_run_history.runs.length > 0 ? (
                     payroll_run_history.runs.map((run) => (
-                      <tr key={run.id} className="border-b hover:bg-gray-50">
+                      <tr key={run.id} className="border-b hover:bg-gray-200 dark:hover:bg-neutral-800">
                         <td className="py-3 px-3">{run.run_date}</td>
-                        <td className="py-3 px-3 text-xs text-gray-500">{run.started_at}</td>
-                        <td className="py-3 px-3 text-xs text-gray-500">
+                        <td className="py-3 px-3 text-xs text-gray-500 dark:text-gray-400">{run.started_at}</td>
+                        <td className="py-3 px-3 text-xs text-gray-500 dark:text-gray-400">
                           {run.completed_at || 'In Progress'}
                         </td>
                         <td className="py-3 px-3">{formatDuration(run.duration_seconds)}</td>
@@ -231,8 +231,8 @@ export default function PayrollPage({
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
                   {Object.entries(error_logs.by_type).map(([type, count]) => (
-                    <div key={type} className="bg-red-50 p-4 rounded-lg">
-                      <p className="text-sm text-gray-600 capitalize">{type.replace(/_/g, ' ')}</p>
+                    <div key={type} className="bg-red-200 p-4 rounded-lg">
+                      <p className="text-sm text-neutral-900 capitalize">{type.replace(/_/g, ' ')}</p>
                       <p className="text-2xl font-bold text-red-600">{count}</p>
                     </div>
                   ))}
@@ -242,15 +242,15 @@ export default function PayrollPage({
                   <h4 className="font-semibold mb-3">Recent Errors</h4>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {error_logs.recent_errors.map((error) => (
-                      <div key={error.id} className="bg-gray-50 p-3 rounded border-l-4 border-red-500">
+                      <div key={error.id} className="bg-red-100 dark:bg-neutral-900 p-3 rounded border-l-4 border-red-500 dark:border-red-700">
                         <div className="flex justify-between items-start mb-2">
                           <Badge variant="destructive" className="capitalize">
                             {error.error_type.replace(/_/g, ' ')}
                           </Badge>
-                          <span className="text-xs text-gray-500">{error.timestamp}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{error.timestamp}</span>
                         </div>
-                        <p className="text-sm text-gray-700">{error.message}</p>
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{error.message}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                           Period: {error.run_details.payroll_period}
                         </p>
                       </div>
@@ -289,7 +289,7 @@ export default function PayrollPage({
                 <tbody>
                   {payment_batches.batches.length > 0 ? (
                     payment_batches.batches.map((batch) => (
-                      <tr key={batch.id} className="border-b hover:bg-gray-50">
+                      <tr key={batch.id} className="border-b hover:bg-gray-200 dark:hover:bg-neutral-800">
                         <td className="py-3 px-3 font-mono text-xs">{batch.batch_number}</td>
                         <td className="py-3 px-3">{batch.payroll_period}</td>
                         <td className="py-3 px-3">{batch.total_employees}</td>

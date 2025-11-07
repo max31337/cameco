@@ -113,7 +113,7 @@ export default function SecurityReports({
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Security Reports</h1>
+            <h1 className="text-3xl font-bold dark:text-foreground">Security Reports</h1>
             <p className="text-muted-foreground mt-1">Security audit logs and suspicious activity monitoring</p>
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function SecurityReports({
                 <tbody>
                   {failed_logins.attempts.length > 0 ? (
                     failed_logins.attempts.map((attempt, idx) => (
-                      <tr key={idx} className="border-b hover:bg-gray-50">
+                      <tr key={idx} className="border-b hover:bg-gray-200 dark:hover:bg-neutral-800">
                         <td className="py-2 px-2">
                           <div className="font-medium">{attempt.user_name}</div>
                           <div className="text-xs text-muted-foreground">ID: {attempt.user_id}</div>
@@ -281,7 +281,7 @@ export default function SecurityReports({
                 <tbody>
                   {password_resets.resets.length > 0 ? (
                     password_resets.resets.map((reset, idx) => (
-                      <tr key={idx} className="border-b hover:bg-gray-50">
+                      <tr key={idx} className="border-b hover:bg-gray-200 dark:hover:bg-neutral-800">
                         <td className="py-2 px-2 font-mono text-xs">{reset.user_id}</td>
                         <td className="py-2 px-2 text-xs">{reset.description}</td>
                         <td className="py-2 px-2 text-xs">{new Date(reset.timestamp).toLocaleString()}</td>
@@ -320,7 +320,7 @@ export default function SecurityReports({
                 <tbody>
                   {role_changes.changes.length > 0 ? (
                     role_changes.changes.map((change, idx) => (
-                      <tr key={idx} className="border-b hover:bg-gray-50">
+                      <tr key={idx} className="border-b hover:bg-gray-200 dark:hover:bg-neutral-800">
                         <td className="py-2 px-2 font-mono text-xs">{change.user_id}</td>
                         <td className="py-2 px-2">
                           <Badge variant={change.action === 'role_removed' ? 'destructive' : 'default'}>
@@ -377,7 +377,7 @@ export default function SecurityReports({
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {filteredAlerts.length > 0 ? (
                 filteredAlerts.map((alert, idx) => (
-                  <div key={idx} className="border rounded p-3 hover:bg-gray-50">
+                  <div key={idx} className="border rounded p-3 hover:bg-gray-200 dark:hover:bg-neutral-800">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Badge className={getSeverityColor(alert.severity)}>

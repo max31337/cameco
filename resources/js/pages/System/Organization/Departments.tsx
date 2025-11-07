@@ -181,7 +181,7 @@ export default function Departments({ departments, hierarchical, managers, stats
 
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Departments Management</h1>
+            <h1 className="text-3xl font-bold dark:text-foreground">Departments Management</h1>
             <p className="text-muted-foreground mt-2">Organize your company structure and manage departments</p>
           </div>
           <Button onClick={() => setShowForm(!showForm)} size="lg">

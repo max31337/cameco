@@ -134,7 +134,7 @@ export default function Health({
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">System Health Monitoring</h1>
+                        <h1 className="text-3xl font-bold tracking-tight dark:text-foreground">System Health Monitoring</h1>
                         <p className="text-muted-foreground">Real-time server metrics and performance monitoring</p>
                     </div>
                     <div className="flex items-center gap-4">

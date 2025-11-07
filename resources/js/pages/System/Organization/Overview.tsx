@@ -113,13 +113,13 @@ export default function Overview({
   const getAlertColor = (type: string) => {
     switch (type) {
       case 'warning':
-        return 'border-yellow-200 bg-yellow-50';
+        return 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950';
       case 'error':
-        return 'border-red-200 bg-red-50';
+        return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950';
       case 'success':
-        return 'border-green-200 bg-green-50';
+        return 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950';
       default:
-        return 'border-blue-200 bg-blue-50';
+        return 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950';
     }
   };
 
@@ -159,10 +159,10 @@ export default function Overview({
         {/* Onboarding Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <h3 className="font-semibold">Onboarding Status</h3>
-            <span className="text-sm font-medium">{onboarding_progress}% Complete</span>
+            <h3 className="font-semibold dark:text-foreground">Onboarding Status</h3>
+            <span className="text-sm font-medium dark:text-foreground">{onboarding_progress}% Complete</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
             <div
               className="bg-green-500 h-2 rounded-full transition-all"
               style={{ width: `${onboarding_progress}%` }}
@@ -178,10 +178,10 @@ export default function Overview({
                 <div className="flex gap-3">
                   {getAlertIcon(alert.type)}
                   <div className="flex-1">
-                    <h4 className="font-semibold">{alert.title}</h4>
-                    <p className="text-sm text-gray-700">{alert.message}</p>
+                    <h4 className="font-semibold dark:text-foreground">{alert.title}</h4>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{alert.message}</p>
                     {alert.action && (
-                      <a href={alert.action_link || '#'} className="text-sm font-semibold text-blue-600 hover:underline mt-2 inline-block">
+                      <a href={alert.action_link || '#'} className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block">
                         {alert.action} →
                       </a>
                     )}
@@ -268,8 +268,8 @@ export default function Overview({
                   <h4 className="font-semibold text-sm mb-2">Templates for {selectedCountry}</h4>
                   <div className="space-y-2">
                     {department_summary.templates.map((template, idx) => (
-                      <div key={idx} className="border rounded p-2 hover:bg-gray-50">
-                        <p className="font-semibold text-sm">{template.name}</p>
+                      <div key={idx} className="border rounded p-2 hover:bg-gray-200 dark:hover:bg-neutral-800 dark:border-neutral-700">
+                        <p className="font-semibold text-sm dark:text-foreground">{template.name}</p>
                         <p className="text-xs text-muted-foreground">{template.code}</p>
                       </div>
                     ))}
@@ -297,10 +297,10 @@ export default function Overview({
 
               {position_summary.top_roles.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">Top Roles</h4>
+                  <h4 className="font-semibold text-sm mb-2 dark:text-foreground">Top Roles</h4>
                   <div className="space-y-1">
                     {position_summary.top_roles.map((role, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-sm">
+                      <div key={idx} className="flex justify-between items-center text-sm dark:text-foreground">
                         <span>{role.title}</span>
                         <Badge variant="secondary">{role.count}</Badge>
                       </div>
@@ -321,15 +321,15 @@ export default function Overview({
           <CardContent>
             <div className="space-y-3">
               {onboarding_checklist.map((item) => (
-                <div key={item.id} className="flex items-start gap-3 p-3 border rounded hover:bg-gray-50">
+                <div key={item.id} className="flex items-start gap-3 p-3 border rounded hover:bg-gray-200 dark:hover:bg-neutral-900 dark:border-neutral-700">
                   {item.status === 'completed' ? (
                     <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                   ) : (
-                    <div className="h-5 w-5 border-2 border-gray-300 rounded-full mt-0.5 flex-shrink-0" />
+                    <div className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded-full mt-0.5 flex-shrink-0" />
                   )}
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-sm">{item.title}</h4>
+                      <h4 className="font-semibold text-sm dark:text-foreground">{item.title}</h4>
                       {item.country_scoped && (
                         <Badge variant="outline" className="text-xs">
                           {selectedCountry}
@@ -341,7 +341,7 @@ export default function Overview({
                   </div>
                   <a
                     href={item.action_link}
-                    className="text-xs font-semibold text-blue-600 hover:underline whitespace-nowrap"
+                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
                   >
                     {item.action_label} →
                   </a>

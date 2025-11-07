@@ -102,7 +102,7 @@ export default function UsageAnalytics({
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Usage Analytics</h1>
+            <h1 className="text-3xl font-bold dark:text-foreground">Usage Analytics</h1>
             <p className="text-muted-foreground mt-1">System activity and user engagement metrics</p>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function UsageAnalytics({
                     <span className="font-medium">{module.module}</span>
                     <span className="text-muted-foreground">{module.access_count} accesses ({module.percentage}%)</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded h-2">
+                  <div className="w-full bg-neutral-200 dark:bg-neutral-900 rounded h-2">
                     <div
                       className="bg-blue-500 h-2 rounded transition-all"
                       style={{ width: `${module.percentage}%` }}
@@ -258,7 +258,7 @@ export default function UsageAnalytics({
                 </thead>
                 <tbody>
                   {user_login_stats.map((stat) => (
-                    <tr key={stat.user_id} className="border-b hover:bg-gray-50">
+                    <tr key={stat.user_id} className="border-b hover:bg-gray-50 dark:hover:bg-slate-800">
                       <td className="py-2 px-2">
                         <div className="font-medium">{stat.user_name}</div>
                         <div className="text-xs text-muted-foreground">{stat.email}</div>
