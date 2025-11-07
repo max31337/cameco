@@ -176,7 +176,7 @@ class ComplianceController extends Controller
         // Query leave-related security audit logs
         $discrepancies = DB::table('security_audit_logs')
             ->where('event_type', 'like', '%leave%')
-            ->where('severity', 'in', ['critical', 'warning'])
+            ->whereIn('severity', ['critical', 'warning'])
             ->whereBetween('created_at', [$from, $to])
             ->orderBy('created_at', 'desc')
             ->limit(100)
@@ -256,11 +256,22 @@ class ComplianceController extends Controller
 
         foreach ($checks as $check) {
             $metadata = $check->metadata ? json_decode($check->metadata, true) : [];
+            // Ensure metadata is always an array
+            $metadata = is_array($metadata) ? $metadata : [];
             $status = $check->severity === 'critical' ? 'failed' : ($check->severity === 'warning' ? 'warning' : 'passed');
 
             $byStatus[$status] = ($byStatus[$status] ?? 0) + 1;
 
             if (count($checkData) < 50) {
+                $remediationDue = null;
+                if (isset($metadata['remediation_due']) && !empty($metadata['remediation_due'])) {
+                    try {
+                        $remediationDue = Carbon::parse($metadata['remediation_due'])->toDateString();
+                    } catch (\Exception $e) {
+                        $remediationDue = null;
+                    }
+                }
+
                 $checkData[] = [
                     'id' => $check->id,
                     'check_type' => $metadata['check_type'] ?? 'Regulatory Compliance',
@@ -270,7 +281,7 @@ class ComplianceController extends Controller
                     'requirement' => $metadata['requirement'] ?? 'N/A',
                     'severity' => $check->severity,
                     'checked_date' => Carbon::parse($check->created_at)->toDateString(),
-                    'remediation_due' => $metadata['remediation_due'] ? Carbon::parse($metadata['remediation_due'])->toDateString() : null,
+                    'remediation_due' => $remediationDue,
                 ];
             }
         }
