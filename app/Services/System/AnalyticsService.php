@@ -1,5 +1,39 @@
 <?php
 
+/**
+ * NOTE – USER ANALYTICS / OBSERVABILITY REPLACEMENT PLAN
+ *
+ * This service manually computes analytics from SecurityAuditLog records to support
+ * admin dashboards in on-prem environments without an observability or analytics stack.
+ * The following functionality is intentionally temporary:
+ *
+ *   • User login statistics
+ *   • Module usage classification (regex-based and fragile)
+ *   • Activity heatmap (day/hour rollups)
+ *   • Crude session duration pairing via login/logout logs
+ *   • Basic event frequency summaries
+ *
+ * Once a full analytics stack is deployed (recommended: SigNoz / Prometheus+Loki+Grafana):
+ *
+ * REPLACE WITH:
+ *   – Aggregated metrics via OTEL instrumentation (success/failure events, module usage)
+ *   – Distributed tracing for session behaviour
+ *   – Structured logs stored and queried in observability backend (Loki/OpenSearch/etc.)
+ *   – Dashboards and visualizations in the monitoring platform instead of Laravel
+ *
+ * REMOVE / REFACTOR:
+ *   1) Module detection using LIKE/CASE patterns, replace with structured metadata on logs
+ *   2) Session duration pairing logic (unreliable, fails on missing logout events)
+ *   3) Heavy in-memory grouping + sorting after ->get() calls, move to database aggregation
+ *   4) Any derived analytics that are better calculated by the analytics backend
+ *
+ * KEEP:
+ *   – Only business-specific metrics required by HRIS (e.g., attendance-driven activity)
+ *
+ * This file is a transitional analytics layer and should be rewritten once proper
+ * telemetry and dashboards are available.
+ */
+
 namespace App\Services\System;
 
 use App\Models\SecurityAuditLog;
