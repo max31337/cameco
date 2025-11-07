@@ -1,5 +1,26 @@
 <?php
 
+/**
+ * ⚠️ Refactor Notes for CronRepository
+ *
+ * This repository currently contains both persistence and business logic,
+ * which violates the repository pattern and pollutes the domain boundary.
+ *
+ * Cleanup Plan:
+ * 1. Extract common filter logic into a reusable scope or filter builder
+ *    (remove duplicated filters in getAllJobs and getPaginatedJobs)
+ * 2. Fix operator precedence issues (wrap enabled + exit_code checks)
+ * 3. Move execution-related logic (increment counters, failure handling,
+ *    timestamps) into a CronExecutionService
+ * 4. Replace fake getExecutionHistory with a real executions table
+ * 5. Add tenant/org scoping once multi-tenancy is enabled
+ * 6. Remove unbounded getAllJobs in favor of pagination everywhere
+ *
+ * Do not introduce new logic here until the separation of responsibilities
+ * is complete.
+ * This is a temporary but functional implementation for the UI.
+ */
+
 namespace App\Repositories\Eloquent\System;
 
 use App\Models\ScheduledJob;
