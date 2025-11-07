@@ -8,7 +8,7 @@ import {
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, HardDrive, Database, Shield, FileBox, Calendar, Lock, Users, Building2, Briefcase, BarChart3, AlertTriangle } from 'lucide-react';
+import { Activity, HardDrive, Database, Shield, FileBox, Calendar, Lock, Users, Building2, BarChart3, Briefcase } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function NavSystemAdmin() {
@@ -96,8 +96,18 @@ export function NavSystemAdmin() {
         },
         {
             title: 'Security Reports',
-            icon: AlertTriangle,
+            icon: Shield,
             href: '/system/reports/security',
+        },
+        {
+            title: 'Payroll Reports',
+            icon: Briefcase,
+            href: '/system/reports/payroll',
+        },
+        {
+            title: 'Compliance Reports',
+            icon: FileBox,
+            href: '/system/reports/compliance',
         },
     ];
 

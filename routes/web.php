@@ -128,9 +128,11 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Monitoring & Reporting - Usage Analytics & Security Reports (Superadmin only)
-    Route::middleware(['superadmin'])->prefix('system/reports')->group(function () {
+    Route::middleware(['auth', 'superadmin'])->prefix('system/reports')->group(function () {
         Route::get('/usage', [\App\Http\Controllers\System\Reports\UsageController::class, 'index'])->name('system.reports.usage');
         Route::get('/security', [\App\Http\Controllers\System\Reports\SecurityController::class, 'index'])->name('system.reports.security');
+        Route::get('/payroll', [\App\Http\Controllers\System\Reports\PayrollController::class, 'index'])->name('system.reports.payroll');
+        Route::get('/compliance', [\App\Http\Controllers\System\Reports\ComplianceController::class, 'index'])->name('system.reports.compliance');
     });
 });
 
