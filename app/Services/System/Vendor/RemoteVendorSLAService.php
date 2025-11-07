@@ -1,5 +1,28 @@
 <?php
 
+/**
+ * TECH DEBT WARNING:
+ *
+ * this shit is radioactive lmao
+ *
+ * This class is doing too much. It mixes:
+ * - Data formatting for display (human-readable times, UI-friendly strings)
+ * - Business rules (uptime calc ranges, support hours, support end date derivation)
+ * - Repository passthroughs with no validation or DTO boundaries
+ * - Cache without context scoping (multi-vendor / multi-tenant risk)
+ *
+ * REFACTOR PLAN (Future Integration Targets):
+ * - Extract SLA calculation rules into a VendorSLADomainService
+ * - Replace hard-coded dates/business hours with config-driven values
+ * - Move output formatting into transformers / casted DTOs
+ * - Namespace cache keys per vendor / tenant (e.g. 'vendor_sla:{vendor_id}:dashboard')
+ * - Add parameterized date ranges across all relevant methods
+ * - Validate repository responses and normalize shapes
+ *
+ * OBS: Long-term plan is to unify SLA telemetry with a proper observability backend
+ *      (SigNoz or compatible OpenTelemetry signals), replacing ad-hoc DB lookups.
+ */
+
 namespace App\Services\System\Vendor;
 
 use App\Repositories\Contracts\System\Vendor\RemoteVendorSLARepositoryInterface;

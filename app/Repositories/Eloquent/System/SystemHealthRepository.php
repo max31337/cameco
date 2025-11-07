@@ -1,5 +1,40 @@
 <?php
 
+/**
+ * ⚠️ Pending Refactor Notes for SystemHealthRepository
+ *
+ * Issues:
+ * 1. This repository is doing too much. Health metrics, backup stats, security event counts…
+ *    It became the orphanage of every “system-related number we can show on a dashboard”.
+ *    Split into: HealthRepository + BackupRepository + SecurityMetricsRepository later.
+ *
+ * 2. getRecentSecurityEvents should eventually use a unified Activity/EventLog table.
+ *    SecurityAuditLog is only one source. Dashboard will lie by omission if other systems fail silently.
+ *
+ * 3. Backup success rate triggers two nearly identical queries. Merge into a single aggregate
+ *    grouping query to avoid redundant load and improve scale.
+ *
+ * 4. Every metric fetch needs tenant-aware conditions once multi-tenancy is enabled.
+ *    Right now this exposes all organization data to whoever queries it. Legal nightmares pending.
+ *
+ * 5. Recent fetch methods return arrays instead of DTOs. Once SigNoz or OpenTelemetry integration
+ *    kicks in, return lightweight metric objects instead of pouring entire DB rows directly into the UI.
+ *
+ * ✅ Actual Fix Suggested (but not fully implemented yet):
+ * Replace `limit()` with `take()` for consistency and readability across Laravel metric fetchers:
+ *
+ *    ->latest()->take($limit)
+ *
+ * ✅ Bonus Minor Correctness Upgrades To Apply Soon:
+ * - Collapse duplicate queries in getBackupSuccessRate using SUM(CASE…) grouping.
+ * - Cache read-heavy metrics behind `Cache::remember()` for dashboards refreshing every few seconds.
+ *
+ * Final Opinion:
+ * This code isn’t broken. It’s just awkward, overworked and deserves a better life.
+ * Perfectly fine for early HRIS deployments with <1000 employees. Will cry into the logs when
+ * SLA dashboards start getting refreshed every 10 seconds by executives who love blinking charts.
+ */
+
 namespace App\Repositories\Eloquent\System;
 
 use App\Models\SecurityAuditLog;

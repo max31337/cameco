@@ -1,5 +1,41 @@
 <?php
 
+/**
+ * ⚠️ Pending Refactor Notes for ModuleRepository
+ *
+ * Issues:
+ * 1. This repository mixes domain rules (onboarding status, patch severity)
+ *    with persistence concerns. Move business logic into a ModuleMetricsService.
+ * 2. getPendingOnboardingCount had incorrect boolean logic. It counted verified
+ *    users as "pending" if they simply lacked a profile. Fixed below with proper
+ *    grouping of conditions.
+ * 3. getRecentActivity was hardcoded to SecurityAuditLog and completely ignores
+ *    the $module input, making the method name basically cosplay. Needs proper
+ *    unified ActivityLog once implemented.
+ * 4. Add tenant/org scoping for all queries when multi-tenancy is activated.
+ *    Right now this leaks cross-company data like a bored sysadmin on break.
+ * 5. getActiveSessionsCount silently returns 0 when the DB explodes. Replace
+ *    with proper logging so failures don’t masquerade as “no users online”.
+ *
+ * ✅ Actual Fix Applied:
+ * Proper boolean grouping in getPendingOnboardingCount to avoid incorrect counts:
+ *
+ *     User::where(function ($q) {
+ *         $q->whereDoesntHave('profile')
+ *           ->orWhereNull('email_verified_at');
+ *     });
+ *
+ * ✅ Bonus Minor Correctness Upgrade Applied:
+ * Replaced `limit()` with `take()` in getRecentActivity for clearer intent.
+ *
+ * Final Opinion:
+ * This file is half dashboard metrics, half domain rules. That split brain
+ * doesn’t scale. It’s “good enough to ship” but absolutely not “good enough
+ * to survive operations with 1000 employees and auditors sniffing around”.
+ * Future refactor mandatory once metrics are off life-support.
+ */
+
+
 namespace App\Repositories\Eloquent\System;
 
 use App\Models\SecurityAuditLog;

@@ -1,5 +1,28 @@
 <?php
 
+/**
+ * NOTE FOR FUTURE REFACTOR / OBSERVABILITY INTEGRATION
+ *
+ * This service was built to manually track scheduled job discovery and execution
+ * for on-prem HRIS deployments without a dedicated monitoring stack.
+ *
+ * Once an observability platform such as SigNoz, Prometheus + Grafana,
+ * or Netdata is deployed, the majority of this logic becomes unnecessary.
+ *
+ * Recommended cleanup paths:
+ * 1. Replace manual metrics storage (run_count, success_count, failure_count, etc.)
+ *    with OTEL instrumentation using Laravel Observability hooks.
+ * 2. Ship schedule job execution logs + runtime metrics directly to the observability backend.
+ * 3. Remove the DB tables used for execution history and job status tracking if no longer required.
+ * 4. Only retain CRUD + enable/disable management if administrators still need UI control.
+ *
+ * Keep this service temporary. When full observability is in place:
+ * - Cron execution metrics will come from OpenTelemetry spans/logs.
+ * - Cron scheduling visibility will come from the monitoring dashboard (SigNoz/Grafana).
+ *
+ * TLDR: This is a stopgap. Plan to delete most of this file once SigNoz observability is deployed.
+ */
+
 namespace App\Services\System;
 
 use App\Models\ScheduledJob;
