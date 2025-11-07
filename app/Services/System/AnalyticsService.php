@@ -17,7 +17,7 @@ class AnalyticsService
         $from = $from ?? now()->subMonths(1);
         $to = $to ?? now();
 
-        $loginStats = SecurityAuditLog::where('action', 'user_login')
+        $loginStats = SecurityAuditLog::where('event_type', 'user_login')
             ->whereBetween('created_at', [$from, $to])
             ->with('user')
             ->get()
@@ -48,20 +48,20 @@ class AnalyticsService
         $from = $from ?? now()->subMonths(1);
         $to = $to ?? now();
 
-        // Extract module from action or details
+        // Extract module from event_type or details
         $moduleUsage = SecurityAuditLog::whereBetween('created_at', [$from, $to])
             ->select(DB::raw('COUNT(*) as access_count'))
             ->selectRaw("
                 CASE 
-                    WHEN action LIKE '%user%' THEN 'User Management'
-                    WHEN action LIKE '%role%' THEN 'Roles & Permissions'
-                    WHEN action LIKE '%security%' OR action LIKE '%policy%' THEN 'Security Policies'
-                    WHEN action LIKE '%ip%' THEN 'IP Rules'
-                    WHEN action LIKE '%department%' THEN 'Departments'
-                    WHEN action LIKE '%position%' THEN 'Positions'
-                    WHEN action LIKE '%health%' OR action LIKE '%backup%' THEN 'System Health'
-                    WHEN action LIKE '%patch%' THEN 'Patch Management'
-                    WHEN action LIKE '%cron%' THEN 'Cron Jobs'
+                    WHEN event_type LIKE '%user%' THEN 'User Management'
+                    WHEN event_type LIKE '%role%' THEN 'Roles & Permissions'
+                    WHEN event_type LIKE '%security%' OR event_type LIKE '%policy%' THEN 'Security Policies'
+                    WHEN event_type LIKE '%ip%' THEN 'IP Rules'
+                    WHEN event_type LIKE '%department%' THEN 'Departments'
+                    WHEN event_type LIKE '%position%' THEN 'Positions'
+                    WHEN event_type LIKE '%health%' OR event_type LIKE '%backup%' THEN 'System Health'
+                    WHEN event_type LIKE '%patch%' THEN 'Patch Management'
+                    WHEN event_type LIKE '%cron%' THEN 'Cron Jobs'
                     ELSE 'Other'
                 END as module
             ")
@@ -95,8 +95,11 @@ class AnalyticsService
         $from = $from ?? now()->subMonths(1);
         $to = $to ?? now();
 
+        // SQLite uses strftime() for date/time extraction
+        // %w gives day of week (0-6, Sunday=0), we add 1 to match MySQL's DAYOFWEEK (1-7, Sunday=1)
+        // %H gives hour (00-23)
         $activities = SecurityAuditLog::whereBetween('created_at', [$from, $to])
-            ->selectRaw('DAYOFWEEK(created_at) as day_of_week, HOUR(created_at) as hour, COUNT(*) as count')
+            ->selectRaw('CAST(strftime("%w", created_at) AS INTEGER) + 1 as day_of_week, CAST(strftime("%H", created_at) AS INTEGER) as hour, COUNT(*) as count')
             ->groupBy('day_of_week', 'hour')
             ->get();
 
@@ -137,11 +140,11 @@ class AnalyticsService
         $to = $to ?? now();
 
         // Get login and logout pairs
-        $logins = SecurityAuditLog::where('action', 'user_login')
+        $logins = SecurityAuditLog::where('event_type', 'user_login')
             ->whereBetween('created_at', [$from, $to])
             ->get();
 
-        $logouts = SecurityAuditLog::where('action', 'user_logout')
+        $logouts = SecurityAuditLog::where('event_type', 'user_logout')
             ->whereBetween('created_at', [$from, $to])
             ->get();
 
@@ -193,13 +196,13 @@ class AnalyticsService
         $to = $to ?? now();
 
         return SecurityAuditLog::whereBetween('created_at', [$from, $to])
-            ->select('action', DB::raw('COUNT(*) as count'))
-            ->groupBy('action')
+            ->select('event_type', DB::raw('COUNT(*) as count'))
+            ->groupBy('event_type')
             ->orderByDesc('count')
             ->get()
             ->map(function ($row) {
                 return [
-                    'action' => $row->action,
+                    'action' => $row->event_type,
                     'count' => $row->count,
                 ];
             })
@@ -218,10 +221,10 @@ class AnalyticsService
         $uniqueUsers = SecurityAuditLog::whereBetween('created_at', [$from, $to])
             ->distinct('user_id')
             ->count('user_id');
-        $loginAttempts = SecurityAuditLog::where('action', 'user_login')
+        $loginAttempts = SecurityAuditLog::where('event_type', 'user_login')
             ->whereBetween('created_at', [$from, $to])
             ->count();
-        $failedLogins = SecurityAuditLog::where('action', 'failed_login_attempt')
+        $failedLogins = SecurityAuditLog::where('event_type', 'failed_login_attempt')
             ->whereBetween('created_at', [$from, $to])
             ->count();
 
