@@ -67,6 +67,28 @@ Route::middleware(['auth'])->group(function () {
     // Storage Management
     Route::get('/system/storage', [\App\Http\Controllers\System\StorageController::class, 'index'])->name('system.storage');
     Route::post('/system/storage/cleanup', [\App\Http\Controllers\System\StorageController::class, 'cleanup'])->name('system.storage.cleanup');
+
+    // Security & Access - Roles and Permissions (Superadmin only)
+    Route::middleware(['superadmin'])->prefix('system/security')->group(function () {
+        Route::get('/roles', [\App\Http\Controllers\System\Security\RoleController::class, 'index'])->name('system.security.roles');
+        Route::get('/roles/create', [\App\Http\Controllers\System\Security\RoleController::class, 'create'])->name('system.security.roles.create');
+        Route::post('/roles', [\App\Http\Controllers\System\Security\RoleController::class, 'store'])->name('system.security.roles.store');
+        Route::get('/roles/{role}/edit', [\App\Http\Controllers\System\Security\RoleController::class, 'edit'])->name('system.security.roles.edit');
+        Route::put('/roles/{role}', [\App\Http\Controllers\System\Security\RoleController::class, 'update'])->name('system.security.roles.update');
+        Route::delete('/roles/{role}', [\App\Http\Controllers\System\Security\RoleController::class, 'destroy'])->name('system.security.roles.destroy');
+        Route::get('/roles/{role}/permissions', [\App\Http\Controllers\System\Security\RoleController::class, 'getPermissionMatrix'])->name('system.security.roles.permissions');
+    });
+
+    // Security & Access - User Lifecycle (Superadmin only)
+    Route::middleware(['superadmin'])->prefix('system/users')->group(function () {
+        Route::get('/', [\App\Http\Controllers\System\Security\UserLifecycleController::class, 'index'])->name('system.users');
+        Route::get('/{user}', [\App\Http\Controllers\System\Security\UserLifecycleController::class, 'show'])->name('system.users.show');
+        Route::put('/{user}', [\App\Http\Controllers\System\Security\UserLifecycleController::class, 'update'])->name('system.users.update');
+        Route::post('/{user}/password-reset', [\App\Http\Controllers\System\Security\UserLifecycleController::class, 'sendPasswordReset'])->name('system.users.password-reset');
+        Route::post('/{user}/deactivate', [\App\Http\Controllers\System\Security\UserLifecycleController::class, 'deactivate'])->name('system.users.deactivate');
+        Route::post('/{user}/activate', [\App\Http\Controllers\System\Security\UserLifecycleController::class, 'activate'])->name('system.users.activate');
+        Route::get('/{user}/audit-trail', [\App\Http\Controllers\System\Security\UserLifecycleController::class, 'auditTrail'])->name('system.users.audit-trail');
+    });
 });
 
 // Cron Job Management (Superadmin only)

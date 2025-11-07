@@ -1,10 +1,10 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import SuperadminOnboardingCard from '@/components/superadmin-onboarding-card';
 import { SystemHealthWidgets, CronJobsCard } from '@/components/system-health-widgets';
+import { ModuleGrid } from '@/components/module-grid';
+import { ModuleCategory } from '@/types/modules';
 
 interface ChecklistItem {
     id: string;
@@ -123,6 +123,25 @@ interface SystemDashboardProps {
     welcomeText: string;
     systemHealth: SystemHealthData | null;
     cronMetrics: CronMetrics | null;
+    moduleCategories?: Array<{
+        id: string;
+        title: string;
+        description?: string;
+        modules: Array<{
+            id: string;
+            icon: string;
+            title: string;
+            description: string;
+            href: string;
+            badge?: {
+                count: number;
+                label: string;
+                variant?: string;
+            };
+            isDisabled?: boolean;
+            comingSoon?: boolean;
+        }>;
+    }>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -133,78 +152,67 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Dashboard({
-    counts,
     company,
-    onboardingStatus,
     welcomeText,
     userOnboarding,
     showSetupModal,
     systemHealth,
     cronMetrics,
+    moduleCategories = [],
 }: SystemDashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="System Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="mb-4">
-                    <h1 className="text-2xl font-bold">
-                        {company.name ? `${company.name} - System Dashboard` : 'System Dashboard'}
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
+                {/* Header */}
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        {company.name ? `${company.name} Dashboard` : 'System Dashboard'}
                     </h1>
                     <p className="text-muted-foreground">{welcomeText}</p>
                 </div>
 
                 {/* User Onboarding Section - Show if profile is incomplete */}
                 {userOnboarding && showSetupModal && (
-                    <SuperadminOnboardingCard 
-                        onboarding={userOnboarding}
-                        compact={false}
-                        dismissible={false}
-                    />
+                    <div className="mb-2">
+                        <SuperadminOnboardingCard 
+                            onboarding={userOnboarding}
+                            compact={false}
+                            dismissible={false}
+                        />
+                    </div>
                 )}
 
-                {/* System Health Monitoring */}
+                {/* System Health Monitoring - Premium positioning */}
                 {systemHealth && (
-                    <SystemHealthWidgets health={systemHealth} />
+                    <div className="space-y-4">
+                        <h2 className="text-lg font-semibold">System Status</h2>
+                        <SystemHealthWidgets health={systemHealth} />
+                    </div>
                 )}
 
-                {/* Cron Job Monitoring */}
+                {/* Cron Jobs - Direct access since it's a quick reference */}
                 {cronMetrics && (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <CronJobsCard cronMetrics={cronMetrics} />
+                    <div className="space-y-4">
+                        <h2 className="text-lg font-semibold">Scheduled Tasks</h2>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                            <CronJobsCard cronMetrics={cronMetrics} />
+                        </div>
                     </div>
                 )}
 
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Total Users</CardTitle>
-                            <CardDescription>Registered users in the system</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold">{counts.users}</div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Onboarding Status</CardTitle>
-                            <CardDescription>System configuration status</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-xl font-semibold capitalize">
-                                {onboardingStatus.replace('_', ' ')}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                {/* Module Quick Access Grid - Primary navigation */}
+                {moduleCategories && moduleCategories.length > 0 && (
+                    <div className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-bold tracking-tight">Module Navigation</h2>
+                            <p className="text-sm text-muted-foreground">
+                                Quick access to all superadmin modules, organized by function
+                            </p>
+                        </div>
+                        <ModuleGrid categories={moduleCategories as unknown as ModuleCategory[]} />
                     </div>
-                </div>
-
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                </div>
+                )}
             </div>
         </AppLayout>
     );

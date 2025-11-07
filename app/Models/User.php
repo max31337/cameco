@@ -23,6 +23,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_active',
+        'last_login_at',
     ];
 
     /**
@@ -46,6 +48,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'is_active' => 'boolean',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];
@@ -69,6 +73,14 @@ class User extends Authenticatable
     public function profile()
     {
         return $this->hasOne(Profile::class);
+    }
+
+    /**
+     * One-to-many relation to SecurityAuditLog
+     */
+    public function auditLogs()
+    {
+        return $this->hasMany(SecurityAuditLog::class);
     }
 
     /**

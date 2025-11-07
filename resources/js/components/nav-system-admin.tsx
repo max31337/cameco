@@ -8,7 +8,7 @@ import {
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, HardDrive, Database, Shield, FileBox, Calendar } from 'lucide-react';
+import { Activity, HardDrive, Database, Shield, FileBox, Calendar, Lock, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function NavSystemAdmin() {
@@ -47,38 +47,85 @@ export function NavSystemAdmin() {
         },
     ];
 
-    const isSystemAdminActive = page.url.startsWith('/system/');
+    const securityAccessItems = [
+        {
+            title: 'User Management',
+            icon: Users,
+            href: '/system/users',
+        },
+        {
+            title: 'Roles & Permissions',
+            icon: Lock,
+            href: '/system/security/roles',
+        },
+    ];
+
+    const isSystemAdminActive = page.url.startsWith('/system/') && !page.url.startsWith('/system/users') && !page.url.startsWith('/system/security/roles');
+    const isSecurityAccessActive = page.url.startsWith('/system/users') || page.url.startsWith('/system/security/roles');
 
     return (
-        <SidebarGroup className="px-2 py-0">
-            <Collapsible defaultOpen={isSystemAdminActive} className="group/collapsible">
-                <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                        <SidebarMenuButton tooltip="System Administration">
-                            <Activity />
-                            <span>System Administration</span>
-                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2">
-                        <SidebarMenuSub className="space-y-1">
-                            {systemAdminItems.map((item) => (
-                                <SidebarMenuSubItem key={item.title}>
-                                    <SidebarMenuSubButton
-                                        asChild
-                                        isActive={page.url.startsWith(item.href)}
-                                    >
-                                        <Link href={item.href} prefetch>
-                                            <item.icon className="h-4 w-4" />
-                                            <span>{item.title}</span>
-                                        </Link>
-                                    </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                            ))}
-                        </SidebarMenuSub>
-                    </CollapsibleContent>
-                </SidebarMenuItem>
-            </Collapsible>
-        </SidebarGroup>
+        <>
+            <SidebarGroup className="px-2 py-0">
+                <Collapsible defaultOpen={isSystemAdminActive} className="group/collapsible">
+                    <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                            <SidebarMenuButton tooltip="System Administration">
+                                <Activity />
+                                <span>System Administration</span>
+                                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2">
+                            <SidebarMenuSub className="space-y-1">
+                                {systemAdminItems.map((item) => (
+                                    <SidebarMenuSubItem key={item.title}>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={page.url.startsWith(item.href)}
+                                        >
+                                            <Link href={item.href} prefetch>
+                                                <item.icon className="h-4 w-4" />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                ))}
+                            </SidebarMenuSub>
+                        </CollapsibleContent>
+                    </SidebarMenuItem>
+                </Collapsible>
+            </SidebarGroup>
+
+            <SidebarGroup className="px-2 py-0">
+                <Collapsible defaultOpen={isSecurityAccessActive} className="group/collapsible">
+                    <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                            <SidebarMenuButton tooltip="Security & Access">
+                                <Shield />
+                                <span>Security & Access</span>
+                                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2">
+                            <SidebarMenuSub className="space-y-1">
+                                {securityAccessItems.map((item) => (
+                                    <SidebarMenuSubItem key={item.title}>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={page.url.startsWith(item.href)}
+                                        >
+                                            <Link href={item.href} prefetch>
+                                                <item.icon className="h-4 w-4" />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                ))}
+                            </SidebarMenuSub>
+                        </CollapsibleContent>
+                    </SidebarMenuItem>
+                </Collapsible>
+            </SidebarGroup>
+        </>
     );
 }

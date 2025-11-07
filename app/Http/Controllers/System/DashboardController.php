@@ -20,6 +20,275 @@ class DashboardController extends Controller
 	) {}
 
 	/**
+	 * Build module categories with badges for the quick access grid.
+	 */
+	protected function getModuleCategories(): array
+	{
+		$pendingPatches = \App\Models\SystemPatchApproval::where('status', 'pending')->count();
+		$failedCrons = \App\Models\ScheduledJob::where('status', 'failed')->count();
+		$securityAlerts = \App\Models\SecurityAuditLog::where('severity', 'critical')->count();
+		$pendingBackups = \App\Models\SystemBackupLog::where('status', 'pending')->count();
+
+		return [
+			[
+				'id' => 'system-admin',
+				'title' => 'System & Server Administration',
+				'description' => 'Core system health, storage, and maintenance management',
+				'modules' => [
+					[
+						'id' => 'health',
+						'icon' => 'Activity',
+						'title' => 'System Health',
+						'description' => 'Monitor CPU, memory, disk usage, and system performance',
+						'href' => '/system/health',
+						'badge' => ['count' => 0, 'label' => 'alerts'],
+						'isDisabled' => false,
+						'comingSoon' => false,
+					],
+					[
+						'id' => 'storage',
+						'icon' => 'HardDrive',
+						'title' => 'Storage Management',
+						'description' => 'View and manage disk space, partitions, and storage resources',
+						'href' => '/system/storage',
+						'badge' => ['count' => 0, 'label' => 'alerts'],
+						'isDisabled' => false,
+						'comingSoon' => false,
+					],
+					[
+						'id' => 'backups',
+						'icon' => 'Database',
+						'title' => 'Backups & Recovery',
+						'description' => 'Schedule, monitor, and manage system backups',
+						'href' => '/system/backups',
+						'badge' => ['count' => $pendingBackups, 'label' => 'pending'],
+						'isDisabled' => false,
+						'comingSoon' => false,
+					],
+					[
+						'id' => 'security-audit',
+						'icon' => 'Shield',
+						'title' => 'Security Audit Logs',
+						'description' => 'Review security events and access logs',
+						'href' => '/system/security-audit',
+						'badge' => ['count' => $securityAlerts, 'label' => 'critical'],
+						'isDisabled' => false,
+						'comingSoon' => false,
+					],
+					[
+						'id' => 'patches',
+						'icon' => 'FileBox',
+						'title' => 'Patch Management',
+						'description' => 'Approve and deploy system patches and updates',
+						'href' => '/system/patches',
+						'badge' => ['count' => $pendingPatches, 'label' => 'pending'],
+						'isDisabled' => false,
+						'comingSoon' => false,
+					],
+					[
+						'id' => 'cron-jobs',
+						'icon' => 'Calendar',
+						'title' => 'Cron Jobs',
+						'description' => 'Schedule and monitor automated system tasks',
+						'href' => '/system/cron',
+						'badge' => ['count' => $failedCrons, 'label' => 'failed'],
+						'isDisabled' => false,
+						'comingSoon' => false,
+					],
+				],
+			],
+			[
+				'id' => 'security-access',
+				'title' => 'Security & Access',
+				'description' => 'User management, permissions, and security policies',
+				'modules' => [
+					[
+						'id' => 'users',
+						'icon' => 'Users',
+						'title' => 'User Management',
+						'description' => 'Manage users, roles, and permissions',
+						'href' => '/system/users',
+						'badge' => ['count' => 0, 'label' => 'users'],
+						'isDisabled' => false,
+						'comingSoon' => false,
+					],
+					[
+						'id' => 'roles-permissions',
+						'icon' => 'Key',
+						'title' => 'Roles & Permissions',
+						'description' => 'Configure user roles and access controls',
+						'href' => '/system/security/roles',
+						'badge' => ['count' => 0, 'label' => 'roles'],
+						'isDisabled' => false,
+						'comingSoon' => false,
+					],
+					[
+						'id' => 'security-policies',
+						'icon' => 'AlertCircle',
+						'title' => 'Security Policies',
+						'description' => 'Define password policies, session timeouts, and security rules',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'pending'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'api-keys',
+						'icon' => 'Key',
+						'title' => 'API Keys & Tokens',
+						'description' => 'Manage API authentication and integration tokens',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'active'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'audit-trail',
+						'icon' => 'BarChart3',
+						'title' => 'Audit Trail',
+						'description' => 'Review all system administrative actions',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'events'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+				],
+			],
+			[
+				'id' => 'organization',
+				'title' => 'Organization Control',
+				'description' => 'Department, team, and organizational structure management',
+				'modules' => [
+					[
+						'id' => 'departments',
+						'icon' => 'Briefcase',
+						'title' => 'Departments',
+						'description' => 'Manage organizational departments and units',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'active'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'teams',
+						'icon' => 'Users',
+						'title' => 'Teams',
+						'description' => 'Create and manage team structures',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'teams'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'divisions',
+						'icon' => 'BarChart3',
+						'title' => 'Divisions',
+						'description' => 'Organize company divisions and business units',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'divisions'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'company-settings',
+						'icon' => 'Settings',
+						'title' => 'Company Settings',
+						'description' => 'Configure global company information and branding',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'pending'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+				],
+			],
+			[
+				'id' => 'hr-operations',
+				'title' => 'HR Operations',
+				'description' => 'Human resources and employee management',
+				'modules' => [
+					[
+						'id' => 'employees',
+						'icon' => 'Users',
+						'title' => 'Employee Directory',
+						'description' => 'Manage employee records and profiles',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'active'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'payroll',
+						'icon' => 'DollarSign',
+						'title' => 'Payroll Management',
+						'description' => 'Process payroll, salaries, and benefits',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'pending'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'leave-management',
+						'icon' => 'Clock',
+						'title' => 'Leave Management',
+						'description' => 'Manage employee leave and time off',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'pending'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'performance',
+						'icon' => 'BarChart3',
+						'title' => 'Performance Reviews',
+						'description' => 'Track and manage employee performance',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'pending'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+				],
+			],
+			[
+				'id' => 'monitoring-reporting',
+				'title' => 'Monitoring & Reporting',
+				'description' => 'System analytics, dashboards, and reports',
+				'modules' => [
+					[
+						'id' => 'analytics',
+						'icon' => 'BarChart3',
+						'title' => 'System Analytics',
+						'description' => 'View system usage analytics and performance metrics',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'reports'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'reports',
+						'icon' => 'FileBox',
+						'title' => 'Custom Reports',
+						'description' => 'Generate and download custom system reports',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'available'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+					[
+						'id' => 'alerts',
+						'icon' => 'AlertCircle',
+						'title' => 'Alert Management',
+						'description' => 'Configure system alerts and notifications',
+						'href' => '#',
+						'badge' => ['count' => 0, 'label' => 'active'],
+						'isDisabled' => true,
+						'comingSoon' => true,
+					],
+				],
+			],
+		];
+	}
+
+	/**
 	 * Show the superadmin dashboard.
 	 */
 	public function index(Request $request)
@@ -191,6 +460,7 @@ class DashboardController extends Controller
 			'welcomeText' => 'Welcome to the Superadmin dashboard — manage platform settings and users from here.',
 			'systemHealth' => $systemHealth,
 			'cronMetrics' => $cronMetrics,
+			'moduleCategories' => $this->getModuleCategories(),
 		];
 
 		return Inertia::render('System/Dashboard', $data);
