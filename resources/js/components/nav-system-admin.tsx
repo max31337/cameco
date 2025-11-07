@@ -8,7 +8,7 @@ import {
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, HardDrive, Database, Shield, FileBox, Calendar, Lock, Users, Building2, BarChart3, Briefcase } from 'lucide-react';
+import { Activity, HardDrive, Database, Shield, FileBox, Calendar, Lock, Users, Building2, BarChart3, Briefcase, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function NavSystemAdmin() {
@@ -34,6 +34,11 @@ export function NavSystemAdmin() {
             title: 'Security Audit',
             icon: Shield,
             href: '/system/security/audit',
+        },
+        {
+            title: 'Error Logs',
+            icon: AlertCircle,
+            href: '/system/logs/errors',
         },
         {
             title: 'Patches',
