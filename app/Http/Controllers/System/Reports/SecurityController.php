@@ -42,11 +42,11 @@ class SecurityController extends Controller
     private function getFailedLogins(Carbon $from, Carbon $to): array
     {
         $logs = SecurityAuditLog::query()
-            ->where('action', 'failed_login_attempt')
+            ->where('event_type', 'failed_login_attempt')
             ->whereBetween('created_at', [$from, $to])
             ->orderBy('created_at', 'desc')
             ->limit(100)
-            ->get(['user_id', 'description', 'created_at', 'details']);
+            ->get(['user_id', 'description', 'created_at', 'metadata']);
 
         $data = [];
         $userAttempts = [];
@@ -60,7 +60,7 @@ class SecurityController extends Controller
                     'user_id' => $userId,
                     'user_name' => $log->description ? explode(' ', $log->description)[0] : 'Unknown',
                     'timestamp' => $log->created_at->toDateTimeString(),
-                    'details' => $log->details,
+                    'details' => $log->metadata,
                 ];
             }
         }
@@ -84,11 +84,11 @@ class SecurityController extends Controller
     private function getPasswordResets(Carbon $from, Carbon $to): array
     {
         $logs = SecurityAuditLog::query()
-            ->where('action', 'password_reset')
+            ->where('event_type', 'password_reset')
             ->whereBetween('created_at', [$from, $to])
             ->orderBy('created_at', 'desc')
             ->limit(100)
-            ->get(['user_id', 'description', 'created_at', 'details']);
+            ->get(['user_id', 'description', 'created_at', 'metadata']);
 
         return [
             'total_resets' => $logs->count(),
@@ -96,7 +96,7 @@ class SecurityController extends Controller
                 'user_id' => $log->user_id,
                 'description' => $log->description,
                 'timestamp' => $log->created_at->toDateTimeString(),
-                'details' => $log->details,
+                'details' => $log->metadata,
             ])->all(),
         ];
     }
@@ -104,20 +104,20 @@ class SecurityController extends Controller
     private function getRoleChanges(Carbon $from, Carbon $to): array
     {
         $logs = SecurityAuditLog::query()
-            ->whereIn('action', ['role_assigned', 'role_removed', 'role_changed'])
+            ->whereIn('event_type', ['role_assigned', 'role_removed', 'role_changed'])
             ->whereBetween('created_at', [$from, $to])
             ->orderBy('created_at', 'desc')
             ->limit(100)
-            ->get(['user_id', 'action', 'description', 'created_at', 'details']);
+            ->get(['user_id', 'event_type', 'description', 'created_at', 'metadata']);
 
         return [
             'total_changes' => $logs->count(),
             'changes' => $logs->map(fn($log) => [
                 'user_id' => $log->user_id,
-                'action' => $log->action,
+                'action' => $log->event_type,
                 'description' => $log->description,
                 'timestamp' => $log->created_at->toDateTimeString(),
-                'details' => $log->details,
+                'details' => $log->metadata,
             ])->all(),
         ];
     }
@@ -129,7 +129,7 @@ class SecurityController extends Controller
             ->whereBetween('created_at', [$from, $to])
             ->orderBy('created_at', 'desc')
             ->limit(100)
-            ->get(['user_id', 'severity', 'action', 'description', 'created_at', 'details']);
+            ->get(['user_id', 'severity', 'event_type', 'description', 'created_at', 'metadata']);
 
         $bySeverity = [
             'critical' => 0,
@@ -148,10 +148,10 @@ class SecurityController extends Controller
             'alerts' => $logs->map(fn($log) => [
                 'user_id' => $log->user_id,
                 'severity' => $log->severity,
-                'action' => $log->action,
+                'action' => $log->event_type,
                 'description' => $log->description,
                 'timestamp' => $log->created_at->toDateTimeString(),
-                'details' => $log->details,
+                'details' => $log->metadata,
             ])->all(),
         ];
     }
