@@ -51,6 +51,19 @@ class ScheduledJob extends Model
     ];
 
     /**
+     * The accessors to append to model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'formatted_next_run',
+        'formatted_last_run',
+        'success_rate',
+        'status',
+        'cron_description',
+    ];
+
+    /**
      * Get the user who created this job.
      */
     public function creator(): BelongsTo
