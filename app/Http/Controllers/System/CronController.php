@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\System;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\System\CronJobRequest;
 use App\Services\System\SystemCronService;
+use App\Traits\LogsSecurityAudits;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +15,8 @@ use Inertia\Response;
 
 class CronController extends Controller
 {
+    use LogsSecurityAudits;
+
     public function __construct(
         private SystemCronService $cronService
     ) {
@@ -62,25 +66,15 @@ class CronController extends Controller
     /**
      * Store a newly created scheduled job.
      */
-    public function store(Request $request)
+    public function store(CronJobRequest $request)
     {
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255|unique:scheduled_jobs,name',
-                'description' => 'nullable|string|max:1000',
-                'command' => 'required|string|max:500',
-                'cron_expression' => 'required|string|max:100',
-                'is_enabled' => 'boolean',
-            ]);
-
-            // Validate cron expression
-            if (!$this->cronService->validateCronExpression($validated['cron_expression'])) {
-                throw ValidationException::withMessages([
-                    'cron_expression' => 'Invalid cron expression format.',
-                ]);
-            }
+            $validated = $request->validated();
 
             $job = $this->cronService->createJob($validated, Auth::id());
+
+            // Audit logging
+            $this->logCronJobCreated($validated);
 
             Log::info('Scheduled job created', [
                 'job_id' => $job->id,
@@ -105,25 +99,19 @@ class CronController extends Controller
     /**
      * Update the specified scheduled job.
      */
-    public function update(Request $request, int $id)
+    public function update(CronJobRequest $request, int $id)
     {
         try {
-            $validated = $request->validate([
-                'name' => 'sometimes|required|string|max:255|unique:scheduled_jobs,name,' . $id,
-                'description' => 'nullable|string|max:1000',
-                'command' => 'sometimes|required|string|max:500',
-                'cron_expression' => 'sometimes|required|string|max:100',
-                'is_enabled' => 'boolean',
-            ]);
+            // Get old data for audit logging
+            $oldJob = $this->cronService->findJobById($id);
+            $oldData = $oldJob->only(['name', 'description', 'command', 'cron_expression', 'is_enabled']);
 
-            // Validate cron expression if provided
-            if (isset($validated['cron_expression']) && !$this->cronService->validateCronExpression($validated['cron_expression'])) {
-                throw ValidationException::withMessages([
-                    'cron_expression' => 'Invalid cron expression format.',
-                ]);
-            }
+            $validated = $request->validated();
 
             $job = $this->cronService->updateJob($id, $validated, Auth::id());
+
+            // Audit logging
+            $this->logCronJobUpdated($id, $oldData, $validated);
 
             Log::info('Scheduled job updated', [
                 'job_id' => $job->id,
@@ -163,6 +151,9 @@ class CronController extends Controller
                 ? $this->cronService->enableJob($id, Auth::id())
                 : $this->cronService->disableJob($id, Auth::id());
 
+            // Audit logging
+            $this->logCronJobToggled($id, $job->name, $newStatus);
+
             Log::info('Scheduled job toggled', [
                 'job_id' => $id,
                 'name' => $job->name,
@@ -197,6 +188,9 @@ class CronController extends Controller
             $jobName = $job->name;
             $this->cronService->deleteJob($id);
 
+            // Audit logging
+            $this->logCronJobDeleted($id, $jobName);
+
             Log::info('Scheduled job deleted', [
                 'job_id' => $id,
                 'name' => $jobName,
@@ -221,7 +215,11 @@ class CronController extends Controller
     public function run(int $id)
     {
         try {
+            $job = $this->cronService->findJobById($id);
             $result = $this->cronService->executeJob($id, Auth::id());
+
+            // Audit logging
+            $this->logCronJobExecuted($id, $job->name, $result['exit_code'], $result['success']);
 
             Log::info('Scheduled job manually executed', [
                 'job_id' => $id,
@@ -282,6 +280,14 @@ class CronController extends Controller
     {
         try {
             $result = $this->cronService->syncJobs(Auth::id());
+
+            // Audit logging
+            $this->logCronJobsSynced([
+                'added' => $result['added'],
+                'updated' => $result['updated'],
+                'skipped' => $result['skipped'],
+                'total' => $result['discovered'],
+            ]);
 
             Log::info('Scheduled jobs synced', [
                 'user_id' => Auth::id(),

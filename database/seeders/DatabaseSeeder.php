@@ -72,5 +72,10 @@ class DatabaseSeeder extends Seeder
         if (class_exists(\Database\Seeders\RemoteVendorSLASeeder::class)) {
             $this->call(\Database\Seeders\RemoteVendorSLASeeder::class);
         }
+
+        // Seed cron jobs
+        if (class_exists(\Database\Seeders\CronJobSeeder::class)) {
+            $this->call(\Database\Seeders\CronJobSeeder::class);
+        }
     }
 }

@@ -8,7 +8,7 @@ import {
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, HardDrive, Database, Shield, FileBox } from 'lucide-react';
+import { Activity, HardDrive, Database, Shield, FileBox, Calendar } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function NavSystemAdmin() {
@@ -39,6 +39,11 @@ export function NavSystemAdmin() {
             title: 'Patches',
             icon: FileBox,
             href: '/system/patches',
+        },
+        {
+            title: 'Cron Jobs',
+            icon: Calendar,
+            href: '/system/cron',
         },
     ];
 

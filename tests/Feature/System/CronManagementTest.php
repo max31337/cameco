@@ -559,6 +559,103 @@ class CronManagementTest extends TestCase
     }
 
     /**
+     * TEST 5b.13.1: Audit Logging - Job Update
+     * Verify updates are logged to security audit logs with changes
+     */
+    public function test_job_update_is_logged(): void
+    {
+        $job = ScheduledJob::factory()->create([
+            'name' => 'Original Name',
+            'command' => 'cache:clear',
+        ]);
+
+        $this->actingAs($this->superAdmin)->put("/system/cron/{$job->id}", [
+            'name' => 'Updated Name',
+            'command' => 'cache:clear',
+            'cron_expression' => '0 0 * * *',
+        ]);
+
+        // Check that audit log was created
+        $auditLog = \App\Models\SecurityAuditLog::where([
+            'user_id' => $this->superAdmin->id,
+            'event_type' => 'cron_job_updated',
+        ])->latest()->first();
+
+        $this->assertNotNull($auditLog);
+        $this->assertEquals('cron_job_updated', $auditLog->event_type);
+        $this->assertArrayHasKey('changes', $auditLog->details);
+    }
+
+    /**
+     * TEST 5b.13.2: Audit Logging - Job Toggle
+     * Verify toggling is logged to security audit logs
+     */
+    public function test_job_toggle_is_logged(): void
+    {
+        $job = ScheduledJob::factory()->disabled()->create();
+
+        $this->actingAs($this->superAdmin)->post("/system/cron/{$job->id}/toggle");
+
+        // Check that audit log was created
+        $this->assertDatabaseHas('security_audit_logs', [
+            'user_id' => $this->superAdmin->id,
+            'event_type' => 'cron_job_toggled',
+        ]);
+    }
+
+    /**
+     * TEST 5b.13.3: Audit Logging - Job Deletion
+     * Verify deletion is logged to security audit logs
+     */
+    public function test_job_deletion_is_logged(): void
+    {
+        $job = ScheduledJob::factory()->create(['name' => 'Job to Delete']);
+
+        $this->actingAs($this->superAdmin)->delete("/system/cron/{$job->id}");
+
+        // Check that audit log was created
+        $auditLog = \App\Models\SecurityAuditLog::where([
+            'user_id' => $this->superAdmin->id,
+            'event_type' => 'cron_job_deleted',
+        ])->latest()->first();
+
+        $this->assertNotNull($auditLog);
+        $this->assertEquals('Job to Delete', $auditLog->details['job_name'] ?? null);
+    }
+
+    /**
+     * TEST 5b.13.4: Audit Logging - Job Execution
+     * Verify manual execution is logged to security audit logs
+     */
+    public function test_job_execution_is_logged(): void
+    {
+        $job = ScheduledJob::factory()->enabled()->create();
+
+        $this->actingAs($this->superAdmin)->post("/system/cron/{$job->id}/run");
+
+        // Check that audit log was created
+        $this->assertDatabaseHas('security_audit_logs', [
+            'user_id' => $this->superAdmin->id,
+            'event_type' => 'cron_job_executed',
+        ]);
+    }
+
+    /**
+     * TEST 5b.13.5: Audit Logging - Jobs Sync
+     * Verify sync operation is logged to security audit logs
+     */
+    public function test_jobs_sync_is_logged(): void
+    {
+        $this->actingAs($this->superAdmin)->post('/system/cron/sync');
+
+        // Check that audit log was created
+        $this->assertDatabaseHas('security_audit_logs', [
+            'user_id' => $this->superAdmin->id,
+            'event_type' => 'cron_jobs_synced',
+        ]);
+    }
+
+    /**
      * TEST 5b.12.25: Non-Superadmin Cannot Create Jobs
      * Verify regular users cannot create jobs
      */
