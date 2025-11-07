@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\System;
+namespace App\Http\Controllers\System\SystemAdministration;
 
 use App\Http\Controllers\Controller;
 use App\Models\SystemPatchApproval;

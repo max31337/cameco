@@ -3,7 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
-use App\Http\Controllers\System\CronController;
+
+//Controllers
+use \App\Http\Controllers\System\User\UserOnboardingController;
+use \App\Http\Controllers\System\DashboardController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -31,42 +34,42 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/system/onboarding/complete', [SystemOnboardingController::class, 'complete'])->name('system.onboarding.complete');
 
     // Per-user onboarding endpoints
-    Route::get('/user/onboarding', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'show'])->name('user.onboarding.show');
-    Route::patch('/user/onboarding', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'update'])->name('user.onboarding.update');
-    Route::post('/user/onboarding/skip', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'skip'])->name('user.onboarding.skip');
+    Route::get('/user/onboarding', [UserOnboardingController::class, 'show'])->name('user.onboarding.show');
+    Route::patch('/user/onboarding', [UserOnboardingController::class, 'update'])->name('user.onboarding.update');
+    Route::post('/user/onboarding/skip', [UserOnboardingController::class, 'skip'])->name('user.onboarding.skip');
 
     // Onboarding UX endpoints
-    Route::get('/onboarding', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'page'])->name('onboarding.page');
-    Route::post('/onboarding/step', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'completeStep'])->name('onboarding.step');
-    Route::post('/onboarding/complete', [\App\Http\Controllers\System\User\UserOnboardingController::class, 'complete'])->name('onboarding.complete');
+    Route::get('/onboarding', [UserOnboardingController::class, 'page'])->name('onboarding.page');
+    Route::post('/onboarding/step', [UserOnboardingController::class, 'completeStep'])->name('onboarding.step');
+    Route::post('/onboarding/complete', [UserOnboardingController::class, 'complete'])->name('onboarding.complete');
 
     // System/Vendor dashboards
-    Route::get('/system/dashboard', [\App\Http\Controllers\System\DashboardController::class, 'index'])->name('system.dashboard');
+    Route::get('/system/dashboard', [DashboardController::class, 'index'])->name('system.dashboard');
     Route::get('/system/vendor/dashboard', [\App\Http\Controllers\System\Vendor\DashboardController::class, 'index'])->name('system.vendor.dashboard');
 
     // System Health Monitoring Detail Pages
-    Route::get('/system/health', action: [\App\Http\Controllers\System\HealthController::class, 'index'])->name('system.health');
-    Route::post('/system/health/refresh', [\App\Http\Controllers\System\HealthController::class, 'refresh'])->name('system.health.refresh');
+    Route::get('/system/health', action: [\App\Http\Controllers\System\SystemAdministration\HealthController::class, 'index'])->name('system.health');
+    Route::post('/system/health/refresh', [\App\Http\Controllers\System\SystemAdministration\HealthController::class, 'refresh'])->name('system.health.refresh');
 
     // Backup Management
-    Route::get('/system/backups', [\App\Http\Controllers\System\BackupController::class, 'index'])->name('system.backups');
-    Route::get('/system/backups/{backup}', [\App\Http\Controllers\System\BackupController::class, 'show'])->name('system.backups.show');
+    Route::get('/system/backups', [\App\Http\Controllers\System\SystemAdministration\BackupController::class, 'index'])->name('system.backups');
+    Route::get('/system/backups/{backup}', [\App\Http\Controllers\System\SystemAdministration\BackupController::class, 'show'])->name('system.backups.show');
 
     // Patch Management
-    Route::get('/system/patches', [\App\Http\Controllers\System\PatchController::class, 'index'])->name('system.patches');
-    Route::get('/system/patches/{patch}', [\App\Http\Controllers\System\PatchController::class, 'show'])->name('system.patches.show');
-    Route::post('/system/patches/{patch}/approve', [\App\Http\Controllers\System\PatchController::class, 'approve'])->name('system.patches.approve');
-    Route::post('/system/patches/{patch}/reject', [\App\Http\Controllers\System\PatchController::class, 'reject'])->name('system.patches.reject');
-    Route::post('/system/patches/{patch}/deploy', [\App\Http\Controllers\System\PatchController::class, 'markDeployed'])->name('system.patches.deploy');
+    Route::get('/system/patches', [\App\Http\Controllers\System\SystemAdministration\PatchController::class, 'index'])->name('system.patches');
+    Route::get('/system/patches/{patch}', [\App\Http\Controllers\System\SystemAdministration\PatchController::class, 'show'])->name('system.patches.show');
+    Route::post('/system/patches/{patch}/approve', [\App\Http\Controllers\System\SystemAdministration\PatchController::class, 'approve'])->name('system.patches.approve');
+    Route::post('/system/patches/{patch}/reject', [\App\Http\Controllers\System\SystemAdministration\PatchController::class, 'reject'])->name('system.patches.reject');
+    Route::post('/system/patches/{patch}/deploy', [\App\Http\Controllers\System\SystemAdministration\PatchController::class, 'markDeployed'])->name('system.patches.deploy');
 
     // Security Audit Logs
-    Route::get('/system/security/audit', [\App\Http\Controllers\System\SecurityAuditController::class, 'index'])->name('system.security.audit');
-    Route::get('/system/security/audit/{log}', [\App\Http\Controllers\System\SecurityAuditController::class, 'show'])->name('system.security.audit.show');
-    Route::get('/system/security/audit/export', [\App\Http\Controllers\System\SecurityAuditController::class, 'export'])->name('system.security.audit.export');
+    Route::get('/system/security/audit', [\App\Http\Controllers\System\SystemAdministration\SecurityAuditController::class, 'index'])->name('system.security.audit');
+    Route::get('/system/security/audit/{log}', [\App\Http\Controllers\System\SystemAdministration\SecurityAuditController::class, 'show'])->name('system.security.audit.show');
+    Route::get('/system/security/audit/export', [\App\Http\Controllers\System\SystemAdministration\SecurityAuditController::class, 'export'])->name('system.security.audit.export');
 
     // Storage Management
-    Route::get('/system/storage', [\App\Http\Controllers\System\StorageController::class, 'index'])->name('system.storage');
-    Route::post('/system/storage/cleanup', [\App\Http\Controllers\System\StorageController::class, 'cleanup'])->name('system.storage.cleanup');
+    Route::get('/system/storage', [\App\Http\Controllers\System\SystemAdministration\StorageController::class, 'index'])->name('system.storage');
+    Route::post('/system/storage/cleanup', [\App\Http\Controllers\System\SystemAdministration\StorageController::class, 'cleanup'])->name('system.storage.cleanup');
 
     // Security & Access - Roles and Permissions (Superadmin only)
     Route::middleware(['superadmin'])->prefix('system/security')->group(function () {
@@ -89,16 +92,33 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{user}/activate', [\App\Http\Controllers\System\Security\UserLifecycleController::class, 'activate'])->name('system.users.activate');
         Route::get('/{user}/audit-trail', [\App\Http\Controllers\System\Security\UserLifecycleController::class, 'auditTrail'])->name('system.users.audit-trail');
     });
+
+    // Security & Access - Security Policies (Superadmin only)
+    Route::middleware(['superadmin'])->prefix('system/security')->group(function () {
+        Route::get('/policies', [\App\Http\Controllers\System\Security\PolicyController::class, 'index'])->name('system.security.policies');
+        Route::post('/policies', [\App\Http\Controllers\System\Security\PolicyController::class, 'update'])->name('system.security.policies.update');
+        Route::get('/policies/{key}', [\App\Http\Controllers\System\Security\PolicyController::class, 'show'])->name('system.security.policies.show');
+        Route::post('/policies/{key}/reset', [\App\Http\Controllers\System\Security\PolicyController::class, 'reset'])->name('system.security.policies.reset');
+    });
+
+    // Security & Access - IP Rules (Superadmin only)
+    Route::middleware(['superadmin'])->prefix('system/security/ip-rules')->group(function () {
+        Route::get('/', [\App\Http\Controllers\System\Security\IPRuleController::class, 'index'])->name('system.security.ip-rules');
+        Route::post('/', [\App\Http\Controllers\System\Security\IPRuleController::class, 'store'])->name('system.security.ip-rules.store');
+        Route::put('/{rule}', [\App\Http\Controllers\System\Security\IPRuleController::class, 'update'])->name('system.security.ip-rules.update');
+        Route::delete('/{rule}', [\App\Http\Controllers\System\Security\IPRuleController::class, 'destroy'])->name('system.security.ip-rules.destroy');
+        Route::post('/{rule}/toggle', [\App\Http\Controllers\System\Security\IPRuleController::class, 'toggle'])->name('system.security.ip-rules.toggle');
+    });
 });
 
 // Cron Job Management (Superadmin only)
 Route::middleware(['auth', 'superadmin'])->prefix('system/cron')->group(function () {
-    Route::get('/', [CronController::class, 'index'])->name('system.cron');
-    Route::post('/', [CronController::class, 'store'])->name('system.cron.store');
-    Route::post('/sync', [CronController::class, 'sync'])->name('system.cron.sync');
-    Route::post('/{id}/toggle', [CronController::class, 'toggle'])->name('system.cron.toggle');
-    Route::post('/{id}/run', [CronController::class, 'run'])->name('system.cron.run');
-    Route::get('/{id}/history', [CronController::class, 'history'])->name('system.cron.history');
-    Route::put('/{id}', [CronController::class, 'update'])->name('system.cron.update');
-    Route::delete('/{id}', [CronController::class, 'destroy'])->name('system.cron.destroy');
+    Route::get('/', [\App\Http\Controllers\System\SystemAdministration\CronController::class, 'index'])->name('system.cron');
+    Route::post('/', [\App\Http\Controllers\System\SystemAdministration\CronController::class, 'store'])->name('system.cron.store');
+    Route::post('/sync', [\App\Http\Controllers\System\SystemAdministration\CronController::class, 'sync'])->name('system.cron.sync');
+    Route::post('/{id}/toggle', [\App\Http\Controllers\System\SystemAdministration\CronController::class, 'toggle'])->name('system.cron.toggle');
+    Route::post('/{id}/run', [\App\Http\Controllers\System\SystemAdministration\CronController::class, 'run'])->name('system.cron.run');
+    Route::get('/{id}/history', [\App\Http\Controllers\System\SystemAdministration\CronController::class, 'history'])->name('system.cron.history');
+    Route::put('/{id}', [\App\Http\Controllers\System\SystemAdministration\CronController::class, 'update'])->name('system.cron.update');
+    Route::delete('/{id}', [\App\Http\Controllers\System\SystemAdministration\CronController::class, 'destroy'])->name('system.cron.destroy');
 });
