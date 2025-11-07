@@ -146,7 +146,7 @@ interface SystemDashboardProps {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'System Dashboard',
+        title: 'Dashboard',
         href: '/dashboard',
     },
 ];

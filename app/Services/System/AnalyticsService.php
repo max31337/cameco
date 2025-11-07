@@ -1,0 +1,240 @@
+<?php
+
+namespace App\Services\System;
+
+use App\Models\SecurityAuditLog;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class AnalyticsService
+{
+    /**
+     * Get user login statistics
+     */
+    public function getUserLoginStats(?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $from = $from ?? now()->subMonths(1);
+        $to = $to ?? now();
+
+        $loginStats = SecurityAuditLog::where('action', 'user_login')
+            ->whereBetween('created_at', [$from, $to])
+            ->with('user')
+            ->get()
+            ->groupBy('user_id')
+            ->map(function ($logs) {
+                $user = $logs->first()->user;
+                return [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'email' => $user->email,
+                    'login_count' => $logs->count(),
+                    'last_login' => $logs->max('created_at'),
+                    'first_login' => $logs->min('created_at'),
+                ];
+            })
+            ->sortByDesc('login_count')
+            ->values()
+            ->toArray();
+
+        return $loginStats;
+    }
+
+    /**
+     * Get most used modules based on audit logs
+     */
+    public function getMostUsedModules(?Carbon $from = null, ?Carbon $to = null, int $limit = 10): array
+    {
+        $from = $from ?? now()->subMonths(1);
+        $to = $to ?? now();
+
+        // Extract module from action or details
+        $moduleUsage = SecurityAuditLog::whereBetween('created_at', [$from, $to])
+            ->select(DB::raw('COUNT(*) as access_count'))
+            ->selectRaw("
+                CASE 
+                    WHEN action LIKE '%user%' THEN 'User Management'
+                    WHEN action LIKE '%role%' THEN 'Roles & Permissions'
+                    WHEN action LIKE '%security%' OR action LIKE '%policy%' THEN 'Security Policies'
+                    WHEN action LIKE '%ip%' THEN 'IP Rules'
+                    WHEN action LIKE '%department%' THEN 'Departments'
+                    WHEN action LIKE '%position%' THEN 'Positions'
+                    WHEN action LIKE '%health%' OR action LIKE '%backup%' THEN 'System Health'
+                    WHEN action LIKE '%patch%' THEN 'Patch Management'
+                    WHEN action LIKE '%cron%' THEN 'Cron Jobs'
+                    ELSE 'Other'
+                END as module
+            ")
+            ->groupBy('module')
+            ->orderByDesc('access_count')
+            ->limit($limit)
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'module' => $row->module,
+                    'access_count' => $row->access_count,
+                    'percentage' => 0, // Will calculate after
+                ];
+            })
+            ->toArray();
+
+        // Calculate percentages
+        $total = array_sum(array_column($moduleUsage, 'access_count'));
+        foreach ($moduleUsage as &$item) {
+            $item['percentage'] = $total > 0 ? round(($item['access_count'] / $total) * 100, 2) : 0;
+        }
+
+        return $moduleUsage;
+    }
+
+    /**
+     * Get user activity heatmap (day of week and hour)
+     */
+    public function getUserActivityHeatmap(?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $from = $from ?? now()->subMonths(1);
+        $to = $to ?? now();
+
+        $activities = SecurityAuditLog::whereBetween('created_at', [$from, $to])
+            ->selectRaw('DAYOFWEEK(created_at) as day_of_week, HOUR(created_at) as hour, COUNT(*) as count')
+            ->groupBy('day_of_week', 'hour')
+            ->get();
+
+        // Initialize heatmap (7 days x 24 hours)
+        $heatmap = [];
+        $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        for ($day = 1; $day <= 7; $day++) {
+            for ($hour = 0; $hour < 24; $hour++) {
+                $heatmap[] = [
+                    'day' => $days[$day - 1],
+                    'day_num' => $day,
+                    'hour' => $hour,
+                    'count' => 0,
+                ];
+            }
+        }
+
+        // Fill in actual data
+        foreach ($activities as $activity) {
+            $day = $activity->day_of_week;
+            $hour = $activity->hour;
+            $key = ($day - 1) * 24 + $hour;
+            if (isset($heatmap[$key])) {
+                $heatmap[$key]['count'] = $activity->count;
+            }
+        }
+
+        return $heatmap;
+    }
+
+    /**
+     * Get session duration statistics
+     */
+    public function getSessionDurationStats(?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $from = $from ?? now()->subMonths(1);
+        $to = $to ?? now();
+
+        // Get login and logout pairs
+        $logins = SecurityAuditLog::where('action', 'user_login')
+            ->whereBetween('created_at', [$from, $to])
+            ->get();
+
+        $logouts = SecurityAuditLog::where('action', 'user_logout')
+            ->whereBetween('created_at', [$from, $to])
+            ->get();
+
+        $sessionDurations = [];
+        $totalDuration = 0;
+        $sessionCount = 0;
+
+        foreach ($logins as $login) {
+            // Find corresponding logout
+            $logout = $logouts
+                ->where('user_id', $login->user_id)
+                ->where('created_at', '>', $login->created_at)
+                ->first();
+
+            if ($logout) {
+                $duration = $logout->created_at->diffInMinutes($login->created_at);
+                $sessionDurations[] = [
+                    'user_id' => $login->user_id,
+                    'user_name' => $login->user?->name ?? 'Unknown',
+                    'login_at' => $login->created_at,
+                    'logout_at' => $logout->created_at,
+                    'duration_minutes' => $duration,
+                ];
+                $totalDuration += $duration;
+                $sessionCount++;
+            }
+        }
+
+        $avgDuration = $sessionCount > 0 ? round($totalDuration / $sessionCount, 2) : 0;
+        $maxDuration = collect($sessionDurations)->max('duration_minutes') ?? 0;
+        $minDuration = collect($sessionDurations)->min('duration_minutes') ?? 0;
+
+        return [
+            'total_sessions' => $sessionCount,
+            'average_duration_minutes' => $avgDuration,
+            'max_duration_minutes' => $maxDuration,
+            'min_duration_minutes' => $minDuration,
+            'total_duration_hours' => round($totalDuration / 60, 2),
+            'sessions' => collect($sessionDurations)->sortByDesc('duration_minutes')->take(20)->values()->toArray(),
+        ];
+    }
+
+    /**
+     * Get activity by action type
+     */
+    public function getActivityByActionType(?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $from = $from ?? now()->subMonths(1);
+        $to = $to ?? now();
+
+        return SecurityAuditLog::whereBetween('created_at', [$from, $to])
+            ->select('action', DB::raw('COUNT(*) as count'))
+            ->groupBy('action')
+            ->orderByDesc('count')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'action' => $row->action,
+                    'count' => $row->count,
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get user activity summary
+     */
+    public function getUserActivitySummary(?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $from = $from ?? now()->subMonths(1);
+        $to = $to ?? now();
+
+        $totalEvents = SecurityAuditLog::whereBetween('created_at', [$from, $to])->count();
+        $uniqueUsers = SecurityAuditLog::whereBetween('created_at', [$from, $to])
+            ->distinct('user_id')
+            ->count('user_id');
+        $loginAttempts = SecurityAuditLog::where('action', 'user_login')
+            ->whereBetween('created_at', [$from, $to])
+            ->count();
+        $failedLogins = SecurityAuditLog::where('action', 'failed_login_attempt')
+            ->whereBetween('created_at', [$from, $to])
+            ->count();
+
+        return [
+            'total_events' => $totalEvents,
+            'unique_users' => $uniqueUsers,
+            'successful_logins' => $loginAttempts,
+            'failed_login_attempts' => $failedLogins,
+            'success_rate' => $loginAttempts + $failedLogins > 0 
+                ? round(($loginAttempts / ($loginAttempts + $failedLogins)) * 100, 2) 
+                : 0,
+            'period_start' => $from->format('Y-m-d'),
+            'period_end' => $to->format('Y-m-d'),
+        ];
+    }
+}
