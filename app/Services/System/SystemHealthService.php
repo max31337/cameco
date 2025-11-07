@@ -1,4 +1,5 @@
 <?php
+// this shit is ugly, only made it to see how it would look like in the frontend, i am gonna be using SigNoz for metrics gathering, this shit is brittle af
 
 namespace App\Services\System;
 
