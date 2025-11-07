@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\System\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Services\System\DatabaseCompatibilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;

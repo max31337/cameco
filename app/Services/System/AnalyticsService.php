@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 class AnalyticsService
 {
+    protected DatabaseCompatibilityService $dbCompat;
+
+    public function __construct()
+    {
+        $this->dbCompat = new DatabaseCompatibilityService();
+    }
     /**
      * Get user login statistics
      */
@@ -95,11 +101,11 @@ class AnalyticsService
         $from = $from ?? now()->subMonths(1);
         $to = $to ?? now();
 
-        // SQLite uses strftime() for date/time extraction
-        // %w gives day of week (0-6, Sunday=0), we add 1 to match MySQL's DAYOFWEEK (1-7, Sunday=1)
-        // %H gives hour (00-23)
+        // Use database-agnostic functions for day of week and hour extraction
         $activities = SecurityAuditLog::whereBetween('created_at', [$from, $to])
-            ->selectRaw('CAST(strftime("%w", created_at) AS INTEGER) + 1 as day_of_week, CAST(strftime("%H", created_at) AS INTEGER) as hour, COUNT(*) as count')
+            ->selectRaw(DatabaseCompatibilityService::extractDayOfWeek('created_at') . ' as day_of_week')
+            ->selectRaw(DatabaseCompatibilityService::extractHour('created_at') . ' as hour')
+            ->selectRaw('COUNT(*) as count')
             ->groupBy('day_of_week', 'hour')
             ->get();
 
@@ -107,10 +113,10 @@ class AnalyticsService
         $heatmap = [];
         $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-        for ($day = 1; $day <= 7; $day++) {
+        for ($day = 0; $day < 7; $day++) {
             for ($hour = 0; $hour < 24; $hour++) {
                 $heatmap[] = [
-                    'day' => $days[$day - 1],
+                    'day' => $days[$day],
                     'day_num' => $day,
                     'hour' => $hour,
                     'count' => 0,
@@ -120,9 +126,9 @@ class AnalyticsService
 
         // Fill in actual data
         foreach ($activities as $activity) {
-            $day = $activity->day_of_week;
-            $hour = $activity->hour;
-            $key = ($day - 1) * 24 + $hour;
+            $day = (int)$activity->day_of_week;
+            $hour = (int)$activity->hour;
+            $key = $day * 24 + $hour;
             if (isset($heatmap[$key])) {
                 $heatmap[$key]['count'] = $activity->count;
             }

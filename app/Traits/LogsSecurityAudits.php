@@ -176,4 +176,36 @@ trait LogsSecurityAudits
             ]
         );
     }
+
+    /**
+     * Log a security audit event with additional context.
+     * 
+     * This is a more flexible version that accepts description and module.
+     *
+     * @param string $eventType
+     * @param string $description
+     * @param string $severity
+     * @param string|null $module
+     * @param array $metadata
+     * @param int|null $userId
+     * @return void
+     */
+    protected function auditLog(
+        string $eventType,
+        string $description,
+        string $severity = 'info',
+        ?string $module = null,
+        array $metadata = [],
+        ?int $userId = null
+    ): void {
+        $details = array_merge($metadata, [
+            'description' => $description,
+        ]);
+
+        if ($module) {
+            $details['module'] = $module;
+        }
+
+        $this->logAudit($eventType, $severity, $details, $userId);
+    }
 }
