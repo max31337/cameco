@@ -229,8 +229,8 @@ export function RecentHiresCard({ data }: { data: RecentHiresData }) {
     const displayData = hireData.slice(0, 5); // Show 5 most recent
 
     return (
-        <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href="/hr/employees?filter=recent" className="flex flex-col h-full">
+        <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
+            <div className="flex flex-col h-full">
                 <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -247,7 +247,11 @@ export function RecentHiresCard({ data }: { data: RecentHiresData }) {
                     {hasData ? (
                         <div className="space-y-3">
                             {displayData.map((hire) => (
-                                <div key={hire.id} className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0">
+                                <Link
+                                    key={hire.id}
+                                    href={`/hr/employees/${hire.id}`}
+                                    className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0 cursor-pointer hover:bg-muted/50 -mx-3 px-3 py-2 rounded transition-colors"
+                                >
                                     <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
                                         <UserPlus className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                                     </div>
@@ -259,12 +263,15 @@ export function RecentHiresCard({ data }: { data: RecentHiresData }) {
                                             <span>{hire.formatted_hire_date}</span>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             ))}
                             {data.count > 5 && (
-                                <p className="text-xs text-muted-foreground text-center pt-2">
+                                <Link
+                                    href="/hr/employees?sort_by=date_hired&sort_order=desc"
+                                    className="text-xs text-primary text-center pt-2 block hover:underline"
+                                >
                                     +{data.count - 5} more recent hires
-                                </p>
+                                </Link>
                             )}
                         </div>
                     ) : (
@@ -272,12 +279,12 @@ export function RecentHiresCard({ data }: { data: RecentHiresData }) {
                             <p className="text-sm">No recent hires in last 30 days</p>
                         </div>
                     )}
-                    <div className="flex items-center justify-end gap-1 text-xs text-primary pt-3 mt-auto">
-                        <span>View Recent Hires</span>
+                    <Link href="/hr/employees?sort=recent" className="flex items-center justify-end gap-1 text-xs text-primary pt-3 mt-auto hover:underline">
+                        <span>View All Recent Hires</span>
                         <ArrowRight className="h-3 w-3" />
-                    </div>
+                    </Link>
                 </CardContent>
-            </Link>
+            </div>
         </Card>
     );
 }

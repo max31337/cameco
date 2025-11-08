@@ -54,6 +54,7 @@ class EmployeeRepository implements EmployeeRepositoryInterface
             'status' => 'employees.status',
             'employment_type' => 'employees.employment_type',
             'date_hired' => 'employees.date_hired',
+            'recent' => 'employees.date_hired', // Sort by date_hired for recent hires
         ];
         
         // Use mapped column or default to the requested column (if it exists in employees table)
