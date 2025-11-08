@@ -26,11 +26,6 @@ export function NavHR() {
     
     const employeeManagementItems = [
         {
-            title: 'Dashboard',
-            icon: BarChart3,
-            href: '/hr/dashboard',
-        },
-        {
             title: 'Employees',
             icon: Users,
             href: '/hr/employees',

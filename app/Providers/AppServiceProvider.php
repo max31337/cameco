@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\HR\EmployeeRepositoryInterface;
+use App\Repositories\Contracts\HR\ProfileRepositoryInterface;
 use App\Repositories\Contracts\System\CronRepositoryInterface;
 use App\Repositories\Contracts\System\SystemHealthRepositoryInterface;
 use App\Repositories\Contracts\System\SuperadminSLARepositoryInterface;
+use App\Repositories\Eloquent\HR\EmployeeRepository;
+use App\Repositories\Eloquent\HR\ProfileRepository;
 use App\Repositories\Eloquent\System\CronRepository;
 use App\Repositories\Eloquent\System\SystemHealthRepository;
 use App\Repositories\Eloquent\System\SuperadminSLARepository;
@@ -33,6 +37,17 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             CronRepositoryInterface::class,
             CronRepository::class
+        );
+
+        // Bind HR Module Repositories
+        $this->app->bind(
+            EmployeeRepositoryInterface::class,
+            EmployeeRepository::class
+        );
+
+        $this->app->bind(
+            ProfileRepositoryInterface::class,
+            ProfileRepository::class
         );
     }
 

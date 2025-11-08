@@ -2,15 +2,44 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Profile extends Model
 {
+    use HasFactory;
+    
     protected $table = 'profiles';
-    protected $fillable = ['user_id','first_name','last_name','middle_name','contact_number','address','emergency_contact'];
+    protected $fillable = [
+        'user_id',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'suffix',
+        'date_of_birth',
+        'gender',
+        'civil_status',
+        'phone',
+        'mobile',
+        'current_address',
+        'permanent_address',
+        'emergency_contact_name',
+        'emergency_contact_relationship',
+        'emergency_contact_phone',
+        'emergency_contact_address',
+        'sss_number',
+        'tin_number',
+        'philhealth_number',
+        'pagibig_number',
+    ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
     }
 }

@@ -62,10 +62,6 @@ const breadcrumbs: BreadcrumbItem[] = [
         title: 'Dashboard',
         href: '/dashboard',
     },
-    {
-        title: 'HR Dashboard',
-        href: '/hr/dashboard',
-    },
 ];
 
 export default function Dashboard({ metrics }: HRDashboardProps) {

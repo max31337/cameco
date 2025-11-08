@@ -19,11 +19,33 @@ class EnsureHRManager
     {
         // Check if user is authenticated
         if (!$request->user()) {
+            \Log::warning('EnsureHRManager: No authenticated user', [
+                'path' => $request->path(),
+                'method' => $request->method(),
+            ]);
             return redirect()->route('login')->with('error', 'You must be logged in to access this page.');
         }
 
+        // Log the user and their roles
+        $user = $request->user();
+        $roles = $user->getRoleNames()->toArray();
+        \Log::debug('EnsureHRManager checking user', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'roles' => $roles,
+            'path' => $request->path(),
+            'method' => $request->method(),
+        ]);
+
         // Check if user has HR Manager or Superadmin role
-        if (!$request->user()->hasRole(['HR Manager', 'Superadmin'])) {
+        $hasRole = $user->hasRole(['HR Manager', 'Superadmin']);
+        if (!$hasRole) {
+            \Log::error('EnsureHRManager: User lacks required role', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'roles' => $roles,
+                'path' => $request->path(),
+            ]);
             abort(403, 'Access denied. You do not have permission to access HR management features.');
         }
 

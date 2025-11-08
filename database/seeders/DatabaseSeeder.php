@@ -25,39 +25,35 @@ class DatabaseSeeder extends Seeder
             ]
         );
         
-        // Seed roles and permissions (Spatie) and assign Superadmin role to the seeded user
-        if (class_exists(\Database\Seeders\RolesAndPermissionsSeeder::class)) {
-            $this->call(\Database\Seeders\RolesAndPermissionsSeeder::class);
-
-            $user = User::where('email', 'superadmin@cameco.com')->first();
-            if ($user && method_exists($user, 'assignRole')) {
-                try {
-                    $user->assignRole('Superadmin');
-                } catch (\Throwable $e) {
-                    // ignore assignment errors during seeding
-                }
-            }
-        }
-
-        
         User::firstOrCreate(
             ['email' => 'hrmanager@cameco.com'],
             [
-                'name' => 'Test User',
+                'name' => 'HR Manager',
                 'username' => 'hrmanager',
                 'password' => 'password',
                 'email_verified_at' => now(),
             ]
         );
         
-        // Seed roles and permissions (Spatie) and assign Superadmin role to the seeded user
+        // Seed roles and permissions (Spatie) and assign roles to users
         if (class_exists(\Database\Seeders\RolesAndPermissionsSeeder::class)) {
             $this->call(\Database\Seeders\RolesAndPermissionsSeeder::class);
 
-            $user = User::where('email', 'hrmanager@cameco.com')->first();
-            if ($user && method_exists($user, 'assignRole')) {
+            // Assign Superadmin role
+            $superadmin = User::where('email', 'superadmin@cameco.com')->first();
+            if ($superadmin && method_exists($superadmin, 'assignRole')) {
                 try {
-                    $user->assignRole('HR Manager');
+                    $superadmin->assignRole('Superadmin');
+                } catch (\Throwable $e) {
+                    // ignore assignment errors during seeding
+                }
+            }
+
+            // Assign HR Manager role
+            $hrManager = User::where('email', 'hrmanager@cameco.com')->first();
+            if ($hrManager && method_exists($hrManager, 'assignRole')) {
+                try {
+                    $hrManager->assignRole('HR Manager');
                 } catch (\Throwable $e) {
                     // ignore assignment errors during seeding
                 }
@@ -106,6 +102,19 @@ class DatabaseSeeder extends Seeder
         // Seed Support Contract Settings
         if (class_exists(\Database\Seeders\SupportContractSettingsSeeder::class)) {
             $this->call(\Database\Seeders\SupportContractSettingsSeeder::class);
+        }
+
+        // Seed HR data
+        if (class_exists(\Database\Seeders\DepartmentSeeder::class)) {
+            $this->call(\Database\Seeders\DepartmentSeeder::class);
+        }
+
+        if (class_exists(\Database\Seeders\PositionSeeder::class)) {
+            $this->call(\Database\Seeders\PositionSeeder::class);
+        }
+
+        if (class_exists(\Database\Seeders\EmployeeSeeder::class)) {
+            $this->call(\Database\Seeders\EmployeeSeeder::class);
         }
 
     }

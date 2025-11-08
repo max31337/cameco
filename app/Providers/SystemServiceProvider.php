@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Repositories\Contracts\SystemOnboardingRepositoryInterface;
-use App\Repositories\SystemOnboardingRepository;
+use App\Repositories\Contracts\System\Organization\SystemOnboardingRepositoryInterface;
+use App\Repositories\Eloquent\System\Organization\SystemOnboardingRepository;
 
 class SystemServiceProvider extends ServiceProvider
 {

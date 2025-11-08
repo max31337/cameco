@@ -166,8 +166,9 @@ export function ActiveEmployeesCard({ data }: { data: ActiveEmployeesData }) {
 }
 
 export function DepartmentBreakdownCard({ data }: { data: DepartmentBreakdownData }) {
-    const hasData = data.data.length > 0;
-    const displayData = data.data.slice(0, 5); // Show top 5 departments
+    const deptData = data.data || [];
+    const hasData = deptData.length > 0;
+    const displayData = deptData.slice(0, 5); // Show top 5 departments
 
     return (
         <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-shadow cursor-pointer">
@@ -179,7 +180,7 @@ export function DepartmentBreakdownCard({ data }: { data: DepartmentBreakdownDat
                             <CardTitle className="text-base">{data.label}</CardTitle>
                         </div>
                         {hasData && (
-                            <Badge variant="secondary">{data.data.length} Dept{data.data.length !== 1 ? 's' : ''}</Badge>
+                            <Badge variant="secondary">{deptData.length} Dept{deptData.length !== 1 ? 's' : ''}</Badge>
                         )}
                     </div>
                     <CardDescription>Distribution across departments</CardDescription>
@@ -201,9 +202,9 @@ export function DepartmentBreakdownCard({ data }: { data: DepartmentBreakdownDat
                                     </div>
                                 </div>
                             ))}
-                            {data.data.length > 5 && (
+                            {deptData.length > 5 && (
                                 <p className="text-xs text-muted-foreground text-center pt-2">
-                                    +{data.data.length - 5} more departments
+                                    +{deptData.length - 5} more departments
                                 </p>
                             )}
                         </div>
@@ -223,8 +224,9 @@ export function DepartmentBreakdownCard({ data }: { data: DepartmentBreakdownDat
 }
 
 export function RecentHiresCard({ data }: { data: RecentHiresData }) {
-    const hasData = data.data.length > 0;
-    const displayData = data.data.slice(0, 5); // Show 5 most recent
+    const hireData = data.data || [];
+    const hasData = hireData.length > 0;
+    const displayData = hireData.slice(0, 5); // Show 5 most recent
 
     return (
         <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow cursor-pointer">
@@ -281,8 +283,9 @@ export function RecentHiresCard({ data }: { data: RecentHiresData }) {
 }
 
 export function PendingActionsCard({ data }: { data: PendingActionsData }) {
-    const hasActions = data.items.length > 0;
-    const displayItems = data.items.slice(0, 3); // Show top 3 pending actions
+    const items = data.items || [];
+    const hasActions = items.length > 0;
+    const displayItems = items.slice(0, 3); // Show top 3 pending actions
 
     return (
         <Card className="border-l-4 border-l-red-500 hover:shadow-lg transition-shadow cursor-pointer">

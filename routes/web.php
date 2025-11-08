@@ -42,3 +42,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/onboarding/step', [UserOnboardingController::class, 'completeStep'])->name('onboarding.step');
     Route::post('/onboarding/complete', [UserOnboardingController::class, 'complete'])->name('onboarding.complete');
 });
+
+// HR Manager Routes
+use App\Http\Controllers\HR\DashboardController as HRDashboardController;
+use App\Http\Controllers\HR\EmployeeController;
+use App\Http\Middleware\EnsureHRManager;
+
+Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->name('hr.')->group(function () {
+    // HR Dashboard
+    Route::get('/dashboard', [HRDashboardController::class, 'index'])->name('dashboard');
+    
+    // Employee Management
+    Route::resource('employees', EmployeeController::class);
+    Route::post('/employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
+});

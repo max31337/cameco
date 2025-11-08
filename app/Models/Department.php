@@ -62,6 +62,14 @@ class Department extends Model
     }
 
     /**
+     * Employees in this department
+     */
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class);
+    }
+
+    /**
      * Get all positions in this department and child departments
      */
     public function allPositions(): HasMany
