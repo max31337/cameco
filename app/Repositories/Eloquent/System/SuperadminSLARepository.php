@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Eloquent\System;
 
-use App\Models\Incident;
-use App\Models\Patch;
+use App\Models\ApplicationIncident;
+use App\Models\ApplicationPatch;
 use App\Models\ApplicationUptimeLog;
 use App\Repositories\Contracts\System\SuperadminSLARepositoryInterface;
 use Illuminate\Support\Collection;
@@ -22,7 +22,7 @@ class SuperadminSLARepository implements SuperadminSLARepositoryInterface
      */
     public function getOpenIncidentsBySeverity(): array
     {
-        $incidents = Incident::open()
+        $incidents = ApplicationIncident::open()
             ->select('severity', DB::raw('count(*) as count'))
             ->groupBy('severity')
             ->get()
@@ -41,7 +41,7 @@ class SuperadminSLARepository implements SuperadminSLARepositoryInterface
      */
     public function getIncidentMetrics(\DateTime $startDate, \DateTime $endDate): array
     {
-        $incidents = Incident::inDateRange($startDate, $endDate)->get();
+        $incidents = ApplicationIncident::inDateRange($startDate, $endDate)->get();
 
         $total = $incidents->count();
         
@@ -148,9 +148,9 @@ class SuperadminSLARepository implements SuperadminSLARepositoryInterface
     /**
      * Get the latest deployed patch.
      */
-    public function getLatestDeployedPatch(): ?Patch
+    public function getLatestDeployedPatch(): ?ApplicationPatch
     {
-        return Patch::latestDeployed()->first();
+        return ApplicationPatch::latestDeployed()->first();
     }
 
     /**
@@ -158,15 +158,15 @@ class SuperadminSLARepository implements SuperadminSLARepositoryInterface
      */
     public function getPendingPatchesCount(): int
     {
-        return Patch::pending()->count();
+        return ApplicationPatch::pending()->count();
     }
 
     /**
      * Get the next scheduled patch.
      */
-    public function getNextScheduledPatch(): ?Patch
+    public function getNextScheduledPatch(): ?ApplicationPatch
     {
-        return Patch::scheduled()
+        return ApplicationPatch::scheduled()
             ->where('scheduled_at', '>', now())
             ->orderBy('scheduled_at', 'asc')
             ->first();
@@ -177,7 +177,7 @@ class SuperadminSLARepository implements SuperadminSLARepositoryInterface
      */
     public function getPendingPatches(): Collection
     {
-        return Patch::pending()
+        return ApplicationPatch::pending()
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -187,7 +187,7 @@ class SuperadminSLARepository implements SuperadminSLARepositoryInterface
      */
     public function getOpenIncidents(): Collection
     {
-        return Incident::open()
+        return ApplicationIncident::open()
             ->with(['reporter', 'assignee'])
             ->orderBy('severity', 'asc')
             ->orderBy('detected_at', 'desc')

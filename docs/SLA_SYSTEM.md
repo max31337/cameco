@@ -121,8 +121,8 @@ Track software patches and deployments.
 - `byType($type)` - Filter by patch type
 - `latestDeployed()` - Get most recent deployed patch
 
-### `SystemUptimeLog`
-**Location:** `app/Models/SystemUptimeLog.php`
+### `ApplicationUptimeLog`
+**Location:** `app/Models/ApplicationUptimeLog.php`
 
 **Computed Attributes:**
 - `response_time_seconds` - Convert ms to seconds

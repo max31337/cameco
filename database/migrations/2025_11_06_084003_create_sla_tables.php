@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Incidents Table - Track support tickets/incidents
-        Schema::create('incidents', function (Blueprint $table) {
+        // Application Incidents Table - Track support tickets/incidents
+        Schema::create('application_incidents', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
@@ -52,8 +52,8 @@ return new class extends Migration
             $table->index(['is_healthy', 'checked_at']);
         });
 
-        // Patches Table - Track patches/updates
-        Schema::create('patches', function (Blueprint $table) {
+        // Application Patches Table - Track patches/updates
+        Schema::create('application_patches', function (Blueprint $table) {
             $table->id();
             $table->string('version'); // e.g., 1.2.3
             $table->string('patch_number')->nullable(); // e.g., PATCH-2024-001
@@ -83,8 +83,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('patches');
+        Schema::dropIfExists('application_patches');
         Schema::dropIfExists('application_uptime_logs');
-        Schema::dropIfExists('incidents');
+        Schema::dropIfExists('application_incidents');
     }
 };

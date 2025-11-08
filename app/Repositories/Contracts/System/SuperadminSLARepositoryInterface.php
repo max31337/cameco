@@ -54,7 +54,7 @@ interface SuperadminSLARepositoryInterface
     /**
      * Get the latest deployed patch.
      *
-     * @return \App\Models\Patch|null
+     * @return \App\Models\ApplicationPatch|null
      */
     public function getLatestDeployedPatch();
 
@@ -68,7 +68,7 @@ interface SuperadminSLARepositoryInterface
     /**
      * Get the next scheduled patch.
      *
-     * @return \App\Models\Patch|null
+     * @return \App\Models\ApplicationPatch|null
      */
     public function getNextScheduledPatch();
 

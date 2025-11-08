@@ -64,13 +64,8 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        // Seed vendor account and remote vendor SLA data
-        if (class_exists(\Database\Seeders\VendorAccountSeeder::class)) {
-            $this->call(\Database\Seeders\VendorAccountSeeder::class);
-        }
-
-        if (class_exists(\Database\Seeders\RemoteVendorSLASeeder::class)) {
-            $this->call(\Database\Seeders\RemoteVendorSLASeeder::class);
+        if (class_exists(\Database\Seeders\SLASeeder::class)) {
+            $this->call(\Database\Seeders\SLASeeder::class);
         }
 
         // Seed cron jobs
@@ -108,6 +103,10 @@ class DatabaseSeeder extends Seeder
             $this->call(\Database\Seeders\SystemHealthSeeder::class);
         }
 
+        // Seed Support Contract Settings
+        if (class_exists(\Database\Seeders\SupportContractSettingsSeeder::class)) {
+            $this->call(\Database\Seeders\SupportContractSettingsSeeder::class);
+        }
 
     }
 

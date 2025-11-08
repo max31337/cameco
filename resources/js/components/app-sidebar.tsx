@@ -64,8 +64,8 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavMain items={mainNavItems} />
                 
-                {/* HR Manager Navigation - Show only for HR Manager and Superadmin */}
-                {(isHRManager || isSuperadmin) && <NavHR />}
+                {/* HR Manager Navigation - Show only for HR Manager (not Superadmin unless they also have HR Manager role) */}
+                {isHRManager && <NavHR />}
                 
                 {/* System Admin Navigation - Show only for Superadmin */}
                 {isSuperadmin && <NavSystemAdmin />}

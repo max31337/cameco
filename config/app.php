@@ -28,6 +28,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Deployment ID
+    |--------------------------------------------------------------------------
+    |
+    | Unique identifier for this deployment/installation. Used for tracking
+    | support contracts and licensing. Set during installation.
+    |
+    */
+
+    'deployment_id' => env('DEPLOYMENT_ID', 'default-deployment'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Update Check URL
     |--------------------------------------------------------------------------
     |

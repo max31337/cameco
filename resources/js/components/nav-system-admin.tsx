@@ -8,7 +8,7 @@ import {
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, HardDrive, Database, Shield, FileBox, Calendar, Lock, Users, Building2, BarChart3, Briefcase, AlertCircle, Download } from 'lucide-react';
+import { Activity, HardDrive, Database, Shield, FileBox, Calendar, Lock, Users, Building2, BarChart3, Briefcase, AlertCircle, Download, Server } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function NavSystemAdmin() {
@@ -19,6 +19,11 @@ export function NavSystemAdmin() {
             title: 'System Health',
             icon: Activity,
             href: '/system/health',
+        },
+        {
+            title: 'SLA Monitoring',
+            icon: Server,
+            href: '/system/sla',
         },
         {
             title: 'Storage',

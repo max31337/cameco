@@ -55,7 +55,7 @@ export default function SLAWidgets({ sla }: SLAWidgetsProps) {
             <Card className={`transition-shadow hover:shadow-md ${uptimeStatus.bg}`}>
                 <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium">System Uptime</CardTitle>
+                        <CardTitle className="text-sm font-medium">Application Uptime</CardTitle>
                         <CheckCircle className={`h-4 w-4 ${uptimeStatus.color}`} />
                     </div>
                 </CardHeader>

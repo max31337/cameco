@@ -169,7 +169,6 @@ Route::middleware(['auth', 'superadmin'])->group(function () {
     Route::prefix('system/vendor-contract')->group(function () {
         Route::get('/', [\App\Http\Controllers\System\SystemAdministration\VendorContractController::class, 'index'])->name('system.vendor-contract');
         Route::get('/show', [\App\Http\Controllers\System\SystemAdministration\VendorContractController::class, 'show'])->name('system.vendor-contract.show');
-        Route::put('/update', [\App\Http\Controllers\System\SystemAdministration\VendorContractController::class, 'update'])->name('system.vendor-contract.update');
-        Route::post('/refresh', [\App\Http\Controllers\System\SystemAdministration\VendorContractController::class, 'refresh'])->name('system.vendor-contract.refresh');
+        Route::post('/cache/clear', [\App\Http\Controllers\System\SystemAdministration\VendorContractController::class, 'clearCache'])->name('system.vendor-contract.cache.clear');
     });
 });
