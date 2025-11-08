@@ -51,8 +51,17 @@ interface Profile {
     last_name: string;
     suffix: string | null;
     date_of_birth: string;
+    place_of_birth: string | null;
+    is_pwd: boolean | null;
     gender: string;
     civil_status: string;
+    spouse_name: string | null;
+    spouse_date_of_birth: string | null;
+    spouse_contact_number: string | null;
+    father_name: string | null;
+    father_date_of_birth: string | null;
+    mother_name: string | null;
+    mother_date_of_birth: string | null;
     phone: string | null;
     mobile: string | null;
     current_address: string | null;
@@ -119,8 +128,17 @@ export default function EditEmployee({
         last_name: employee.profile.last_name || '',
         suffix: employee.profile.suffix || '',
         date_of_birth: employee.profile.date_of_birth || '',
+        place_of_birth: employee.profile.place_of_birth || '',
+        is_pwd: employee.profile.is_pwd || false,
         gender: employee.profile.gender || 'male',
         civil_status: employee.profile.civil_status || 'single',
+        spouse_name: employee.profile.spouse_name || '',
+        spouse_date_of_birth: employee.profile.spouse_date_of_birth || '',
+        spouse_contact_number: employee.profile.spouse_contact_number || '',
+        father_name: employee.profile.father_name || '',
+        father_date_of_birth: employee.profile.father_date_of_birth || '',
+        mother_name: employee.profile.mother_name || '',
+        mother_date_of_birth: employee.profile.mother_date_of_birth || '',
         email: employee.email || '',
         phone: employee.profile.phone || '',
         mobile: employee.profile.mobile || '',

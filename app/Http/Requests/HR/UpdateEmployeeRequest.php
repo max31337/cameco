@@ -32,8 +32,21 @@ class UpdateEmployeeRequest extends FormRequest
             'middle_name' => ['nullable', 'string', 'max:100'],
             'suffix' => ['nullable', 'string', 'max:20'],
             'date_of_birth' => ['sometimes', 'required', 'date', 'before:today', 'after:' . now()->subYears(100)->format('Y-m-d')],
+            'place_of_birth' => ['nullable', 'string', 'max:200'],
+            'is_pwd' => ['nullable', 'boolean'],
             'gender' => ['sometimes', 'required', 'string', 'in:male,female'],
             'civil_status' => ['sometimes', 'required', 'string', 'in:single,married,widowed,divorced,separated'],
+            
+            // Spouse Information (required if married)
+            'spouse_name' => ['nullable', 'string', 'max:200'],
+            'spouse_date_of_birth' => ['nullable', 'date'],
+            'spouse_contact_number' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
+            
+            // Parents Information
+            'father_name' => ['nullable', 'string', 'max:200'],
+            'father_date_of_birth' => ['nullable', 'date'],
+            'mother_name' => ['nullable', 'string', 'max:200'],
+            'mother_date_of_birth' => ['nullable', 'date'],
             
             // Contact Information
             'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:employees,email,' . $employeeId],

@@ -14,8 +14,17 @@ export interface PersonalInfoData {
     last_name: string;
     suffix?: string;
     date_of_birth: string;
+    place_of_birth: string;
+    is_pwd: boolean;
     gender: string;
     civil_status: string;
+    spouse_name: string;
+    spouse_date_of_birth: string;
+    spouse_contact_number: string;
+    father_name: string;
+    father_date_of_birth: string;
+    mother_name: string;
+    mother_date_of_birth: string;
     email: string;
     phone: string;
     mobile: string;
@@ -170,99 +179,246 @@ export function PersonalInfoSection({ data, onChange, errors = {} }: PersonalInf
                     </div>
                 </div>
 
+                {/* Place of Birth and PWD Status */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="place_of_birth">Place of Birth</Label>
+                        <Input
+                            id="place_of_birth"
+                            value={data.place_of_birth || ''}
+                            onChange={(e) => onChange('place_of_birth', e.target.value)}
+                            placeholder="City, Province"
+                        />
+                        {errors.place_of_birth && (
+                            <p className="text-xs text-destructive">{errors.place_of_birth}</p>
+                        )}
+                    </div>
+
+                    <div className="flex items-center space-x-2 pt-8">
+                        <input
+                            type="checkbox"
+                            id="is_pwd"
+                            checked={data.is_pwd || false}
+                            onChange={(e) => onChange('is_pwd', e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor="is_pwd" className="font-normal cursor-pointer">
+                            Person with Disability (PWD)
+                        </Label>
+                    </div>
+                </div>
+
+                {/* Spouse Information (shown when married) */}
+                {data.civil_status === 'married' && (
+                    <div className="border-t pt-6">
+                        <h3 className="text-sm font-semibold mb-4">Spouse Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="spouse_name">Spouse Name</Label>
+                                <Input
+                                    id="spouse_name"
+                                    value={data.spouse_name || ''}
+                                    onChange={(e) => onChange('spouse_name', e.target.value)}
+                                    placeholder="Full name"
+                                />
+                                {errors.spouse_name && (
+                                    <p className="text-xs text-destructive">{errors.spouse_name}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="spouse_date_of_birth">Spouse Date of Birth</Label>
+                                <Input
+                                    id="spouse_date_of_birth"
+                                    type="date"
+                                    value={data.spouse_date_of_birth || ''}
+                                    onChange={(e) => onChange('spouse_date_of_birth', e.target.value)}
+                                />
+                                {errors.spouse_date_of_birth && (
+                                    <p className="text-xs text-destructive">{errors.spouse_date_of_birth}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="spouse_contact_number">Spouse Contact Number</Label>
+                                <Input
+                                    id="spouse_contact_number"
+                                    type="tel"
+                                    value={data.spouse_contact_number || ''}
+                                    onChange={(e) => onChange('spouse_contact_number', e.target.value)}
+                                    placeholder="0917-123-4567"
+                                />
+                                {errors.spouse_contact_number && (
+                                    <p className="text-xs text-destructive">{errors.spouse_contact_number}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Parents Information */}
+                <div className="border-t pt-6">
+                    <h3 className="text-sm font-semibold mb-4">Parents Information</h3>
+                    <div className="space-y-6">
+                        {/* Father */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="father_name">Father's Name</Label>
+                                <Input
+                                    id="father_name"
+                                    value={data.father_name || ''}
+                                    onChange={(e) => onChange('father_name', e.target.value)}
+                                    placeholder="Full name"
+                                />
+                                {errors.father_name && (
+                                    <p className="text-xs text-destructive">{errors.father_name}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="father_date_of_birth">Father's Date of Birth</Label>
+                                <Input
+                                    id="father_date_of_birth"
+                                    type="date"
+                                    value={data.father_date_of_birth || ''}
+                                    onChange={(e) => onChange('father_date_of_birth', e.target.value)}
+                                />
+                                {errors.father_date_of_birth && (
+                                    <p className="text-xs text-destructive">{errors.father_date_of_birth}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Mother */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="mother_name">Mother's Name</Label>
+                                <Input
+                                    id="mother_name"
+                                    value={data.mother_name || ''}
+                                    onChange={(e) => onChange('mother_name', e.target.value)}
+                                    placeholder="Full name"
+                                />
+                                {errors.mother_name && (
+                                    <p className="text-xs text-destructive">{errors.mother_name}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="mother_date_of_birth">Mother's Date of Birth</Label>
+                                <Input
+                                    id="mother_date_of_birth"
+                                    type="date"
+                                    value={data.mother_date_of_birth || ''}
+                                    onChange={(e) => onChange('mother_date_of_birth', e.target.value)}
+                                />
+                                {errors.mother_date_of_birth && (
+                                    <p className="text-xs text-destructive">{errors.mother_date_of_birth}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Contact Information */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">
-                            Email Address <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            value={data.email}
-                            onChange={(e) => onChange('email', e.target.value)}
-                            placeholder="juan.delacruz@example.com"
-                        />
-                        {errors.email && (
-                            <p className="text-xs text-destructive">{errors.email}</p>
-                        )}
-                    </div>
+                <div className="border-t pt-6">
+                    <h3 className="text-sm font-semibold mb-4">Contact Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="email">
+                                Email Address <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                value={data.email}
+                                onChange={(e) => onChange('email', e.target.value)}
+                                placeholder="juan.delacruz@example.com"
+                            />
+                            {errors.email && (
+                                <p className="text-xs text-destructive">{errors.email}</p>
+                            )}
+                        </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input
-                            id="phone"
-                            type="tel"
-                            value={data.phone}
-                            onChange={(e) => onChange('phone', e.target.value)}
-                            placeholder="(02) 1234-5678"
-                        />
-                        {errors.phone && (
-                            <p className="text-xs text-destructive">{errors.phone}</p>
-                        )}
-                    </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <Input
+                                id="phone"
+                                type="tel"
+                                value={data.phone}
+                                onChange={(e) => onChange('phone', e.target.value)}
+                                placeholder="(02) 1234-5678"
+                            />
+                            {errors.phone && (
+                                <p className="text-xs text-destructive">{errors.phone}</p>
+                            )}
+                        </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="mobile">
-                            Mobile Number <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="mobile"
-                            type="tel"
-                            value={data.mobile}
-                            onChange={(e) => onChange('mobile', e.target.value)}
-                            placeholder="0917-123-4567"
-                        />
-                        {errors.mobile && (
-                            <p className="text-xs text-destructive">{errors.mobile}</p>
-                        )}
+                        <div className="space-y-2">
+                            <Label htmlFor="mobile">
+                                Mobile Number <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="mobile"
+                                type="tel"
+                                value={data.mobile}
+                                onChange={(e) => onChange('mobile', e.target.value)}
+                                placeholder="0917-123-4567"
+                            />
+                            {errors.mobile && (
+                                <p className="text-xs text-destructive">{errors.mobile}</p>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Address Information */}
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="current_address">
-                            Current Address <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="current_address"
-                            value={data.current_address}
-                            onChange={(e) => onChange('current_address', e.target.value)}
-                            placeholder="Street, Barangay, City, Province"
-                        />
-                        {errors.current_address && (
-                            <p className="text-xs text-destructive">{errors.current_address}</p>
-                        )}
-                    </div>
+                <div className="border-t pt-6">
+                    <h3 className="text-sm font-semibold mb-4">Address Information</h3>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="current_address">
+                                Current Address <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="current_address"
+                                value={data.current_address}
+                                onChange={(e) => onChange('current_address', e.target.value)}
+                                placeholder="Street, Barangay, City, Province"
+                            />
+                            {errors.current_address && (
+                                <p className="text-xs text-destructive">{errors.current_address}</p>
+                            )}
+                        </div>
 
-                    <div className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            id="same_as_current"
-                            checked={data.same_as_current}
-                            onChange={(e) => handleSameAsCurrentChange(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300"
-                        />
-                        <Label htmlFor="same_as_current" className="font-normal cursor-pointer">
-                            Permanent address is same as current address
-                        </Label>
-                    </div>
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="same_as_current"
+                                checked={data.same_as_current}
+                                onChange={(e) => handleSameAsCurrentChange(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300"
+                            />
+                            <Label htmlFor="same_as_current" className="font-normal cursor-pointer">
+                                Permanent address is same as current address
+                            </Label>
+                        </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="permanent_address">
-                            Permanent Address <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="permanent_address"
-                            value={data.permanent_address}
-                            onChange={(e) => onChange('permanent_address', e.target.value)}
-                            placeholder="Street, Barangay, City, Province"
-                            disabled={data.same_as_current}
-                        />
-                        {errors.permanent_address && (
-                            <p className="text-xs text-destructive">{errors.permanent_address}</p>
-                        )}
+                        <div className="space-y-2">
+                            <Label htmlFor="permanent_address">
+                                Permanent Address <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="permanent_address"
+                                value={data.permanent_address}
+                                onChange={(e) => onChange('permanent_address', e.target.value)}
+                                placeholder="Street, Barangay, City, Province"
+                                disabled={data.same_as_current}
+                            />
+                            {errors.permanent_address && (
+                                <p className="text-xs text-destructive">{errors.permanent_address}</p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </CardContent>

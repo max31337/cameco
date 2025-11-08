@@ -23,8 +23,17 @@ interface Profile {
     last_name: string;
     suffix: string | null;
     date_of_birth: string;
+    place_of_birth: string | null;
+    is_pwd: boolean | null;
     gender: string;
     civil_status: string;
+    spouse_name: string | null;
+    spouse_date_of_birth: string | null;
+    spouse_contact_number: string | null;
+    father_name: string | null;
+    father_date_of_birth: string | null;
+    mother_name: string | null;
+    mother_date_of_birth: string | null;
     phone: string | null;
     mobile: string | null;
     current_address: string | null;
@@ -166,12 +175,20 @@ function OverviewTab({ employee }: { employee: Employee }) {
                         <p className="text-sm mt-1">{formatDate(employee.profile.date_of_birth)}</p>
                     </div>
                     <div>
+                        <label className="text-sm font-medium text-muted-foreground">Place of Birth</label>
+                        <p className="text-sm mt-1">{employee.profile.place_of_birth || 'Not provided'}</p>
+                    </div>
+                    <div>
                         <label className="text-sm font-medium text-muted-foreground">Gender</label>
                         <p className="text-sm mt-1">{employee.profile.gender}</p>
                     </div>
                     <div>
                         <label className="text-sm font-medium text-muted-foreground">Civil Status</label>
                         <p className="text-sm mt-1">{employee.profile.civil_status}</p>
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium text-muted-foreground">PWD Status</label>
+                        <p className="text-sm mt-1">{employee.profile.is_pwd ? 'Yes' : 'No'}</p>
                     </div>
                     <div>
                         <label className="text-sm font-medium text-muted-foreground">Email</label>
@@ -265,6 +282,75 @@ function OverviewTab({ employee }: { employee: Employee }) {
                     <div>
                         <label className="text-sm font-medium text-muted-foreground">Address</label>
                         <p className="text-sm mt-1">{employee.profile.emergency_contact_address || 'Not provided'}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Spouse Information Card (shown if married) */}
+            {employee.profile.civil_status === 'married' && (
+                <div className="bg-card rounded-lg border p-6">
+                    <h3 className="text-lg font-semibold mb-4">Spouse Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-sm font-medium text-muted-foreground">Spouse Name</label>
+                            <p className="text-sm mt-1">{employee.profile.spouse_name || 'Not provided'}</p>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-muted-foreground">Spouse Date of Birth</label>
+                            <p className="text-sm mt-1">
+                                {employee.profile.spouse_date_of_birth 
+                                    ? formatDate(employee.profile.spouse_date_of_birth)
+                                    : 'Not provided'}
+                            </p>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="text-sm font-medium text-muted-foreground">Spouse Contact Number</label>
+                            <p className="text-sm mt-1">{employee.profile.spouse_contact_number || 'Not provided'}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Parents Information Card */}
+            <div className="bg-card rounded-lg border p-6">
+                <h3 className="text-lg font-semibold mb-4">Parents Information</h3>
+                <div className="space-y-6">
+                    {/* Father */}
+                    <div>
+                        <h4 className="text-sm font-medium mb-3">Father</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-4">
+                            <div>
+                                <label className="text-xs font-medium text-muted-foreground">Father's Name</label>
+                                <p className="text-sm mt-1">{employee.profile.father_name || 'Not provided'}</p>
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-muted-foreground">Father's Date of Birth</label>
+                                <p className="text-sm mt-1">
+                                    {employee.profile.father_date_of_birth
+                                        ? formatDate(employee.profile.father_date_of_birth)
+                                        : 'Not provided'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Mother */}
+                    <div>
+                        <h4 className="text-sm font-medium mb-3">Mother</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-4">
+                            <div>
+                                <label className="text-xs font-medium text-muted-foreground">Mother's Name</label>
+                                <p className="text-sm mt-1">{employee.profile.mother_name || 'Not provided'}</p>
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-muted-foreground">Mother's Date of Birth</label>
+                                <p className="text-sm mt-1">
+                                    {employee.profile.mother_date_of_birth
+                                        ? formatDate(employee.profile.mother_date_of_birth)
+                                        : 'Not provided'}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
