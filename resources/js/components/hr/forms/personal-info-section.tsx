@@ -1,8 +1,10 @@
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { User, Upload, X } from 'lucide-react';
 
 // ============================================================================
 // Type Definitions
@@ -31,11 +33,14 @@ export interface PersonalInfoData {
     current_address: string;
     permanent_address: string;
     same_as_current: boolean;
+    profile_picture?: File | null;
+    profile_picture_path?: string | null;
 }
 
 interface PersonalInfoSectionProps {
     data: PersonalInfoData;
     onChange: (field: keyof PersonalInfoData, value: string | boolean) => void;
+    onFileChange?: (file: File | null) => void;
     errors?: Partial<Record<keyof PersonalInfoData, string>>;
 }
 
@@ -43,7 +48,26 @@ interface PersonalInfoSectionProps {
 // Component
 // ============================================================================
 
-export function PersonalInfoSection({ data, onChange, errors = {} }: PersonalInfoSectionProps) {
+export function PersonalInfoSection({ data, onChange, onFileChange, errors = {} }: PersonalInfoSectionProps) {
+    const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+
+    const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            onFileChange?.(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveProfilePicture = () => {
+        onFileChange?.(null);
+        setPreviewUrl(null);
+    };
+
     const handleSameAsCurrentChange = (checked: boolean) => {
         onChange('same_as_current', checked);
         if (checked) {
@@ -62,7 +86,71 @@ export function PersonalInfoSection({ data, onChange, errors = {} }: PersonalInf
                     </div>
                 </div>
             </CardHeader>
+            
             <CardContent className="space-y-6">
+
+                
+                {/* Profile Picture */}
+                <div className="border-t pt-6">
+                    <h3 className="text-sm font-semibold mb-4">Profile Picture</h3>
+                    <div className="space-y-4">
+                        <div className="flex flex-col md:flex-row gap-6">
+                            {/* Preview */}
+                            <div className="flex-shrink-0">
+                                <div className="w-32 h-32 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-muted-foreground/30 overflow-hidden">
+                                    {previewUrl ? (
+                                        <img src={previewUrl} alt="Profile preview" className="w-full h-full object-cover" />
+                                    ) : data.profile_picture_path ? (
+                                        <img src={`/storage/${data.profile_picture_path}`} alt="Current profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="w-12 h-12 text-muted-foreground" />
+                                    )}
+                                </div>
+                            </div>
+                            {/* Upload Control */}
+                            <div className="flex-1 space-y-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="profile_picture">Upload Photo</Label>
+                                    <div className="relative">
+                                        <input
+                                            id="profile_picture"
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/jpg,image/gif"
+                                            onChange={handleProfilePictureChange}
+                                            className="hidden"
+                                        />
+                                        <label
+                                            htmlFor="profile_picture"
+                                            className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                                        >
+                                            <div className="text-center">
+                                                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                                                <p className="text-sm font-medium">Click to upload or drag and drop</p>
+                                                <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF up to 5MB</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                {(previewUrl || data.profile_picture) && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleRemoveProfilePicture}
+                                        className="w-full"
+                                    >
+                                        <X className="w-4 h-4 mr-2" />
+                                        Remove Picture
+                                    </Button>
+                                )}
+                                {errors.profile_picture && (
+                                    <p className="text-xs text-destructive">{errors.profile_picture}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Name Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2">

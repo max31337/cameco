@@ -123,9 +123,26 @@ class EmployeeController extends Controller
                 ]
             );
 
+            // Return JSON if this is an AJAX request, otherwise redirect
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'employee_id' => $result['employee']->id,
+                    'message' => $result['message']
+                ], 201);
+            }
+
             return redirect()
                 ->route('hr.employees.show', $result['employee']->id)
                 ->with('success', $result['message']);
+        }
+
+        // Return error JSON if this is an AJAX request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['error' => $result['message']]
+            ], 400);
         }
 
         return back()
@@ -196,6 +213,15 @@ class EmployeeController extends Controller
      */
     public function update(UpdateEmployeeRequest $request, int $id)
     {
+        // Debug: Log request data
+        \Log::debug('Update request received', [
+            'id' => $id,
+            'has_file' => $request->hasFile('profile_picture'),
+            'all_data_keys' => array_keys($request->all()),
+            'dependents_type' => gettype($request->get('dependents')),
+            'dependents_value' => substr($request->get('dependents') ?? '', 0, 100),
+        ]);
+
         $result = $this->employeeService->updateEmployee($id, $request->validated());
 
         if ($result['success']) {
@@ -210,9 +236,26 @@ class EmployeeController extends Controller
                 ]
             );
 
+            // Return JSON if this is an AJAX request, otherwise redirect
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'employee_id' => $result['employee']->id,
+                    'message' => $result['message']
+                ], 200);
+            }
+
             return redirect()
                 ->route('hr.employees.show', $id)
                 ->with('success', $result['message']);
+        }
+
+        // Return error JSON if this is an AJAX request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['error' => $result['message']]
+            ], 400);
         }
 
         return back()

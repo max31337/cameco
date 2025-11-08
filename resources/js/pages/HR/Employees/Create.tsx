@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useState } from 'react';
+import axios from 'axios';
 import { 
     PersonalInfoSection, 
     type PersonalInfoData 
@@ -85,6 +86,7 @@ export default function CreateEmployee({ departments = [], positions = [], super
         current_address: '',
         permanent_address: '',
         same_as_current: false,
+        profile_picture: null,
     });
 
     const [employmentInfo, setEmploymentInfo] = useState<EmploymentInfoData>({
@@ -121,6 +123,17 @@ export default function CreateEmployee({ departments = [], positions = [], super
             setErrors(prev => {
                 const newErrors = { ...prev };
                 delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    const handleProfilePictureChange = (file: File | null) => {
+        setPersonalInfo(prev => ({ ...prev, profile_picture: file }));
+        if (errors.profile_picture) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors.profile_picture;
                 return newErrors;
             });
         }
@@ -164,27 +177,87 @@ export default function CreateEmployee({ departments = [], positions = [], super
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Combine all form data
-        const formData = {
-            ...personalInfo,
-            ...employmentInfo,
-            ...emergencyContact,
-            ...governmentIDs,
-            dependents: dependents,
-        };
-
-        router.post('/hr/employees', formData as unknown as Record<string, string | boolean>, {
-            onSuccess: () => {
-                // Redirect handled by backend
-            },
-            onError: (serverErrors) => {
-                setErrors(serverErrors as Partial<Record<keyof EmployeeFormData, string>>);
-                setIsSubmitting(false);
-            },
-            onFinish: () => {
-                setIsSubmitting(false);
-            },
+        // Create FormData to support file uploads
+        const formData = new FormData();
+        
+        // Add personal info fields
+        Object.entries(personalInfo).forEach(([key, value]) => {
+            if (value instanceof File) {
+                formData.append(key, value);
+            } else if (typeof value === 'boolean') {
+                formData.append(key, value ? '1' : '0');
+            } else if (value !== null && value !== undefined) {
+                formData.append(key, String(value));
+            }
         });
+
+        // Add employment info fields
+        Object.entries(employmentInfo).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                formData.append(key, String(value));
+            }
+        });
+
+        // Add emergency contact fields
+        Object.entries(emergencyContact).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                formData.append(key, String(value));
+            }
+        });
+
+        // Add government IDs fields
+        Object.entries(governmentIDs).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                formData.append(key, String(value));
+            }
+        });
+
+        // Add dependents as FormData array format (not JSON string)
+        dependents.forEach((dependent, index) => {
+            if (dependent.id) {
+                formData.append(`dependents[${index}][id]`, String(dependent.id));
+            }
+            formData.append(`dependents[${index}][first_name]`, dependent.first_name);
+            if (dependent.middle_name) {
+                formData.append(`dependents[${index}][middle_name]`, dependent.middle_name);
+            }
+            formData.append(`dependents[${index}][last_name]`, dependent.last_name);
+            formData.append(`dependents[${index}][date_of_birth]`, dependent.date_of_birth);
+            formData.append(`dependents[${index}][relationship]`, dependent.relationship);
+            if (dependent.remarks) {
+                formData.append(`dependents[${index}][remarks]`, dependent.remarks);
+            }
+        });
+
+        // Use axios for FormData upload instead of Inertia router
+        axios.post('/hr/employees', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
+            .then((response) => {
+                // Redirect to show page on success
+                if (response.data?.employee_id) {
+                    router.visit(`/hr/employees/${response.data.employee_id}`, { method: 'get' });
+                } else {
+                    router.visit('/hr/employees', { method: 'get' });
+                }
+            })
+            .catch((error) => {
+                // Log detailed error information
+                console.error('Form submission error:', {
+                    status: error.response?.status,
+                    data: error.response?.data,
+                    errors: error.response?.data?.errors,
+                });
+                
+                if (error.response?.data?.errors) {
+                    setErrors(error.response.data.errors as Partial<Record<keyof EmployeeFormData, string>>);
+                } else if (error.response?.statusText) {
+                    console.error(`Error: ${error.response.statusText}`);
+                }
+                setIsSubmitting(false);
+            });
     };
 
     return (
@@ -215,6 +288,7 @@ export default function CreateEmployee({ departments = [], positions = [], super
                     <PersonalInfoSection
                         data={personalInfo}
                         onChange={handlePersonalInfoChange}
+                        onFileChange={handleProfilePictureChange}
                         errors={errors}
                     />
 

@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useState } from 'react';
+import axios from 'axios';
 import { 
     PersonalInfoSection, 
     type PersonalInfoData 
@@ -74,6 +75,7 @@ interface Profile {
     tin_number: string | null;
     philhealth_number: string | null;
     pagibig_number: string | null;
+    profile_picture_path: string | null;
 }
 
 interface Employee {
@@ -145,6 +147,8 @@ export default function EditEmployee({
         current_address: employee.profile.current_address || '',
         permanent_address: employee.profile.permanent_address || '',
         same_as_current: employee.profile.current_address === employee.profile.permanent_address,
+        profile_picture_path: employee.profile.profile_picture_path || null,
+        profile_picture: null,
     });
 
     const [employmentInfo, setEmploymentInfo] = useState<EmploymentInfoData>({
@@ -182,6 +186,17 @@ export default function EditEmployee({
             setErrors(prev => {
                 const newErrors = { ...prev };
                 delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    const handleProfilePictureChange = (file: File | null) => {
+        setPersonalInfo(prev => ({ ...prev, profile_picture: file }));
+        if (errors.profile_picture) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors.profile_picture;
                 return newErrors;
             });
         }
@@ -225,29 +240,94 @@ export default function EditEmployee({
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Combine all form data (exclude employee_number from submission)
+        // Create FormData to support file uploads
+        const formData = new FormData();
+        
+        // Exclude employee_number from submission
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { employee_number, ...employmentData } = employmentInfo;
-        const formData = {
-            ...personalInfo,
-            ...employmentData,
-            ...emergencyContact,
-            ...governmentIDs,
-            dependents: dependents,
-        };
-
-        router.put(`/hr/employees/${employee.id}`, formData as unknown as Record<string, string | boolean>, {
-            onSuccess: () => {
-                // Redirect handled by backend
-            },
-            onError: (serverErrors) => {
-                setErrors(serverErrors as Partial<Record<keyof EmployeeFormData, string>>);
-                setIsSubmitting(false);
-            },
-            onFinish: () => {
-                setIsSubmitting(false);
-            },
+        
+        // Add personal info fields
+        Object.entries(personalInfo).forEach(([key, value]) => {
+            if (value instanceof File) {
+                formData.append(key, value);
+            } else if (typeof value === 'boolean') {
+                formData.append(key, value ? '1' : '0');
+            } else if (value !== null && value !== undefined) {
+                formData.append(key, String(value));
+            }
         });
+
+        // Add employment info fields (without employee_number)
+        Object.entries(employmentData).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                formData.append(key, String(value));
+            }
+        });
+
+        // Add emergency contact fields
+        Object.entries(emergencyContact).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                formData.append(key, String(value));
+            }
+        });
+
+        // Add government IDs fields
+        Object.entries(governmentIDs).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                formData.append(key, String(value));
+            }
+        });
+
+        // Add dependents as FormData array format (not JSON string)
+        dependents.forEach((dependent, index) => {
+            if (dependent.id) {
+                formData.append(`dependents[${index}][id]`, String(dependent.id));
+            }
+            formData.append(`dependents[${index}][first_name]`, dependent.first_name);
+            if (dependent.middle_name) {
+                formData.append(`dependents[${index}][middle_name]`, dependent.middle_name);
+            }
+            formData.append(`dependents[${index}][last_name]`, dependent.last_name);
+            formData.append(`dependents[${index}][date_of_birth]`, dependent.date_of_birth);
+            formData.append(`dependents[${index}][relationship]`, dependent.relationship);
+            if (dependent.remarks) {
+                formData.append(`dependents[${index}][remarks]`, dependent.remarks);
+            }
+        });
+
+        // Debug: Log FormData contents
+        console.log('Form submission - FormData contents:', {
+            profile_picture: formData.get('profile_picture'),
+            has_profile_picture: formData.has('profile_picture'),
+            personalInfo_profile_picture: personalInfo.profile_picture,
+        });
+
+        // Use axios for FormData upload instead of Inertia router
+        axios.post(`/hr/employees/${employee.id}?_method=PUT`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
+            .then(() => {
+                // Redirect on success
+                router.visit(`/hr/employees/${employee.id}`, { method: 'get' });
+            })
+            .catch((error) => {
+                // Log detailed error information
+                console.error('Form submission error:', {
+                    status: error.response?.status,
+                    data: error.response?.data,
+                    errors: error.response?.data?.errors,
+                });
+                
+                if (error.response?.data?.errors) {
+                    setErrors(error.response.data.errors as Partial<Record<keyof EmployeeFormData, string>>);
+                } else if (error.response?.statusText) {
+                    console.error(`Error: ${error.response.statusText}`);
+                }
+                setIsSubmitting(false);
+            });
     };
 
     return (
@@ -278,6 +358,7 @@ export default function EditEmployee({
                     <PersonalInfoSection
                         data={personalInfo}
                         onChange={handlePersonalInfoChange}
+                        onFileChange={handleProfilePictureChange}
                         errors={errors}
                     />
 

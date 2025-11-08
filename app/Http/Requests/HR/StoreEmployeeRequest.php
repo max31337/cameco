@@ -64,6 +64,9 @@ class StoreEmployeeRequest extends FormRequest
             'philhealth_number' => ['nullable', 'string', 'max:14'],
             'pagibig_number' => ['nullable', 'string', 'max:14'],
             
+            // Profile Picture
+            'profile_picture' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'], // 5MB max
+            
             // Employment Information
             'department_id' => ['required', 'integer', 'exists:departments,id'],
             'position_id' => ['required', 'integer', 'exists:positions,id'],
@@ -143,5 +146,23 @@ class StoreEmployeeRequest extends FormRequest
             'regularization_date' => 'regularization date',
             'status' => 'status',
         ];
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     */
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    {
+        if ($this->expectsJson()) {
+            // Log validation errors for debugging
+            \Log::debug('Validation failed on create employee', [
+                'errors' => $validator->errors()->toArray(),
+                'request_data_keys' => array_keys($this->all()),
+            ]);
+            
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+        
+        parent::failedValidation($validator);
     }
 }

@@ -40,6 +40,7 @@ class Profile extends Model
         'tin_number',
         'philhealth_number',
         'pagibig_number',
+        'profile_picture_path',
     ];
 
     public function user()

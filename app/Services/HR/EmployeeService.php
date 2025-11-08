@@ -8,6 +8,7 @@ use App\Repositories\Contracts\HR\EmployeeRepositoryInterface;
 use App\Repositories\Contracts\HR\ProfileRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeService
 {
@@ -20,6 +21,52 @@ class EmployeeService
     ) {
         $this->employeeRepository = $employeeRepository;
         $this->profileRepository = $profileRepository;
+    }
+
+    /**
+     * Handle profile picture upload.
+     */
+    private function handleProfilePictureUpload($file, $employeeNumber): ?string
+    {
+        if (!$file) {
+            Log::debug('handleProfilePictureUpload: No file provided');
+            return null;
+        }
+
+        try {
+            Log::debug('handleProfilePictureUpload: Starting upload', [
+                'employee_number' => $employeeNumber,
+                'file_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
+                'file_mime' => $file->getClientMimeType(),
+            ]);
+            
+            $fileName = "employees/{$employeeNumber}/" . time() . '.' . $file->getClientOriginalExtension();
+            $path = Storage::disk('public')->putFileAs('', $file, $fileName);
+            
+            Log::info('Profile picture uploaded successfully', [
+                'employee_number' => $employeeNumber,
+                'path' => $path,
+            ]);
+            
+            return $path;
+        } catch (\Exception $e) {
+            Log::error('Profile picture upload failed', [
+                'employee_number' => $employeeNumber,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Delete old profile picture.
+     */
+    private function deleteOldProfilePicture($profilePicturePath): void
+    {
+        if ($profilePicturePath && Storage::disk('public')->exists($profilePicturePath)) {
+            Storage::disk('public')->delete($profilePicturePath);
+        }
     }
 
     /**
@@ -84,6 +131,16 @@ class EmployeeService
 
             $employee = $this->employeeRepository->create($employeeData);
 
+            // Handle profile picture upload
+            if (!empty($data['profile_picture'])) {
+                $profilePicturePath = $this->handleProfilePictureUpload($data['profile_picture'], $employeeNumber);
+                if ($profilePicturePath) {
+                    $this->profileRepository->update($profile->id, [
+                        'profile_picture_path' => $profilePicturePath,
+                    ]);
+                }
+            }
+
             // Save dependents if provided
             if (!empty($data['dependents']) && is_array($data['dependents'])) {
                 foreach ($data['dependents'] as $dependent) {
@@ -139,6 +196,14 @@ class EmployeeService
 
         try {
             $employee = $this->employeeRepository->find($id);
+            
+            // Debug: Log file upload attempt
+            Log::info('Employee update - profile picture data:', [
+                'employee_id' => $id,
+                'has_profile_picture' => isset($data['profile_picture']),
+                'profile_picture_type' => isset($data['profile_picture']) ? gettype($data['profile_picture']) : 'not set',
+                'profile_picture_class' => isset($data['profile_picture']) ? get_class($data['profile_picture']) : 'N/A',
+            ]);
 
             if (!$employee) {
                 return [
@@ -181,6 +246,21 @@ class EmployeeService
 
             if (!empty($profileUpdates)) {
                 $this->profileRepository->update($employee->profile_id, $profileUpdates);
+            }
+
+            // Handle profile picture upload
+            if (!empty($data['profile_picture'])) {
+                // Delete old profile picture if exists
+                if ($employee->profile->profile_picture_path) {
+                    $this->deleteOldProfilePicture($employee->profile->profile_picture_path);
+                }
+                
+                $profilePicturePath = $this->handleProfilePictureUpload($data['profile_picture'], $employee->employee_number);
+                if ($profilePicturePath) {
+                    $this->profileRepository->update($employee->profile_id, [
+                        'profile_picture_path' => $profilePicturePath,
+                    ]);
+                }
             }
 
             // Update employee data
