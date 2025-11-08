@@ -44,11 +44,11 @@ use Illuminate\Support\Facades\DB;
 class AnalyticsService
 {
     protected DatabaseCompatibilityService $dbCompat;
-
-    public function __construct()
+    public function __construct(DatabaseCompatibilityService $dbCompat)
     {
-        $this->dbCompat = new DatabaseCompatibilityService();
+        $this->dbCompat = $dbCompat;
     }
+
     /**
      * Get user login statistics
      */
