@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
     Users, 
     UserCheck, 
@@ -46,6 +47,7 @@ interface RecentHiresData {
         department: string;
         hire_date: string;
         formatted_hire_date: string;
+        profile_picture_path?: string | null;
     }>;
     count: number;
     label: string;
@@ -66,6 +68,14 @@ interface PendingActionsData {
 // ============================================================================
 // Helper Functions
 // ============================================================================
+
+function getInitials(name: string): string {
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+        return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+}
 
 const getPriorityBadgeVariant = (priority: 'low' | 'medium' | 'high') => {
     switch (priority) {
@@ -252,9 +262,17 @@ export function RecentHiresCard({ data }: { data: RecentHiresData }) {
                                     href={`/hr/employees/${hire.id}`}
                                     className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0 cursor-pointer hover:bg-muted/50 -mx-3 px-3 py-2 rounded transition-colors"
                                 >
-                                    <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
-                                        <UserPlus className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                                    </div>
+                                    <Avatar className="h-8 w-8 flex-shrink-0">
+                                        {hire.profile_picture_path && (
+                                            <AvatarImage 
+                                                src={`/storage/${hire.profile_picture_path}`} 
+                                                alt={hire.name}
+                                            />
+                                        )}
+                                        <AvatarFallback className="text-xs bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400">
+                                            {getInitials(hire.name)}
+                                        </AvatarFallback>
+                                    </Avatar>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium truncate">{hire.name}</p>
                                         <p className="text-xs text-muted-foreground truncate">{hire.position}</p>

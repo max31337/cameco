@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { EmployeeStatusBadge } from '@/components/hr/employee-status-badge';
 import { EmployeeDocumentsTab } from '@/components/hr/employee-documents-tab';
 import { EmployeeHistoryTab } from '@/components/hr/employee-history-tab';
@@ -46,6 +46,7 @@ interface Profile {
     tin_number: string | null;
     philhealth_number: string | null;
     pagibig_number: string | null;
+    profile_picture_path: string | null;
 }
 
 interface Department {
@@ -580,6 +581,12 @@ export default function ShowEmployee({ employee }: ShowEmployeeProps) {
                         </Link>
                         <div className="flex items-start gap-4">
                             <Avatar className="h-16 w-16">
+                                {employee.profile.profile_picture_path ? (
+                                    <AvatarImage 
+                                        src={`/storage/${employee.profile.profile_picture_path}`} 
+                                        alt={getFullName(employee)}
+                                    />
+                                ) : null}
                                 <AvatarFallback className="text-lg">
                                     {getInitials(employee.profile.first_name, employee.profile.last_name)}
                                 </AvatarFallback>

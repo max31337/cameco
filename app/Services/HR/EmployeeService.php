@@ -558,6 +558,7 @@ class EmployeeService
                 'department' => $emp->department->name ?? 'Not Assigned',
                 'hire_date' => $emp->date_hired,
                 'formatted_hire_date' => $formattedDate,
+                'profile_picture_path' => $emp->profile->profile_picture_path,
             ];
         })->toArray();
 

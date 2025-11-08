@@ -44,6 +44,7 @@ export interface Employee {
         first_name: string;
         last_name: string;
         middle_name?: string;
+        profile_picture_path?: string | null;
     };
     department?: {
         id: number;
@@ -239,7 +240,12 @@ export function EmployeeTable({
                             <TableCell>
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
-                                        <AvatarImage src="" alt={getFullName(employee)} />
+                                        {employee.profile.profile_picture_path && (
+                                            <AvatarImage 
+                                                src={`/storage/${employee.profile.profile_picture_path}`} 
+                                                alt={getFullName(employee)} 
+                                            />
+                                        )}
                                         <AvatarFallback className="text-xs">
                                             {getInitials(
                                                 employee.profile.first_name, 

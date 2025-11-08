@@ -71,8 +71,8 @@ export default function CreateEmployee({ departments = [], positions = [], super
         date_of_birth: '',
         place_of_birth: '',
         is_pwd: false,
-        gender: '',
-        civil_status: '',
+        gender: 'male', // Default to 'male' to match Select component default
+        civil_status: 'single', // Default to 'single' to match Select component default
         spouse_name: '',
         spouse_date_of_birth: '',
         spouse_contact_number: '',
@@ -187,6 +187,7 @@ export default function CreateEmployee({ departments = [], positions = [], super
             } else if (typeof value === 'boolean') {
                 formData.append(key, value ? '1' : '0');
             } else if (value !== null && value !== undefined) {
+                // Always send the value (even empty strings) so validation works properly
                 formData.append(key, String(value));
             }
         });

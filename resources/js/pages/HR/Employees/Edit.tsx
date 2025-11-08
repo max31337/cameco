@@ -253,28 +253,28 @@ export default function EditEmployee({
                 formData.append(key, value);
             } else if (typeof value === 'boolean') {
                 formData.append(key, value ? '1' : '0');
-            } else if (value !== null && value !== undefined) {
+            } else if (value !== null && value !== undefined && value !== '') {
                 formData.append(key, String(value));
             }
         });
 
         // Add employment info fields (without employee_number)
         Object.entries(employmentData).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
+            if (value !== null && value !== undefined && value !== '') {
                 formData.append(key, String(value));
             }
         });
 
         // Add emergency contact fields
         Object.entries(emergencyContact).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
+            if (value !== null && value !== undefined && value !== '') {
                 formData.append(key, String(value));
             }
         });
 
         // Add government IDs fields
         Object.entries(governmentIDs).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
+            if (value !== null && value !== undefined && value !== '') {
                 formData.append(key, String(value));
             }
         });
