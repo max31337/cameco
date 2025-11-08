@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Remote Vendor Incidents Table - Track support tickets/incidents with external vendors
-        Schema::create('remote_vendor_incidents', function (Blueprint $table) {
+        // Incidents Table - Track support tickets/incidents
+        Schema::create('incidents', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
@@ -36,8 +36,8 @@ return new class extends Migration
             $table->index('assigned_to');
         });
 
-        // Remote Vendor Uptime Logs Table - Track uptime/availability of external vendor services
-        Schema::create('remote_vendor_uptime_logs', function (Blueprint $table) {
+        // Application Uptime Logs Table - Track uptime/availability of application services
+        Schema::create('application_uptime_logs', function (Blueprint $table) {
             $table->id();
             $table->timestamp('checked_at');
             $table->boolean('is_healthy')->default(true);
@@ -52,8 +52,8 @@ return new class extends Migration
             $table->index(['is_healthy', 'checked_at']);
         });
 
-        // Remote Vendor Patches Table - Track patches/updates provided by external vendors
-        Schema::create('remote_vendor_patches', function (Blueprint $table) {
+        // Patches Table - Track patches/updates
+        Schema::create('patches', function (Blueprint $table) {
             $table->id();
             $table->string('version'); // e.g., 1.2.3
             $table->string('patch_number')->nullable(); // e.g., PATCH-2024-001
@@ -83,8 +83,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('remote_vendor_patches');
-        Schema::dropIfExists('remote_vendor_uptime_logs');
-        Schema::dropIfExists('remote_vendor_incidents');
+        Schema::dropIfExists('patches');
+        Schema::dropIfExists('application_uptime_logs');
+        Schema::dropIfExists('incidents');
     }
 };
