@@ -146,6 +146,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/payroll', [\App\Http\Controllers\System\Reports\PayrollController::class, 'index'])->name('system.reports.payroll');
         Route::get('/compliance', [\App\Http\Controllers\System\Reports\ComplianceController::class, 'index'])->name('system.reports.compliance');
     });
+
+    // Update Management (Superadmin only)
+    Route::middleware(['auth', 'superadmin'])->prefix('system/updates')->group(function () {
+        Route::get('/', [\App\Http\Controllers\System\UpdateController::class, 'index'])->name('system.updates');
+        Route::post('/check', [\App\Http\Controllers\System\UpdateController::class, 'check'])->name('system.updates.check');
+        Route::post('/download', [\App\Http\Controllers\System\UpdateController::class, 'download'])->name('system.updates.download');
+        Route::post('/deploy', [\App\Http\Controllers\System\UpdateController::class, 'deploy'])->name('system.updates.deploy');
+        Route::get('/progress/{deploymentId}', [\App\Http\Controllers\System\UpdateController::class, 'progress'])->name('system.updates.progress');
+        Route::post('/rollback', [\App\Http\Controllers\System\UpdateController::class, 'rollback'])->name('system.updates.rollback');
+    });
 });
 
 // Cron Job Management (Superadmin only)

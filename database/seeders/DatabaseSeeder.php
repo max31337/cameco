@@ -87,5 +87,29 @@ class DatabaseSeeder extends Seeder
         if (class_exists(\Database\Seeders\SecurityAuditLogSeeder::class)) {
             $this->call(\Database\Seeders\SecurityAuditLogSeeder::class);
         }
+
+        // Seed system settings
+        if (class_exists(\Database\Seeders\SystemSettingsSeeder::class)) {
+            $this->call(\Database\Seeders\SystemSettingsSeeder::class);
+        }
+
+        // Seed System Error Logs
+        if (class_exists(\Database\Seeders\SystemErrorLogSeeder::class)) {
+            $this->call(\Database\Seeders\SystemErrorLogSeeder::class);
+        }
+
+        // Seed Scheduled Jobs
+        if (class_exists(\Database\Seeders\ScheduledJobsSeeder::class)) {
+            $this->call(\Database\Seeders\ScheduledJobsSeeder::class);
+        }
+
+        // Seed System Health Checks
+        if (class_exists(\Database\Seeders\SystemHealthSeeder::class)) {
+            $this->call(\Database\Seeders\SystemHealthSeeder::class);
+        }
+
+
     }
+
+
 }
