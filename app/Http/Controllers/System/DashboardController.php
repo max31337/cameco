@@ -24,10 +24,32 @@ class DashboardController extends Controller
 	 */
 	protected function getModuleCategories(): array
 	{
-		$pendingPatches = \App\Models\SystemPatchApproval::where('status', 'pending')->count();
-		$failedCrons = \App\Models\ScheduledJob::where('status', 'failed')->count();
-		$securityAlerts = \App\Models\SecurityAuditLog::where('severity', 'critical')->count();
-		$pendingBackups = \App\Models\SystemBackupLog::where('status', 'pending')->count();
+		// Safely query counts, returning 0 if table doesn't exist or query fails
+		try {
+			$pendingPatches = \App\Models\SystemPatchApproval::where('status', 'pending')->count();
+		} catch (\Exception $e) {
+			$pendingPatches = 0;
+		}
+
+		try {
+			$failedCrons = \App\Models\ScheduledJob::where('last_exit_code', '!=', 0)
+				->whereNotNull('last_exit_code')
+				->count();
+		} catch (\Exception $e) {
+			$failedCrons = 0;
+		}
+
+		try {
+			$securityAlerts = \App\Models\SecurityAuditLog::where('severity', 'critical')->count();
+		} catch (\Exception $e) {
+			$securityAlerts = 0;
+		}
+
+		try {
+			$pendingBackups = \App\Models\SystemBackupLog::where('status', 'pending')->count();
+		} catch (\Exception $e) {
+			$pendingBackups = 0;
+		}
 
 		return [
 			[
@@ -92,6 +114,16 @@ class DashboardController extends Controller
 						'description' => 'Schedule and monitor automated system tasks',
 						'href' => '/system/cron',
 						'badge' => ['count' => $failedCrons, 'label' => 'failed'],
+						'isDisabled' => false,
+						'comingSoon' => false,
+					],
+					[
+						'id' => 'updates',
+						'icon' => 'Download',
+						'title' => 'System Updates',
+						'description' => 'Check, download, and deploy system updates and patches',
+						'href' => '/system/updates',
+						'badge' => ['count' => 0, 'label' => 'available'],
 						'isDisabled' => false,
 						'comingSoon' => false,
 					],
