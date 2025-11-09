@@ -43,6 +43,34 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+        
+        // Allow login with email, username, or name
+        Fortify::authenticateUsing(function (Request $request) {
+            $loginInput = $request->input('email');
+            $password = $request->input('password');
+            
+            // Try to find user by email, username, or name
+            $user = \App\Models\User::where('email', $loginInput)
+                ->orWhere('username', $loginInput)
+                ->orWhere('name', $loginInput)
+                ->first();
+
+            if ($user && \Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+                \Log::info('User authenticated successfully', [
+                    'user_id' => $user->id,
+                    'username' => $user->username,
+                    'login_identifier' => $loginInput,
+                ]);
+                return $user;
+            }
+
+            \Log::warning('Failed authentication attempt', [
+                'login_identifier' => $loginInput,
+                'user_found' => $user ? true : false,
+            ]);
+
+            return null;
+        });
     }
 
     /**
@@ -86,7 +114,8 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            // Use email field for rate limiting (accepts both email and username)
+            $throttleKey = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
         });
