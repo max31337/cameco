@@ -49,6 +49,23 @@ class DepartmentController extends Controller
     }
 
     /**
+     * Show the form for creating a new department.
+     */
+    public function create(): Response
+    {
+        $this->authorize('create', Department::class);
+
+        $parentDepartments = Department::where('is_active', true)
+            ->select('id', 'name', 'code')
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('HR/Departments/Create', [
+            'parentDepartments' => $parentDepartments,
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(StoreDepartmentRequest $request): RedirectResponse
@@ -62,6 +79,25 @@ class DepartmentController extends Controller
         Department::create($data);
 
         return back()->with('success', 'Department created successfully.');
+    }
+
+    /**
+     * Show the form for editing the specified department.
+     */
+    public function edit(Department $department): Response
+    {
+        $this->authorize('update', $department);
+
+        $parentDepartments = Department::where('is_active', true)
+            ->where('id', '!=', $department->id)
+            ->select('id', 'name', 'code')
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('HR/Departments/Edit', [
+            'department' => $department,
+            'parentDepartments' => $parentDepartments,
+        ]);
     }
 
     /**

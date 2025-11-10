@@ -47,19 +47,16 @@ export function NavHR() {
             title: 'Leave Requests',
             icon: ClipboardList,
             href: '/hr/leave/requests',
-            comingSoon: true,
         },
         {
             title: 'Leave Balances',
             icon: Calendar,
             href: '/hr/leave/balances',
-            comingSoon: true,
         },
         {
             title: 'Leave Policies',
             icon: Shield,
             href: '/hr/leave/policies',
-            comingSoon: true,
         },
     ];
 
@@ -68,13 +65,11 @@ export function NavHR() {
             title: 'Employee Reports',
             icon: BarChart3,
             href: '/hr/reports/employees',
-            comingSoon: true,
         },
         {
             title: 'Leave Reports',
             icon: Calendar,
             href: '/hr/reports/leave',
-            comingSoon: true,
         },
         {
             title: 'Analytics',
@@ -142,10 +137,7 @@ export function NavHR() {
                                         >
                                             <Link href={item.href} prefetch>
                                                 <item.icon className="h-4 w-4" />
-                                                <span className={item.comingSoon ? 'text-muted-foreground' : ''}>{item.title}</span>
-                                                {item.comingSoon && (
-                                                    <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
-                                                )}
+                                                <span>{item.title}</span>
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
@@ -177,10 +169,7 @@ export function NavHR() {
                                         >
                                             <Link href={item.href} prefetch>
                                                 <item.icon className="h-4 w-4" />
-                                                <span className={item.comingSoon ? 'text-muted-foreground' : ''}>{item.title}</span>
-                                                {item.comingSoon && (
-                                                    <span className="ml-auto text-[10px] text-muted-foreground">Soon</span>
-                                                )}
+                                                <span>{item.title}</span>
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>

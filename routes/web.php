@@ -45,10 +45,17 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // HR Manager Routes
+// HR Manager Routes
 use App\Http\Controllers\HR\DashboardController as HRDashboardController;
 use App\Http\Controllers\HR\AnalyticsController;
 use App\Http\Controllers\HR\EmployeeController;
+use App\Http\Controllers\HR\DepartmentController;
+use App\Http\Controllers\HR\PositionController;
+use App\Http\Controllers\HR\LeaveBalanceController;
+use App\Http\Controllers\HR\LeavePolicyController;
+use App\Http\Controllers\HR\ReportController;
 use App\Http\Middleware\EnsureHRManager;
+
 
 Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->name('hr.')->group(function () {
     // HR Dashboard
@@ -62,8 +69,32 @@ Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->n
     Route::post('/employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
 
     // Department Management
-    Route::resource('departments', \App\Http\Controllers\HR\DepartmentController::class)->only(['index','store','update','destroy']);
+    Route::resource('departments', DepartmentController::class)->only(['index','store','update','destroy']);
 
     // Position Managementcontroller: 
-    Route::resource('positions', \App\Http\Controllers\HR\PositionController::class)->only(['index','store','update','destroy']);
+    Route::resource('positions', PositionController::class)->only(['index','store','update','destroy']);
+
+    // Leave Management (ISSUE-5)
+    Route::prefix('leave')->name('leave.')->group(function () {
+        Route::get('/requests', [EmployeeController::class, 'leaveRequests'])->name('requests');
+        Route::get('/balances', [LeaveBalanceController::class, 'index'])->name('balances');
+        Route::get('/policies', [LeavePolicyController::class, 'index'])->name('policies');
+    });
+
+    // Reports
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/employees', [ReportController::class, 'employees'])->name('employees');
+        Route::get('/leave', [ReportController::class, 'leave'])->name('leave');
+    });
+
+    // Document Management (ISSUE-6)
+    Route::prefix('documents')->name('documents.')->group(function () {
+        Route::get('/templates', [EmployeeController::class, 'documentTemplates'])->name('templates.index');
+        Route::get('/templates/create', [EmployeeController::class, 'createDocumentTemplate'])->name('templates.create');
+        Route::post('/templates', [EmployeeController::class, 'storeDocumentTemplate'])->name('templates.store');
+        Route::get('/generate/{template}', [EmployeeController::class, 'generateDocument'])->name('generate.create');
+        Route::post('/generate/{template}', [EmployeeController::class, 'storeDocument'])->name('generate.store');
+        Route::get('/list', [EmployeeController::class, 'listDocuments'])->name('list');
+        Route::get('/{document}/download', [EmployeeController::class, 'downloadDocument'])->name('download');
+    });
 });

@@ -63,6 +63,29 @@ class PositionController extends Controller
     }
 
     /**
+     * Show the form for creating a new position.
+     */
+    public function create(): Response
+    {
+        $this->authorize('create', Position::class);
+
+        $departments = Department::where('is_active', true)
+            ->select('id', 'name', 'code')
+            ->orderBy('name')
+            ->get();
+
+        $positions = Position::where('is_active', true)
+            ->select('id', 'title', 'code')
+            ->orderBy('title')
+            ->get();
+
+        return Inertia::render('HR/Positions/Create', [
+            'departments' => $departments,
+            'positions' => $positions,
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(StorePositionRequest $request): RedirectResponse
@@ -85,6 +108,41 @@ class PositionController extends Controller
         Position::create($mapped);
 
         return back()->with('success', 'Position created successfully.');
+    }
+
+    /**
+     * Show the form for editing the specified position.
+     */
+    public function edit(Position $position): Response
+    {
+        $this->authorize('update', $position);
+
+        $departments = Department::where('is_active', true)
+            ->select('id', 'name', 'code')
+            ->orderBy('name')
+            ->get();
+
+        $positions = Position::where('is_active', true)
+            ->where('id', '!=', $position->id)
+            ->select('id', 'title', 'code')
+            ->orderBy('title')
+            ->get();
+
+        return Inertia::render('HR/Positions/Edit', [
+            'position' => [
+                'id' => $position->id,
+                'title' => $position->title,
+                'code' => (string) ($position->code ?? ''),
+                'description' => $position->description,
+                'department_id' => $position->department_id,
+                'reports_to' => $position->reports_to,
+                'salary_min' => $position->min_salary,
+                'salary_max' => $position->max_salary,
+                'is_active' => (bool) $position->is_active,
+            ],
+            'departments' => $departments,
+            'positions' => $positions,
+        ]);
     }
 
     /**
