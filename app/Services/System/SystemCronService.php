@@ -1,30 +1,24 @@
 <?php
-
 /**
- * NOTE FOR FUTURE REFACTOR / OBSERVABILITY INTEGRATION
+ * NOTE: Refactor / Observability Integration Plan
  *
- * TODO: Refactor: Add retry mechanism and error recovery for cron executions.
- * Current behavior: failures are logged but not retried, causing silent job drops.
- * Future plan: implement exponential backoff with max retry count and centralized visibility (e.g. SigNoz integration).
+ * TODO: Implement retry and error recovery for cron executions.
+ * Current limitation: failed jobs are only logged — no retry, backoff, or visibility.
  *
- * This service was built to manually track scheduled job discovery and execution
- * for on-prem HRIS deployments without a dedicated monitoring stack.
+ * Purpose: interim solution for on-prem HRIS deployments lacking centralized observability.
+ * Once a platform like SigNoz, Prometheus+Grafana, or Netdata is active,
+ * most of this logic should be deprecated.
  *
- * Once an observability platform such as SigNoz, Prometheus + Grafana,
- * or Netdata is deployed, the majority of this logic becomes unnecessary.
+ * Refactor plan:
+ * 1. Replace manual metrics (run_count, success_count, failure_count, etc.) with OTEL-based instrumentation.
+ * 2. Stream execution traces, logs, and runtime metrics to the observability backend.
+ * 3. Drop local job history tables unless UI management requires persistence.
+ * 4. Retain only configuration and enable/disable controls.
  *
- * Recommended cleanup paths:
- * 1. Replace manual metrics storage (run_count, success_count, failure_count, etc.)
- *    with OTEL instrumentation using Laravel Observability hooks.
- * 2. Ship schedule job execution logs + runtime metrics directly to the observability backend.
- * 3. Remove the DB tables used for execution history and job status tracking if no longer required.
- * 4. Only retain CRUD + enable/disable management if administrators still need UI control.
- *
- * Keep this service temporary. When full observability is in place:
- * - Cron execution metrics will come from OpenTelemetry spans/logs.
- * - Cron scheduling visibility will come from the monitoring dashboard (SigNoz/Grafana).
- *
- * TLDR: This is a stopgap. Plan to delete most of this file once SigNoz observability is deployed.
+ * End state:
+ * - Retry and recovery handled by queue/worker orchestration.
+ * - Metrics and visibility provided by OTEL → SigNoz/Grafana.
+ * - This service reduced to thin orchestration glue.
  */
 
 namespace App\Services\System;
