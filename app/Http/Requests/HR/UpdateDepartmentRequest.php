@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Http\Requests\HR;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class UpdateDepartmentRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:150'],
+            'code' => ['nullable', 'string', 'max:32'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'parent_id' => ['nullable', 'integer', 'exists:departments,id'],
+            'is_active' => ['boolean'],
+        ];
+    }
+}
