@@ -31,6 +31,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/system/onboarding/start', [SystemOnboardingController::class, 'start']);
     Route::post('/system/onboarding/skip', [SystemOnboardingController::class, 'skip']);
     Route::post('/system/onboarding/complete', [SystemOnboardingController::class, 'complete'])->name('system.onboarding.complete');
+    Route::post('/system/onboarding/initialize-company', [SystemOnboardingController::class, 'initializeCompany'])->name('system.onboarding.initialize-company');
 
     // Per-user onboarding endpoints
     Route::get('/user/onboarding', [UserOnboardingController::class, 'show'])->name('user.onboarding.show');
@@ -51,8 +52,14 @@ use App\Http\Middleware\EnsureHRManager;
 Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->name('hr.')->group(function () {
     // HR Dashboard
     Route::get('/dashboard', [HRDashboardController::class, 'index'])->name('dashboard');
-    
+
     // Employee Management
     Route::resource('employees', EmployeeController::class);
     Route::post('/employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
+
+    // Department Management
+    Route::resource('departments', \App\Http\Controllers\HR\DepartmentController::class)->only(['index','store','update','destroy']);
+
+    // Position Management
+    Route::resource('positions', \App\Http\Controllers\HR\PositionController::class)->only(['index','store','update','destroy']);
 });

@@ -4,8 +4,11 @@ namespace App\Http\Controllers\System\Security;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\System\Security\RoleRequest;
+use App\Models\Position;
 use App\Traits\LogsSecurityAudits;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -19,6 +22,9 @@ class RoleController extends Controller
 	 */
 	public function index(Request $request)
 	{
+		// Authorization: Only Super Admin
+		Gate::authorize('system.onboarding.initialize');
+
 		$roles = Role::with('permissions')
 			->withCount('users')
 			->orderBy('name')
@@ -38,14 +44,39 @@ class RoleController extends Controller
 				])->toArray(),
 			]);
 
-		// Get all available permissions grouped by category
-		$permissions = Permission::orderBy('name')->get()
-			->groupBy(fn($p) => explode(':', $p->name)[0]) // Group by prefix (e.g., 'user', 'role', 'security')
+		// Get all available permissions grouped by module
+		$permissionsQuery = Permission::where('guard_name', 'web');
+		
+		// Check if module column exists before ordering by it
+		if (Schema::hasColumn('permissions', 'module')) {
+			$permissionsQuery->orderBy('module')->orderBy('name');
+		} else {
+			$permissionsQuery->orderBy('name');
+		}
+		
+		$permissions = $permissionsQuery->get()
+			->groupBy(fn($p) => $p->module ?? 'General')
 			->map(fn($group) => $group->map(fn($p) => [
 				'id' => $p->id,
 				'name' => $p->name,
 				'description' => $p->description ?? '',
+				'module' => $p->module ?? 'General',
 			])->toArray());
+
+		// Get positions for role mapping
+		$positions = Position::select('id', 'title', 'level', 'department_id')
+			->with('department:id,name')
+			->orderBy('level')
+			->orderBy('title')
+			->get()
+			->map(function ($position) {
+				return [
+					'id' => $position->id,
+					'title' => $position->title,
+					'level' => $position->level,
+					'department_name' => $position->department?->name ?? 'N/A',
+				];
+			});
 
 		$breadcrumbs = [
 			['title' => 'System', 'href' => '#'],
@@ -56,12 +87,14 @@ class RoleController extends Controller
 		return Inertia::render('System/Security/Roles', [
 			'roles' => $roles,
 			'permissions' => $permissions,
+			'positions' => $positions,
 			'breadcrumbs' => $breadcrumbs,
 			'stats' => [
-				'total_roles' => Role::count(),
-				'system_roles' => Role::whereIn('name', ['Superadmin', 'Admin', 'User'])->count(),
-				'custom_roles' => Role::whereNotIn('name', ['Superadmin', 'Admin', 'User'])->count(),
-				'total_permissions' => Permission::count(),
+				'total_roles' => Role::where('guard_name', 'web')->count(),
+				'system_roles' => Role::whereIn('name', ['Superadmin', 'Admin', 'User'])->where('guard_name', 'web')->count(),
+				'custom_roles' => Role::whereNotIn('name', ['Superadmin', 'Admin', 'User'])->where('guard_name', 'web')->count(),
+				'total_permissions' => Permission::where('guard_name', 'web')->count(),
+				'total_positions' => Position::count(),
 			],
 		]);
 	}
@@ -110,11 +143,17 @@ class RoleController extends Controller
 			}
 
 			// Audit log
-			$this->logSecurityAudit('role.created', [
-				'role_id' => $role->id,
-				'role_name' => $role->name,
-				'permissions_count' => count($request->validated('permissions')),
-			]);
+			$this->auditLog(
+				'role_created',
+				"Created role: {$role->name}",
+				'high',
+				'Role Management',
+				[
+					'role_id' => $role->id,
+					'role_name' => $role->name,
+					'permissions_count' => count($request->validated('permissions')),
+				]
+			);
 
 			return redirect('/system/security/roles')
 				->with('success', "Role '{$role->name}' created successfully.");
@@ -182,11 +221,17 @@ class RoleController extends Controller
 			}
 
 			// Audit log
-			$this->logSecurityAudit('role.updated', [
-				'role_id' => $role->id,
-				'role_name' => $role->name,
-				'permissions_count' => count($request->validated('permissions')),
-			]);
+			$this->auditLog(
+				'role_updated',
+				"Updated role: {$role->name}",
+				'high',
+				'Role Management',
+				[
+					'role_id' => $role->id,
+					'role_name' => $role->name,
+					'permissions_count' => count($request->validated('permissions')),
+				]
+			);
 
 			return redirect('/system/security/roles')
 				->with('success', "Role '{$role->name}' updated successfully.");
@@ -216,9 +261,15 @@ class RoleController extends Controller
 			$role->delete();
 
 			// Audit log
-			$this->logSecurityAudit('role.deleted', [
-				'role_name' => $roleName,
-			]);
+			$this->auditLog(
+				'role_deleted',
+				"Deleted role: {$roleName}",
+				'high',
+				'Role Management',
+				[
+					'role_name' => $roleName,
+				]
+			);
 
 			return redirect('/system/security/roles')
 				->with('success', "Role '{$roleName}' deleted successfully.");

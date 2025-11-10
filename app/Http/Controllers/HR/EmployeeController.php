@@ -5,6 +5,7 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HR\StoreEmployeeRequest;
 use App\Http\Requests\HR\UpdateEmployeeRequest;
+use App\Models\Employee as EmployeeModel;
 use App\Services\HR\EmployeeService;
 use App\Traits\LogsSecurityAudits;
 use Illuminate\Http\Request;
@@ -26,6 +27,7 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', EmployeeModel::class);
         $filters = [
             'search' => $request->input('search'),
             'department_id' => $request->input('department_id'),
@@ -69,6 +71,7 @@ class EmployeeController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', EmployeeModel::class);
         // Get all departments for dropdown
         $departments = \App\Models\Department::select('id', 'name')
             ->orderBy('name')
@@ -103,11 +106,12 @@ class EmployeeController extends Controller
      */
     public function store(StoreEmployeeRequest $request)
     {
+        $this->authorize('create', EmployeeModel::class);
         $validated = $request->validated();
-        
+
         // Log the validated data
         \Log::debug('Employee creation - validated data:', $validated);
-        
+
         $result = $this->employeeService->createEmployee($validated);
 
         if ($result['success']) {
@@ -160,6 +164,8 @@ class EmployeeController extends Controller
         if (!$employee) {
             abort(404, 'Employee not found');
         }
+
+        $this->authorize('view', $employee);
 
         return Inertia::render('HR/Employees/Show', [
             'employee' => $employee,

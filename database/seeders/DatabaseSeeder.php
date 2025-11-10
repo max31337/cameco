@@ -104,7 +104,7 @@ class DatabaseSeeder extends Seeder
             $this->call(\Database\Seeders\SupportContractSettingsSeeder::class);
         }
 
-        // Seed HR data
+        /* Seed HR data
         if (class_exists(\Database\Seeders\DepartmentSeeder::class)) {
             $this->call(\Database\Seeders\DepartmentSeeder::class);
         }
@@ -116,6 +116,7 @@ class DatabaseSeeder extends Seeder
         if (class_exists(\Database\Seeders\EmployeeSeeder::class)) {
             $this->call(\Database\Seeders\EmployeeSeeder::class);
         }
+        */    
 
     }
 

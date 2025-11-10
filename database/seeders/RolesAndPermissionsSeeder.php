@@ -13,21 +13,56 @@ class RolesAndPermissionsSeeder extends Seeder
      */
     public function run(): void
     {
-        $perms = [
+        // Base permissions (existing)
+        $basePerms = [
             'users.create', 'users.update', 'users.delete', 'users.view',
             'workforce.schedules.create', 'workforce.assignments.update',
             'timekeeping.attendance.create', 'timekeeping.reports.view',
             'system.settings.update',
         ];
 
+        // Phase 8: HR permissions
+        $hrPermissions = [
+            // Employee Management
+            'hr.employees.view',
+            'hr.employees.create',
+            'hr.employees.update',
+            'hr.employees.delete', // archive
+            'hr.employees.restore',
+
+            // Department Management
+            'hr.departments.view',
+            'hr.departments.create',
+            'hr.departments.update',
+            'hr.departments.delete',
+
+            // Position Management
+            'hr.positions.view',
+            'hr.positions.create',
+            'hr.positions.update',
+            'hr.positions.delete',
+
+            // Sensitive Data Access
+            'hr.employees.view_salary',
+            'hr.employees.view_government_ids',
+
+            // Reports
+            'hr.reports.view',
+            'hr.reports.export',
+        ];
+
+        $perms = array_values(array_unique(array_merge($basePerms, $hrPermissions)));
+
         foreach ($perms as $p) {
             Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
         }
 
+        // Roles
         $superadmin = Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
-        $superadmin->givePermissionTo(Permission::all());
+        $superadmin->givePermissionTo(Permission::all()); // Always retains all permissions
 
         $hrManager = Role::firstOrCreate(['name' => 'HR Manager', 'guard_name' => 'web']);
-        $hrManager->givePermissionTo(['workforce.schedules.create', 'workforce.assignments.update']);
+        // Grant HR Manager all HR permissions (do not revoke existing)
+        $hrManager->givePermissionTo($hrPermissions);
     }
 }

@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\System\Organization;
 
+use App\Http\Controllers\Controller;
 use App\Models\Department;
+use App\Models\Position;
 use App\Models\User;
 use App\Traits\LogsSecurityAudits;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class DepartmentController
+class DepartmentController extends Controller
 {
     use LogsSecurityAudits;
 
@@ -135,6 +138,132 @@ class DepartmentController
         );
 
         return response()->json(['message' => 'Department deleted']);
+    }
+
+    /**
+     * Seed default Philippine company department structure
+     * 
+     * Only Super Admin can call this endpoint
+     * Prevents duplicates - checks if departments already exist
+     * Accepts custom departments array from request
+     */
+    public function seedDefaults(Request $request)
+    {
+        // Check authorization - Super Admin only
+        Gate::authorize('system.onboarding.initialize');
+
+        // Prevent duplicate seeding
+        if (Department::count() > 0) {
+            return response()->json([
+                'message' => 'Departments already exist. Delete existing departments to seed again.',
+            ], 422);
+        }
+
+        // Get custom departments from request, or use defaults
+        $customDepartments = [];
+        if ($request->has('departments')) {
+            try {
+                $customDepartments = json_decode($request->input('departments'), true) ?? [];
+            } catch (\Exception $e) {
+                $customDepartments = [];
+            }
+        }
+
+        // If no custom departments provided, use default PH structure
+        if (empty($customDepartments)) {
+            $departmentData = [
+                // Top-level departments
+                ['name' => 'Executive Management', 'code' => 'EXEC', 'description' => 'Executive leadership', 'parent_id' => null, 'level' => 0],
+                ['name' => 'Human Resources', 'code' => 'HR', 'description' => 'HR operations and services', 'parent_id' => null, 'level' => 0],
+                ['name' => 'Finance & Accounting', 'code' => 'FIN', 'description' => 'Finance and accounting services', 'parent_id' => null, 'level' => 0],
+                ['name' => 'Operations', 'code' => 'OPS', 'description' => 'Operations management', 'parent_id' => null, 'level' => 0],
+                ['name' => 'Sales & Marketing', 'code' => 'SALES', 'description' => 'Sales and marketing', 'parent_id' => null, 'level' => 0],
+                ['name' => 'IT & Technology', 'code' => 'IT', 'description' => 'IT and technology services', 'parent_id' => null, 'level' => 0],
+                ['name' => 'Administration', 'code' => 'ADMIN', 'description' => 'Administrative services', 'parent_id' => null, 'level' => 0],
+                
+                // HR sub-departments
+                ['name' => 'HR Operations', 'code' => 'HR-OPS', 'description' => 'HR day-to-day operations', 'parent_code' => 'HR', 'level' => 1],
+                ['name' => 'Recruitment & Talent', 'code' => 'HR-REC', 'description' => 'Hiring and talent management', 'parent_code' => 'HR', 'level' => 1],
+                
+                // Finance sub-departments
+                ['name' => 'Accounts Payable', 'code' => 'FIN-AP', 'description' => 'AP management', 'parent_code' => 'FIN', 'level' => 1],
+                ['name' => 'Accounts Receivable', 'code' => 'FIN-AR', 'description' => 'AR management', 'parent_code' => 'FIN', 'level' => 1],
+                ['name' => 'Payroll', 'code' => 'FIN-PAY', 'description' => 'Payroll processing', 'parent_code' => 'FIN', 'level' => 1],
+            ];
+        } else {
+            // Transform custom departments to proper format
+            $departmentData = array_map(function ($dept) {
+                return [
+                    'name' => $dept['name'] ?? '',
+                    'code' => $dept['code'] ?? '',
+                    'description' => $dept['description'] ?? null,
+                    'level' => $dept['level'] ?? 0,
+                    'parent_code' => null,
+                ];
+            }, $customDepartments);
+        }
+
+        try {
+            // Create departments with parent-child relationships
+            $createdDepts = [];
+            foreach ($departmentData as $dept) {
+                $parentId = null;
+                
+                // Resolve parent_code to parent_id
+                if (isset($dept['parent_code'])) {
+                    $parentDept = Department::where('code', $dept['parent_code'])->first();
+                    $parentId = $parentDept?->id;
+                }
+
+                $created = Department::create([
+                    'name' => $dept['name'],
+                    'code' => $dept['code'],
+                    'description' => $dept['description'],
+                    'parent_id' => $parentId,
+                    'is_active' => true,
+                ]);
+
+                $createdDepts[] = $created;
+            }
+
+            // Log audit trail
+            $this->auditLog(
+                'seed_departments',
+                'Seeded Philippine company department structure',
+                'high',
+                'System Onboarding',
+                [
+                    'total_departments' => count($createdDepts),
+                    'department_codes' => array_column($createdDepts, 'code'),
+                ]
+            );
+
+            // Check if user wants to also seed positions
+            $shouldSeedPositions = $request->input('seed_positions') === '1';
+            if ($shouldSeedPositions && Position::count() === 0) {
+                // Automatically seed positions for the created departments
+                $positionController = new PositionController();
+                // Create a new request with empty positions (will use defaults)
+                $positionRequest = new Request();
+                $positionController->seedDefaults($positionRequest);
+            }
+
+            // Redirect back with success message for Inertia
+            return redirect()->back()->with('message', 'Default departments created successfully' . ($shouldSeedPositions && Position::count() > 0 ? ' and positions seeded!' : ''));
+
+        } catch (\Exception $e) {
+            // Log error
+            $this->auditLog(
+                'seed_departments_failed',
+                'Failed to seed departments: ' . $e->getMessage(),
+                'high',
+                'System Onboarding',
+                ['error' => $e->getMessage()]
+            );
+
+            // Redirect back with error for Inertia
+            return redirect()->back()->withErrors(['error' => 'Failed to seed departments: ' . $e->getMessage()]);
+        }
     }
 
     /**

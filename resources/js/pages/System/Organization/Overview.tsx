@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SeedDepartmentsModal } from '@/components/system/seed-departments-modal';
+import { SeedPositionsModal } from '@/components/system/seed-positions-modal';
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
 import type { BreadcrumbItem } from '@/types';
@@ -22,6 +24,8 @@ type OnboardingItem = {
   country_scoped: boolean;
   action_link: string;
   action_label: string;
+  view_link?: string;
+  required?: boolean;
 };
 
 type Alert = {
@@ -89,6 +93,20 @@ export default function Overview({
   ];
 
   const [selectedCountry, setSelectedCountry] = useState(company.country);
+  const [showSeedDepartmentsModal, setShowSeedDepartmentsModal] = useState(false);
+  const [showSeedPositionsModal, setShowSeedPositionsModal] = useState(false);
+
+  const handleActionClick = (e: React.MouseEvent<HTMLAnchorElement>, actionLink: string) => {
+    // Handle seeding actions with modals instead of navigation
+    if (actionLink === '/system/organization/departments/seed') {
+      e.preventDefault();
+      setShowSeedDepartmentsModal(true);
+    } else if (actionLink === '/system/organization/positions/seed') {
+      e.preventDefault();
+      setShowSeedPositionsModal(true);
+    }
+    // Otherwise allow normal navigation
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -321,30 +339,57 @@ export default function Overview({
           <CardContent>
             <div className="space-y-3">
               {onboarding_checklist.map((item) => (
-                <div key={item.id} className="flex items-start gap-3 p-3 border rounded hover:bg-gray-200 dark:hover:bg-neutral-900 dark:border-neutral-700">
+                <div key={item.id} className="flex items-start gap-3 p-3 border rounded hover:bg-accent dark:hover:bg-neutral-900 dark:border-neutral-700 transition-colors">
                   {item.status === 'completed' ? (
                     <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                   ) : (
                     <div className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded-full mt-0.5 flex-shrink-0" />
                   )}
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="font-semibold text-sm dark:text-foreground">{item.title}</h4>
+                      {item.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
                       {item.country_scoped && (
                         <Badge variant="outline" className="text-xs">
                           {selectedCountry}
                         </Badge>
                       )}
-                      {item.status === 'completed' && <Badge className="text-xs bg-green-600">Done</Badge>}
+                      {item.status === 'completed' && (
+                        <Badge className="text-xs bg-green-600 hover:bg-green-700">✓ Completed</Badge>
+                      )}
+                      {item.status === 'pending' && (
+                        <Badge variant="outline" className="text-xs">⏳ Pending</Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
                   </div>
-                  <a
-                    href={item.action_link}
-                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
-                  >
-                    {item.action_label} →
-                  </a>
+                  <div className="flex gap-2 flex-shrink-0">
+                    {item.status === 'completed' && item.view_link && (
+                      <a
+                        href={item.view_link}
+                        className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        View
+                      </a>
+                    )}
+                    {item.status === 'pending' && (
+                      <a
+                        href={item.action_link}
+                        onClick={(e) => handleActionClick(e, item.action_link)}
+                        className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
+                      >
+                        {item.action_label} →
+                      </a>
+                    )}
+                    {item.status === 'completed' && item.view_link && (
+                      <a
+                        href={item.view_link}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Edit
+                      </a>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -414,6 +459,10 @@ export default function Overview({
           </CardContent>
         </Card>
       </div>
+
+      {/* Seed Modals */}
+      <SeedDepartmentsModal isOpen={showSeedDepartmentsModal} onClose={() => setShowSeedDepartmentsModal(false)} />
+      <SeedPositionsModal isOpen={showSeedPositionsModal} onClose={() => setShowSeedPositionsModal(false)} />
     </AppLayout>
   );
 }

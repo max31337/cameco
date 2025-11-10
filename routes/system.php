@@ -71,6 +71,7 @@ Route::middleware(['auth', 'superadmin'])->group(function () {
         Route::post('/', [\App\Http\Controllers\System\Security\RoleController::class, 'store'])->name('system.security.roles.store');
         Route::get('/{role}/edit', [\App\Http\Controllers\System\Security\RoleController::class, 'edit'])->name('system.security.roles.edit');
         Route::put('/{role}', [\App\Http\Controllers\System\Security\RoleController::class, 'update'])->name('system.security.roles.update');
+        Route::post('/{role}', [\App\Http\Controllers\System\Security\RoleController::class, 'update'])->name('system.security.roles.update.post');
         Route::delete('/{role}', [\App\Http\Controllers\System\Security\RoleController::class, 'destroy'])->name('system.security.roles.destroy');
         Route::get('/{role}/permissions', [\App\Http\Controllers\System\Security\RoleController::class, 'getPermissionMatrix'])->name('system.security.roles.permissions');
     });
@@ -111,6 +112,7 @@ Route::middleware(['auth', 'superadmin'])->group(function () {
         Route::prefix('departments')->group(function () {
             Route::get('/', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'index'])->name('system.organization.departments');
             Route::post('/', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'store'])->name('system.organization.departments.store');
+            Route::post('/seed', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'seedDefaults'])->name('system.organization.departments.seed');
             Route::get('/{department}', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'show'])->name('system.organization.departments.show');
             Route::put('/{department}', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'update'])->name('system.organization.departments.update');
             Route::delete('/{department}', [\App\Http\Controllers\System\Organization\DepartmentController::class, 'destroy'])->name('system.organization.departments.destroy');
@@ -120,6 +122,7 @@ Route::middleware(['auth', 'superadmin'])->group(function () {
         Route::prefix('positions')->group(function () {
             Route::get('/', [\App\Http\Controllers\System\Organization\PositionController::class, 'index'])->name('system.organization.positions');
             Route::post('/', [\App\Http\Controllers\System\Organization\PositionController::class, 'store'])->name('system.organization.positions.store');
+            Route::post('/seed', [\App\Http\Controllers\System\Organization\PositionController::class, 'seedDefaults'])->name('system.organization.positions.seed');
             Route::get('/{position}', [\App\Http\Controllers\System\Organization\PositionController::class, 'show'])->name('system.organization.positions.show');
             Route::put('/{position}', [\App\Http\Controllers\System\Organization\PositionController::class, 'update'])->name('system.organization.positions.update');
             Route::delete('/{position}', [\App\Http\Controllers\System\Organization\PositionController::class, 'destroy'])->name('system.organization.positions.destroy');

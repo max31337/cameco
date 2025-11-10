@@ -4,7 +4,9 @@ namespace App\Http\Controllers\System\Organization;
 
 use App\Models\Department;
 use App\Models\Position;
+use App\Models\Role;
 use App\Models\SecurityAuditLog;
+use App\Models\SystemSetting;
 use App\Traits\LogsSecurityAudits;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -81,11 +83,13 @@ class OverviewController extends \App\Http\Controllers\Controller
 
         // Company info
         $company = [
-            'name' => config('app.name', 'Company Name'),
+            'name' => SystemSetting::where('key', 'company_name')->value('value') ?? config('app.name', 'Company Name'),
+            'registration_number' => SystemSetting::where('key', 'company_registration_number')->value('value'),
             'site_id' => 1,
-            'country' => $country,
-            'timezone' => $this->getTimezone($country),
-            'currency' => $this->getCurrency($country),
+            'country' => SystemSetting::where('key', 'country')->value('value') ?? $country,
+            'timezone' => SystemSetting::where('key', 'timezone')->value('value') ?? $this->getTimezone($country),
+            'currency' => SystemSetting::where('key', 'currency')->value('value') ?? $this->getCurrency($country),
+            'fiscal_year_start_month' => SystemSetting::where('key', 'fiscal_year_start_month')->value('value'),
             'environment' => config('app.env'),
         ];
 
@@ -154,55 +158,61 @@ class OverviewController extends \App\Http\Controllers\Controller
     {
         $checklist = [
             [
-                'id' => 'departments',
+                'id' => 'seed_departments',
                 'title' => 'Seed Default Departments',
                 'description' => 'Create core company departments',
                 'status' => Department::count() > 0 ? 'completed' : 'pending',
-                'country_scoped' => false,
-                'action_link' => '/system/organization/departments',
-                'action_label' => 'View Departments',
+                'country_scoped' => true,
+                'action_link' => '/system/organization/departments/seed',
+                'action_label' => 'Seed Departments',
+                'view_link' => '/system/organization/departments',
+                'required' => true,
             ],
             [
-                'id' => 'positions',
+                'id' => 'seed_positions',
                 'title' => 'Seed Job Positions',
                 'description' => 'Create job titles and hierarchy',
                 'status' => Position::count() > 0 ? 'completed' : 'pending',
-                'country_scoped' => false,
-                'action_link' => '/system/organization/positions',
-                'action_label' => 'View Positions',
+                'country_scoped' => true,
+                'action_link' => '/system/organization/positions/seed',
+                'action_label' => 'Seed Positions',
+                'view_link' => '/system/organization/positions',
+                'required' => true,
             ],
             [
-                'id' => 'roles',
+                'id' => 'configure_roles',
                 'title' => 'Configure Roles & Permissions',
                 'description' => 'Set up security roles and permissions',
-                'status' => 'pending',
+                'status' => Role::where('guard_name', 'web')->count() > 3 ? 'completed' : 'pending',
                 'country_scoped' => false,
                 'action_link' => '/system/security/roles',
                 'action_label' => 'Manage Roles',
+                'view_link' => '/system/security/roles',
+                'required' => true,
             ],
-        ];
-
-        // Add country-specific items
-        if ($country === 'PH') {
-            $checklist[] = [
-                'id' => 'statutory_ph',
+            [
+                'id' => 'configure_statutory',
                 'title' => 'Configure Philippine Statutory Setup',
                 'description' => 'SSS, PhilHealth, Pag-IBIG, BIR tax settings',
-                'status' => 'pending',
+                'status' => SystemSetting::where('key', 'statutory_configured')->exists() ? 'completed' : 'pending',
                 'country_scoped' => true,
-                'action_link' => '/system/organization/settings?country=PH',
+                'action_link' => '/system/payroll/statutory',
                 'action_label' => 'Configure',
-            ];
-            $checklist[] = [
-                'id' => 'payroll_schedule',
-                'title' => 'Set Payroll Schedule (Semi-monthly)',
-                'description' => '15th and end of month (Philippine standard)',
-                'status' => 'pending',
+                'view_link' => '/system/payroll/statutory',
+                'required' => $country === 'PH',
+            ],
+            [
+                'id' => 'set_payroll_schedule',
+                'title' => 'Set Payroll Schedule',
+                'description' => 'Configure payroll period (semi-monthly, monthly, etc.)',
+                'status' => SystemSetting::where('key', 'payroll_schedule')->exists() ? 'completed' : 'pending',
                 'country_scoped' => true,
-                'action_link' => '/system/organization/payroll-schedules',
+                'action_link' => '/system/payroll/schedule',
                 'action_label' => 'Configure',
-            ];
-        }
+                'view_link' => '/system/payroll/schedule',
+                'required' => $country === 'PH',
+            ],
+        ];
 
         return $checklist;
     }
