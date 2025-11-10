@@ -3,6 +3,10 @@
 /**
  * NOTE FOR FUTURE REFACTOR / OBSERVABILITY INTEGRATION
  *
+ * TODO: Refactor: Add retry mechanism and error recovery for cron executions.
+ * Current behavior: failures are logged but not retried, causing silent job drops.
+ * Future plan: implement exponential backoff with max retry count and centralized visibility (e.g. SigNoz integration).
+ *
  * This service was built to manually track scheduled job discovery and execution
  * for on-prem HRIS deployments without a dedicated monitoring stack.
  *
