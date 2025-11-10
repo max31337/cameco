@@ -158,9 +158,13 @@ class CronJobSeeder extends Seeder
                 $jobData['next_run_at'] = Carbon::now()->addDay();
             }
 
-            ScheduledJob::create($jobData);
+            // Use firstOrCreate to avoid duplicate entry errors
+            ScheduledJob::firstOrCreate(
+                ['name' => $jobData['name']], // Search criteria
+                $jobData // Full data to create if not found
+            );
         }
 
-        $this->command->info('Created 10 sample cron jobs.');
+        $this->command->info('Seeded cron jobs (created new or skipped existing).');
     }
 }
