@@ -183,6 +183,8 @@ class EmployeeController extends Controller
             abort(404, 'Employee not found');
         }
 
+        $this->authorize('update', $employee);
+
         // Get all departments for dropdown
         $departments = \App\Models\Department::select('id', 'name')
             ->orderBy('name')
@@ -227,6 +229,12 @@ class EmployeeController extends Controller
             'dependents_type' => gettype($request->get('dependents')),
             'dependents_value' => substr($request->get('dependents') ?? '', 0, 100),
         ]);
+
+        $employee = $this->employeeService->getEmployeeById($id);
+        if (!$employee) {
+            abort(404, 'Employee not found');
+        }
+        $this->authorize('update', $employee);
 
         $result = $this->employeeService->updateEmployee($id, $request->validated());
 

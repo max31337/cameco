@@ -53,6 +53,7 @@ class DepartmentController extends Controller
      */
     public function store(StoreDepartmentRequest $request): RedirectResponse
     {
+        $this->authorize('create', Department::class);
         $data = $request->validated();
         // Normalize optional fields
         $data['parent_id'] = $data['parent_id'] ?? null;
@@ -68,6 +69,7 @@ class DepartmentController extends Controller
      */
     public function update(UpdateDepartmentRequest $request, Department $department): RedirectResponse
     {
+        $this->authorize('update', $department);
         $data = $request->validated();
         $data['parent_id'] = $data['parent_id'] ?? null;
         $data['description'] = $data['description'] ?? null;
