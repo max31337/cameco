@@ -80,7 +80,6 @@ export function NavHR() {
             title: 'Analytics',
             icon: BarChart3,
             href: '/hr/reports/analytics',
-            comingSoon: true,
         },
     ];
 

@@ -8,6 +8,7 @@ import {
     RecentHiresCard, 
     PendingActionsCard 
 } from '@/components/hr-metrics-widgets';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface HRMetrics {
     totalEmployees: {
@@ -76,6 +77,24 @@ export default function Dashboard({ metrics }: HRDashboardProps) {
                         Manage employees, departments, and HR operations for Cathay Metal Corporation
                     </p>
                 </div>
+
+                
+                  {/* Info Card */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Getting Started</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm">
+                        <p>
+                            Welcome to the HR Manager Dashboard. This is your central hub for all HR operations.
+                        </p>
+                        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                            <li>Use <strong>Employees</strong> to manage employee records and view employee details</li>
+                            <li>Configure your company structure with <strong>Departments</strong> and <strong>Positions</strong></li>
+                            <li>View comprehensive HR metrics and analytics in the <strong>Analytics</strong> section</li>
+                        </ul>
+                    </CardContent>
+                </Card>
 
                 {/* Key Metrics - Top Row */}
                 <div className="space-y-4">

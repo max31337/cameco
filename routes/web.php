@@ -46,12 +46,16 @@ Route::middleware(['auth'])->group(function () {
 
 // HR Manager Routes
 use App\Http\Controllers\HR\DashboardController as HRDashboardController;
+use App\Http\Controllers\HR\AnalyticsController;
 use App\Http\Controllers\HR\EmployeeController;
 use App\Http\Middleware\EnsureHRManager;
 
 Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->name('hr.')->group(function () {
     // HR Dashboard
     Route::get('/dashboard', [HRDashboardController::class, 'index'])->name('dashboard');
+
+    // HR Reports & Analytics
+    Route::get('/reports/analytics', [AnalyticsController::class, 'index'])->name('reports.analytics');
 
     // Employee Management
     Route::resource('employees', EmployeeController::class);
@@ -60,6 +64,6 @@ Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->n
     // Department Management
     Route::resource('departments', \App\Http\Controllers\HR\DepartmentController::class)->only(['index','store','update','destroy']);
 
-    // Position Management
+    // Position Managementcontroller: 
     Route::resource('positions', \App\Http\Controllers\HR\PositionController::class)->only(['index','store','update','destroy']);
 });
