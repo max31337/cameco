@@ -1,4 +1,4 @@
-<?php
+ <?php
 /**
  * NOTE: Refactor / Observability Integration Plan
  *
@@ -10,10 +10,13 @@
  * most of this logic should be deprecated.
  *
  * Refactor plan:
- * 1. Replace manual metrics (run_count, success_count, failure_count, etc.) with OTEL-based instrumentation.
+ * 1. Replace manual metrics (run_count, success_count, failure_count, etc.) with OTEL-based instrumentation. 
+ *  --Signoz would be my bet. DX friendly 
+ * and not a headache inducer with a frankenstein of an observability. 
+ *   --yeah, Grafafa, Jaeger and Prometheus 
  * 2. Stream execution traces, logs, and runtime metrics to the observability backend.
- * 3. Drop local job history tables unless UI management requires persistence.
- * 4. Retain only configuration and enable/disable controls.
+ * 3. **Retain** local job history tables for UI management requires persistence.
+ * 4. **Retain** configuration and enable/disable controls.
  *
  * End state:
  * - Retry and recovery handled by queue/worker orchestration.
