@@ -18,6 +18,7 @@ class DepartmentController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Department::class);
         // Load departments with employee count
         $departments = Department::query()
             ->withCount('employees')
