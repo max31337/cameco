@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Repositories\Eloquent\System\User;
 
 use Illuminate\Support\Facades\DB;
 

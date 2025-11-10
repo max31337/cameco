@@ -19,6 +19,7 @@ class PositionController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Position::class);
         $positions = Position::query()
             ->orderBy('title')
             ->get()
@@ -66,6 +67,7 @@ class PositionController extends Controller
      */
     public function store(StorePositionRequest $request): RedirectResponse
     {
+        $this->authorize('create', Position::class);
         $data = $request->validated();
 
         // Map UI field names to DB columns
@@ -90,6 +92,7 @@ class PositionController extends Controller
      */
     public function update(UpdatePositionRequest $request, Position $position): RedirectResponse
     {
+        $this->authorize('update', $position);
         $data = $request->validated();
 
         $mapped = [
@@ -113,6 +116,7 @@ class PositionController extends Controller
      */
     public function destroy(Position $position): RedirectResponse
     {
+        $this->authorize('delete', $position);
         // Optional: prevent delete if has employees assigned (if relation exists)
         if (method_exists($position, 'employees') && $position->employees()->exists()) {
             return back()->with('error', 'Cannot archive position with employees.');

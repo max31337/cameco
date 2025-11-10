@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Services\UserOnboardingService;
+use App\Services\System\User\UserOnboardingService;
 use App\Models\User;
 use App\Models\Profile;
 

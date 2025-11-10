@@ -37,4 +37,13 @@ class SystemOnboardingRepository implements SystemOnboardingRepositoryInterface
             ->orderByDesc('id')
             ->first();
     }
+
+    public function findRole(int $id)
+    {
+        $record = DB::table('system_onboarding')
+            ->where('id', $id)
+            ->first();
+
+        return $record ? $record->current_owner_role : null;
+    }
 }

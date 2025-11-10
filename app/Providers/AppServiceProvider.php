@@ -49,6 +49,18 @@ class AppServiceProvider extends ServiceProvider
             ProfileRepositoryInterface::class,
             ProfileRepository::class
         );
+
+        $this->app->bind(
+        \App\Repositories\Contracts\System\Organization\SystemOnboardingRepositoryInterface::class,
+        \App\Repositories\Eloquent\System\Organization\SystemOnboardingRepository::class
+         );
+
+         $this->app->bind(
+            \App\Repositories\Contracts\System\User\UserOnboardingRepositoryInterface::class,
+            \App\Repositories\Eloquent\System\User\UserOnboardingRepository::class
+         );
+
+         
     }
 
     /**

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\System\User;
 
-use App\Repositories\UserOnboardingRepository;
+use App\Repositories\Eloquent\System\User\UserOnboardingRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;

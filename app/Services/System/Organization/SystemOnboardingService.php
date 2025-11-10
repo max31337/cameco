@@ -4,7 +4,7 @@ namespace App\Services\System\Organization;
 
 use App\Repositories\Contracts\System\Organization\SystemOnboardingRepositoryInterface;
 use App\Services\System\Organization\SystemConfigService;
-use App\Services\System\Organization\SystemRoleDelegationService;
+use App\Services\System\Organization\SystemRoleDelegation;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -28,12 +28,12 @@ class SystemOnboardingService
 {
     protected SystemOnboardingRepositoryInterface $repo;
     protected SystemConfigService $config;
-    protected SystemRoleDelegationService $delegation;
+    protected SystemRoleDelegation $delegation;
 
     public function __construct(
         SystemOnboardingRepositoryInterface $repo,
         SystemConfigService $config,
-        SystemRoleDelegationService $delegation
+        SystemRoleDelegation $delegation
     ) {
         $this->repo = $repo;
         $this->config = $config;

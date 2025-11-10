@@ -63,7 +63,7 @@ class ProfileController extends Controller
         // After saving basic profile info, regenerate the user's onboarding
         // checklist so the onboarding UI reflects authoritative profile data.
         try {
-            $service = app(\App\Services\UserOnboardingService::class);
+            $service = app(\App\Services\System\User\UserOnboardingService::class);
             $checklist = $service->generateChecklistForUser($request->user());
             // Persist the regenerated checklist (service will JSON-encode as needed)
             $service->start($request->user()->id, ['checklist_json' => $checklist]);

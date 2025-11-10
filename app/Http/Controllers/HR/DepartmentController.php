@@ -84,6 +84,7 @@ class DepartmentController extends Controller
      */
     public function destroy(Department $department): RedirectResponse
     {
+        $this->authorize('delete', $department);
         // Optional: prevent delete if has active employees (simple guard)
         if (method_exists($department, 'employees') && $department->employees()->exists()) {
             return back()->with('error', 'Cannot archive department with employees.');

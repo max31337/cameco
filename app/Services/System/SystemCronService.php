@@ -1,4 +1,14 @@
- <?php
+<?php
+namespace App\Services\System;
+
+use App\Models\ScheduledJob;
+use App\Repositories\Contracts\System\CronRepositoryInterface;
+use Cron\CronExpression;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+
 /**
  * NOTE: Refactor / Observability Integration Plan
  *
@@ -23,16 +33,6 @@
  * - Metrics and visibility provided by OTEL → SigNoz/Grafana.
  * - This service reduced to thin orchestration glue.
  */
-
-namespace App\Services\System;
-
-use App\Models\ScheduledJob;
-use App\Repositories\Contracts\System\CronRepositoryInterface;
-use Cron\CronExpression;
-use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class SystemCronService
 {

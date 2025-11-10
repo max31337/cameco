@@ -18,4 +18,6 @@ interface SystemOnboardingRepositoryInterface
      * Retrieve latest onboarding workflow entry.
      */
     public function findLatest();
+
+    public function findRole(int $id);
 }

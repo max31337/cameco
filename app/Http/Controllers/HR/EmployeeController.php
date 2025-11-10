@@ -288,6 +288,8 @@ class EmployeeController extends Controller
             abort(404, 'Employee not found');
         }
 
+        $this->authorize('delete', $employee);
+
         $result = $this->employeeService->archiveEmployee(
             employeeId: $id,
             reason: request()->input('reason', 'Archived by HR Manager'),
@@ -320,6 +322,13 @@ class EmployeeController extends Controller
      */
     public function restore(int $id)
     {
+        $employee = EmployeeModel::withTrashed()->find($id);
+        if (!$employee) {
+            abort(404, 'Employee not found');
+        }
+
+        $this->authorize('restore', $employee);
+
         $result = $this->employeeService->restoreEmployee($id);
 
         if ($result['success']) {

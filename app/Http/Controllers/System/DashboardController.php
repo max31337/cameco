@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Services\System\SystemHealthService;
 use App\Services\System\SystemCronService;
 use App\Services\System\SuperadminSLAService;
-use App\Services\UserOnboardingService;
+use App\Services\System\User\UserOnboardingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
