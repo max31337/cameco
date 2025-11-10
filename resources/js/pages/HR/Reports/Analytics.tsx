@@ -28,13 +28,13 @@ interface Metric {
         photo_url?: string;
         employment_type: string;
     }>;
-    employee_status_breakdown: Array<{
+    employee_status_breakdown?: Array<{
         status: string;
         status_key: string;
         count: number;
         percentage: number;
     }>;
-    employment_type_breakdown: Array<{
+    employment_type_breakdown?: Array<{
         type: string;
         type_key: string;
         count: number;
@@ -66,16 +66,35 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 function getStatusColor(status: string): string {
     const colorMap: Record<string, string> = {
+        active: 'bg-green-100 text-green-800',
         Active: 'bg-green-100 text-green-800',
+        inactive: 'bg-gray-100 text-gray-800',
         Inactive: 'bg-gray-100 text-gray-800',
+        on_leave: 'bg-blue-100 text-blue-800',
         On_Leave: 'bg-blue-100 text-blue-800',
+        terminated: 'bg-red-100 text-red-800',
         Terminated: 'bg-red-100 text-red-800',
+        probation: 'bg-yellow-100 text-yellow-800',
         Probation: 'bg-yellow-100 text-yellow-800',
     };
     return colorMap[status] || 'bg-gray-100 text-gray-800';
 }
 
 export default function Analytics({ metrics }: AnalyticsPageProps) {
+    // Ensure metrics has all required fields with defaults
+    const safeMetrics = {
+        total_employees: metrics?.total_employees ?? 0,
+        active_employees: metrics?.active_employees ?? 0,
+        inactive_employees: metrics?.inactive_employees ?? 0,
+        employees_by_department: metrics?.employees_by_department ?? [],
+        recent_hires: metrics?.recent_hires ?? [],
+        employee_status_breakdown: metrics?.employee_status_breakdown ?? [],
+        employment_type_breakdown: metrics?.employment_type_breakdown ?? [],
+        turnover_rate: metrics?.turnover_rate ?? 0,
+        average_employment_duration: metrics?.average_employment_duration ?? 0,
+        new_hires_this_month: metrics?.new_hires_this_month ?? 0,
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="HR Analytics & Reports" />
@@ -101,7 +120,7 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-3xl font-bold">{metrics.total_employees}</div>
+                                <div className="text-3xl font-bold">{safeMetrics.total_employees}</div>
                                 <p className="text-xs text-muted-foreground mt-1">
                                     Active workforce
                                 </p>
@@ -117,9 +136,9 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-3xl font-bold">{metrics.active_employees}</div>
+                                <div className="text-3xl font-bold">{safeMetrics.active_employees}</div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    {metrics.inactive_employees > 0 ? Math.round((metrics.active_employees / (metrics.active_employees + metrics.inactive_employees)) * 100) : 0}% of total
+                                    {safeMetrics.total_employees > 0 ? Math.round((safeMetrics.active_employees / safeMetrics.total_employees) * 100) : 0}% of total
                                 </p>
                             </CardContent>
                         </Card>
@@ -133,7 +152,7 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-3xl font-bold">{metrics.average_employment_duration}</div>
+                                <div className="text-3xl font-bold">{safeMetrics.average_employment_duration}</div>
                                 <p className="text-xs text-muted-foreground mt-1">
                                     Average tenure
                                 </p>
@@ -149,7 +168,7 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-3xl font-bold">{metrics.turnover_rate.toFixed(1)}%</div>
+                                <div className="text-3xl font-bold">{(safeMetrics.turnover_rate ?? 0).toFixed(1)}%</div>
                                 <p className="text-xs text-muted-foreground mt-1">
                                     Last 12 months
                                 </p>
@@ -162,7 +181,7 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                 <div className="grid gap-4 lg:grid-cols-2">
                     {/* Department Breakdown Chart */}
                     <div>
-                        <DepartmentBreakdownChart data={metrics.employees_by_department} />
+                        <DepartmentBreakdownChart data={safeMetrics.employees_by_department ?? []} />
                     </div>
 
                     {/* Employee Status Breakdown */}
@@ -173,8 +192,8 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {metrics.employee_status_breakdown.length > 0 ? (
-                                    metrics.employee_status_breakdown.map((status) => (
+                                {safeMetrics.employee_status_breakdown && safeMetrics.employee_status_breakdown.length > 0 ? (
+                                    safeMetrics.employee_status_breakdown.map((status) => (
                                         <div key={status.status_key} className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <Badge className={getStatusColor(status.status)}>
@@ -188,7 +207,7 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-sm text-muted-foreground">No status data</p>
+                                    <p className="text-sm text-muted-foreground">No status data available</p>
                                 )}
                             </div>
                         </CardContent>
@@ -199,7 +218,7 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                 <div className="grid gap-4 lg:grid-cols-3">
                     {/* Recent Hires Widget - Spans 2 columns */}
                     <div className="lg:col-span-2">
-                        <RecentHiresWidget recent_hires={metrics.recent_hires} />
+                        <RecentHiresWidget recent_hires={safeMetrics.recent_hires} />
                     </div>
 
                     {/* Employment Type Breakdown */}
@@ -210,8 +229,8 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {metrics.employment_type_breakdown.length > 0 ? (
-                                    metrics.employment_type_breakdown.map((type) => (
+                                {safeMetrics.employment_type_breakdown && safeMetrics.employment_type_breakdown.length > 0 ? (
+                                    safeMetrics.employment_type_breakdown.map((type) => (
                                         <div key={type.type_key} className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm font-medium">{type.type}</span>
@@ -223,7 +242,7 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-sm text-muted-foreground">No employment type data</p>
+                                    <p className="text-sm text-muted-foreground">No employment type data available</p>
                                 )}
                             </div>
                         </CardContent>
@@ -238,7 +257,7 @@ export default function Analytics({ metrics }: AnalyticsPageProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-4xl font-bold text-emerald-600">
-                            {metrics.new_hires_this_month}
+                            {safeMetrics.new_hires_this_month}
                         </div>
                         <p className="text-sm text-muted-foreground mt-2">
                             New team members onboarded this month
