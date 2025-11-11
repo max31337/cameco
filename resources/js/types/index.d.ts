@@ -42,3 +42,10 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+// ============================================================================
+// ATS MODULE TYPES
+// ============================================================================
+
+// Export all ATS types for use across the application
+export * from './ats-pages';
