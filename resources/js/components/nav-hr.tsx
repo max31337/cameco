@@ -178,20 +178,20 @@ export function NavHR() {
                 </Collapsible>
             </SidebarGroup>
 
-            {/* Reports Section (Placeholder) */}
+            {/* Recruitment Section */}
             <SidebarGroup className="px-2 py-0">
-                <Collapsible defaultOpen={isReportsActive} className="group/collapsible">
+                <Collapsible defaultOpen={isRecruitmentActive} className="group/collapsible">
                     <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                            <SidebarMenuButton tooltip="HR Reports & Analytics">
-                                <FileText />
-                                <span>Reports</span>
+                            <SidebarMenuButton tooltip="Recruitment & ATS">
+                                <Briefcase />
+                                <span>Recruitment</span>
                                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                             </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2">
                             <SidebarMenuSub className="space-y-1">
-                                {reportsItems.map((item) => (
+                                {recruitmentItems.map((item) => (
                                     <SidebarMenuSubItem key={item.title}>
                                         <SidebarMenuSubButton
                                             asChild
@@ -210,20 +210,20 @@ export function NavHR() {
                 </Collapsible>
             </SidebarGroup>
 
-            {/* Recruitment Section */}
+                        {/* Reports Section (Placeholder) */}
             <SidebarGroup className="px-2 py-0">
-                <Collapsible defaultOpen={isRecruitmentActive} className="group/collapsible">
+                <Collapsible defaultOpen={isReportsActive} className="group/collapsible">
                     <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                            <SidebarMenuButton tooltip="Recruitment & ATS">
-                                <Briefcase />
-                                <span>Recruitment</span>
+                            <SidebarMenuButton tooltip="HR Reports & Analytics">
+                                <FileText />
+                                <span>Reports</span>
                                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                             </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2">
                             <SidebarMenuSub className="space-y-1">
-                                {recruitmentItems.map((item) => (
+                                {reportsItems.map((item) => (
                                     <SidebarMenuSubItem key={item.title}>
                                         <SidebarMenuSubButton
                                             asChild
