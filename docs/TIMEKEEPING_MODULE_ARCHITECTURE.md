@@ -11,7 +11,7 @@ The Timekeeping Module manages employee attendance, time tracking, and work sche
  - 🔄 **Provides data to**: Payroll Module (attendance for salary calculations)
 
 ## Module Goals
-1. **Manual Time Entry**: Staff-assisted time recording system
+1. **Manual Time Entry**:  time recording system with edge machine integration with rfid scanner for IDs
 2. **Import Management**: CSV/Excel timesheet processing
 3. **Attendance Tracking**: Real-time attendance monitoring
 4. **Schedule Management**: Shift schedules and overtime tracking
