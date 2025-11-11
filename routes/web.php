@@ -54,6 +54,11 @@ use App\Http\Controllers\HR\PositionController;
 use App\Http\Controllers\HR\LeaveBalanceController;
 use App\Http\Controllers\HR\LeavePolicyController;
 use App\Http\Controllers\HR\ReportController;
+use App\Http\Controllers\HR\ATS\JobPostingController;
+use App\Http\Controllers\HR\ATS\CandidateController;
+use App\Http\Controllers\HR\ATS\ApplicationController;
+use App\Http\Controllers\HR\ATS\InterviewController;
+use App\Http\Controllers\HR\ATS\HiringPipelineController;
 use App\Http\Middleware\EnsureHRManager;
 
 
@@ -96,5 +101,96 @@ Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->n
         Route::post('/generate/{template}', [EmployeeController::class, 'storeDocument'])->name('generate.store');
         Route::get('/list', [EmployeeController::class, 'listDocuments'])->name('list');
         Route::get('/{document}/download', [EmployeeController::class, 'downloadDocument'])->name('download');
+    });
+
+    // ATS (Applicant Tracking System) Module
+    Route::prefix('ats')->name('ats.')->group(function () {
+        // Job Postings
+        Route::get('/job-postings', [JobPostingController::class, 'index'])
+            ->middleware('permission:recruitment.job_postings.view')
+            ->name('job-postings.index');
+        Route::get('/job-postings/create', [JobPostingController::class, 'create'])
+            ->middleware('permission:recruitment.job_postings.create')
+            ->name('job-postings.create');
+        Route::post('/job-postings', [JobPostingController::class, 'store'])
+            ->middleware('permission:recruitment.job_postings.create')
+            ->name('job-postings.store');
+        Route::get('/job-postings/{id}/edit', [JobPostingController::class, 'edit'])
+            ->middleware('permission:recruitment.job_postings.update')
+            ->name('job-postings.edit');
+        Route::put('/job-postings/{id}', [JobPostingController::class, 'update'])
+            ->middleware('permission:recruitment.job_postings.update')
+            ->name('job-postings.update');
+        Route::delete('/job-postings/{id}', [JobPostingController::class, 'destroy'])
+            ->middleware('permission:recruitment.job_postings.delete')
+            ->name('job-postings.destroy');
+        Route::post('/job-postings/{id}/publish', [JobPostingController::class, 'publish'])
+            ->middleware('permission:recruitment.job_postings.update')
+            ->name('job-postings.publish');
+        Route::post('/job-postings/{id}/close', [JobPostingController::class, 'close'])
+            ->middleware('permission:recruitment.job_postings.update')
+            ->name('job-postings.close');
+
+        // Candidates
+        Route::get('/candidates', [CandidateController::class, 'index'])
+            ->middleware('permission:recruitment.candidates.view')
+            ->name('candidates.index');
+        Route::get('/candidates/{id}', [CandidateController::class, 'show'])
+            ->middleware('permission:recruitment.candidates.view')
+            ->name('candidates.show');
+        Route::post('/candidates', [CandidateController::class, 'store'])
+            ->middleware('permission:recruitment.candidates.create')
+            ->name('candidates.store');
+        Route::put('/candidates/{id}', [CandidateController::class, 'update'])
+            ->middleware('permission:recruitment.candidates.update')
+            ->name('candidates.update');
+        Route::post('/candidates/{id}/notes', [CandidateController::class, 'addNote'])
+            ->middleware('permission:recruitment.candidates.update')
+            ->name('candidates.notes.store');
+
+        // Applications
+        Route::get('/applications', [ApplicationController::class, 'index'])
+            ->middleware('permission:recruitment.applications.view')
+            ->name('applications.index');
+        Route::get('/applications/{id}', [ApplicationController::class, 'show'])
+            ->middleware('permission:recruitment.applications.view')
+            ->name('applications.show');
+        Route::put('/applications/{id}/status', [ApplicationController::class, 'updateStatus'])
+            ->middleware('permission:recruitment.applications.update')
+            ->name('applications.update-status');
+        Route::post('/applications/{id}/shortlist', [ApplicationController::class, 'shortlist'])
+            ->middleware('permission:recruitment.applications.update')
+            ->name('applications.shortlist');
+        Route::post('/applications/{id}/reject', [ApplicationController::class, 'reject'])
+            ->middleware('permission:recruitment.applications.update')
+            ->name('applications.reject');
+
+        // Interviews
+        Route::get('/interviews', [InterviewController::class, 'index'])
+            ->middleware('permission:recruitment.interviews.view')
+            ->name('interviews.index');
+        Route::post('/interviews', [InterviewController::class, 'store'])
+            ->middleware('permission:recruitment.interviews.create')
+            ->name('interviews.store');
+        Route::put('/interviews/{id}', [InterviewController::class, 'update'])
+            ->middleware('permission:recruitment.interviews.update')
+            ->name('interviews.update');
+        Route::post('/interviews/{id}/feedback', [InterviewController::class, 'addFeedback'])
+            ->middleware('permission:recruitment.interviews.update')
+            ->name('interviews.feedback');
+        Route::post('/interviews/{id}/cancel', [InterviewController::class, 'cancel'])
+            ->middleware('permission:recruitment.interviews.update')
+            ->name('interviews.cancel');
+        Route::post('/interviews/{id}/complete', [InterviewController::class, 'markCompleted'])
+            ->middleware('permission:recruitment.interviews.update')
+            ->name('interviews.complete');
+
+        // Hiring Pipeline
+        Route::get('/hiring-pipeline', [HiringPipelineController::class, 'index'])
+            ->middleware('permission:recruitment.hiring_pipeline.view')
+            ->name('hiring-pipeline.index');
+        Route::post('/hiring-pipeline/move/{id}', [HiringPipelineController::class, 'moveApplication'])
+            ->middleware('permission:recruitment.hiring_pipeline.update')
+            ->name('hiring-pipeline.move');
     });
 });
