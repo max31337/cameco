@@ -176,7 +176,7 @@ class PayrollController extends Controller
      */
     private function getPayrollSummary(Carbon $from, Carbon $to): array
     {
-        $runs = DB::table('scheduled_jobs')
+        $runs = DB::table('payroll_execution_histories')
             ->where('job_type', 'payroll_generation')
             ->whereBetween('executed_at', [$from, $to])
             ->get();
