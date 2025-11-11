@@ -60,6 +60,11 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // Seed ATS permissions
+        if (class_exists(\Database\Seeders\ATSPermissionsSeeder::class)) {
+            $this->call(\Database\Seeders\ATSPermissionsSeeder::class);
+        }
+
         if (class_exists(\Database\Seeders\SLASeeder::class)) {
             $this->call(\Database\Seeders\SLASeeder::class);
         }
@@ -105,7 +110,7 @@ class DatabaseSeeder extends Seeder
         }
 
          // Seed HR data
-         /*
+         
         if (class_exists(\Database\Seeders\DepartmentSeeder::class)) {
             $this->call(\Database\Seeders\DepartmentSeeder::class);
         }
@@ -113,11 +118,10 @@ class DatabaseSeeder extends Seeder
         if (class_exists(\Database\Seeders\PositionSeeder::class)) {
             $this->call(\Database\Seeders\PositionSeeder::class);
         }
-        */
+        
         if (class_exists(\Database\Seeders\EmployeeSeeder::class)) {
             $this->call(\Database\Seeders\EmployeeSeeder::class);
         }
-          
 
     }
 

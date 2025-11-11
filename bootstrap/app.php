@@ -32,6 +32,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'superadmin' => EnsureSuperadmin::class,
             'hr.manager' => EnsureHRManager::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
