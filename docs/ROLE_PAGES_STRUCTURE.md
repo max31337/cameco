@@ -192,6 +192,24 @@ When enabled by client, the system will support:
   - Labor law compliance
   - Government filing status
 
+# *Missing Pages*
+### Core Pages
+- **System Configuration**
+  - Module toggles (enable/disable ATS, Payroll, Timekeeping, etc.).
+  - Global settings (timezone, company name, backup schedule).
+- **Backup & Restore**
+  - Manual and automated database backups.
+  - Restore operations and version control.
+- **Security Settings**
+  - Password policies, access control, audit trail.
+- **System Logs**
+  - Application logs, queue jobs, error reports, and integrations.
+- **License Management**
+  - Manage system license or activation key for on-prem installations.
+- **Update Management**
+  - Patch management and version history.
+
+
 ---
 
 # 2. OFFICE ADMIN / ADMIN OFFICER
