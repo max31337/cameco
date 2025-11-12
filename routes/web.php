@@ -169,6 +169,9 @@ Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->n
         Route::get('/interviews', [InterviewController::class, 'index'])
             ->middleware('permission:recruitment.interviews.view')
             ->name('interviews.index');
+        Route::get('/interviews/{id}', [InterviewController::class, 'show'])
+            ->middleware('permission:recruitment.interviews.view')
+            ->name('interviews.show');
         Route::post('/interviews', [InterviewController::class, 'store'])
             ->middleware('permission:recruitment.interviews.create')
             ->name('interviews.store');

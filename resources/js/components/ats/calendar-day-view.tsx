@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -8,11 +9,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Clock, MapPin } from 'lucide-react';
+import { InterviewStatusBadge } from './interview-status-badge';
 import type { Interview } from '@/types/ats-pages';
 
 interface CalendarDayViewProps {
   interviews: Interview[];
   currentDate: Date;
+  onDateChange: (date: Date) => void;
   onSelectDate: () => void;
   onReschedule: (interview: Interview) => void;
   onAddFeedback: (interview: Interview) => void;
@@ -28,6 +31,7 @@ interface CalendarDayViewProps {
 export function CalendarDayView({
   interviews,
   currentDate,
+  onDateChange,
   onSelectDate,
   onReschedule,
   onAddFeedback,
@@ -81,22 +85,6 @@ export function CalendarDayView({
     }
   };
 
-  // Get status badge color
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'no_show':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   // Format date
   const formatDate = (date: Date) => {
     const options: Intl.DateTimeFormatOptions = {
@@ -108,8 +96,175 @@ export function CalendarDayView({
     return date.toLocaleDateString('en-US', options);
   };
 
+  // Generate month and year options
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  const currentDay = currentDate.getDate();
+
+  // Days in current month
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  // Calculate week number
+  const getWeekNumber = (date: Date): number => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() + 1;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  };
+
+  // Get weeks in current month
+  const getWeeksInMonth = (): number[] => {
+    const monthStart = new Date(currentYear, currentMonth, 1);
+    const monthEnd = new Date(currentYear, currentMonth + 1, 0);
+    
+    const weeks = new Set<number>();
+    const current = new Date(monthStart);
+    current.setDate(current.getDate() - current.getDay()); // Start from Sunday
+    
+    while (current <= monthEnd) {
+      weeks.add(getWeekNumber(current));
+      current.setDate(current.getDate() + 7);
+    }
+    
+    return Array.from(weeks).sort((a, b) => a - b);
+  };
+
+  const currentWeek = getWeekNumber(currentDate);
+  const weeksInMonth = getWeeksInMonth();
+
+  // Get available years and months from interview data
+  const getAvailableYearsAndMonths = () => {
+    const yearsMap = new Map<number, Set<number>>();
+    interviews.forEach((interview) => {
+      const date = new Date(interview.scheduled_date);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      if (!yearsMap.has(year)) {
+        yearsMap.set(year, new Set());
+      }
+      yearsMap.get(year)!.add(month);
+    });
+    return yearsMap;
+  };
+
+  const availableYearsAndMonthsMap = getAvailableYearsAndMonths();
+ // const availableYears = Array.from(availableYearsAndMonthsMap.keys()).sort() as number[]; for future use
+  const availableMonthsInYear = Array.from(
+    availableYearsAndMonthsMap.get(currentYear) || new Set()
+  ).sort() as number[];
+
+  // Generate year options
+  const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+
+  const handleDayChange = (day: number) => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(day);
+    onDateChange(newDate);
+  };
+
+  const handleMonthChange = (monthIndex: number) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(monthIndex);
+    // Adjust day if it exceeds days in new month
+    const daysInNewMonth = new Date(newDate.getFullYear(), monthIndex + 1, 0).getDate();
+    if (newDate.getDate() > daysInNewMonth) {
+      newDate.setDate(daysInNewMonth);
+    }
+    onDateChange(newDate);
+  };
+
+  const handleWeekChange = (week: number) => {
+    // Calculate the date for the start of the week
+    const newDate = new Date(currentYear, 0, 1);
+    const dayNum = newDate.getUTCDay() + 1;
+    newDate.setUTCDate(newDate.getUTCDate() + 4 - dayNum);
+    newDate.setDate(newDate.getDate() + (week - 1) * 7);
+    onDateChange(newDate);
+  };
+
+  const handleYearChange = (year: number) => {
+    const newDate = new Date(currentDate);
+    newDate.setFullYear(year);
+    onDateChange(newDate);
+  };
+
   return (
     <div className="space-y-4">
+      {/* Date Picker Controls */}
+      <div className="flex items-center justify-between gap-2 rounded-lg border p-4 bg-muted/50 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">Month:</span>
+          <select
+            value={currentMonth}
+            onChange={(e) => handleMonthChange(parseInt(e.target.value))}
+            className="px-3 py-2 rounded-md border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {months.map((month, idx) => {
+              const hasData = availableMonthsInYear.includes(idx);
+              return (
+                <option key={month} value={idx} disabled={!hasData}>
+                  {month} {!hasData ? '(no data)' : ''}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">Week:</span>
+          <select
+            value={currentWeek}
+            onChange={(e) => handleWeekChange(parseInt(e.target.value))}
+            className="px-3 py-2 rounded-md border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {weeksInMonth.map((week) => (
+              <option key={week} value={week}>
+                Week {week}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">Day:</span>
+          <select
+            value={currentDay}
+            onChange={(e) => handleDayChange(parseInt(e.target.value))}
+            className="px-3 py-2 rounded-md border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
+              <option key={day} value={day}>
+                {day}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">Year:</span>
+          <select
+            value={currentYear}
+            onChange={(e) => handleYearChange(parseInt(e.target.value))}
+            className="px-3 py-2 rounded-md border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {yearOptions.map((year) => {
+              const hasData = availableYearsAndMonthsMap.has(year);
+              return (
+                <option key={year} value={year} disabled={!hasData}>
+                  {year} {!hasData ? '(no data)' : ''}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
+
       {/* Day Header */}
       <Card>
         <CardHeader>
@@ -124,46 +279,55 @@ export function CalendarDayView({
       {sortedInterviews.length > 0 ? (
         <div className="space-y-3">
           {sortedInterviews.map((interview) => (
-            <Card key={interview.id} className={`border-2 ${getStatusColor(interview.status)}`}>
-              <CardContent className="pt-6">
-                <div className="space-y-3">
-                  {/* Interview Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{interview.candidate_name}</h3>
-                      <p className="text-sm text-muted-foreground">{interview.job_title}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusBadgeColor(interview.status)}`}
-                      >
-                        {interview.status.charAt(0).toUpperCase() + interview.status.slice(1)}
-                      </span>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onReschedule(interview)}>
-                            Reschedule
-                          </DropdownMenuItem>
-                          {interview.status === 'scheduled' && (
-                            <DropdownMenuItem onClick={() => onAddFeedback(interview)}>
-                              Add Feedback
+            <Link
+              key={interview.id}
+              href={interview.id ? `/hr/ats/interviews/${interview.id}` : '#'}
+              className={`block no-underline hover:opacity-90 transition-opacity ${
+                !interview.id ? 'pointer-events-none opacity-50' : ''
+              }`}
+              onClick={(e) => {
+                if (!interview.id) {
+                  e.preventDefault();
+                  console.warn('Interview ID is missing', interview);
+                }
+              }}
+            >
+              <Card className={`border-2 cursor-pointer hover:shadow-lg transition-shadow ${getStatusColor(interview.status)}`}>
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    {/* Interview Header */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{interview.candidate_name}</h3>
+                        <p className="text-sm text-muted-foreground">{interview.job_title}</p>
+                      </div>
+                      <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
+                        <InterviewStatusBadge status={interview.status} />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onReschedule(interview)}>
+                              Reschedule
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onClick={() => onCancel(interview)}
-                            className="text-red-600"
-                          >
-                            Cancel
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            {interview.status === 'scheduled' && (
+                              <DropdownMenuItem onClick={() => onAddFeedback(interview)}>
+                                Add Feedback
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onClick={() => onCancel(interview)}
+                              className="text-red-600"
+                            >
+                              Cancel
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                  </div>
 
                   {/* Interview Details */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
@@ -180,16 +344,16 @@ export function CalendarDayView({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-muted-foreground text-xs">Location</p>
-                        <p className="font-medium capitalize">
-                          {interview.location_type.replace('_', ' ')}
-                        </p>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-muted-foreground text-xs">Location</p>
+                          <p className="font-medium capitalize">
+                            {interview.location_type ? interview.location_type.replace('_', ' ') : 'N/A'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
                     <div>
                       <p className="text-muted-foreground text-xs">Interviewer</p>
                       <p className="font-medium">{interview.interviewer_name || 'N/A'}</p>
@@ -236,6 +400,7 @@ export function CalendarDayView({
                 </div>
               </CardContent>
             </Card>
+          </Link>
           ))}
         </div>
       ) : (
@@ -257,20 +422,16 @@ export function CalendarDayView({
         <CardContent>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded bg-blue-100 border border-blue-200" />
-              <span>Scheduled</span>
+              <InterviewStatusBadge status="scheduled" />
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded bg-green-100 border border-green-200" />
-              <span>Completed</span>
+              <InterviewStatusBadge status="completed" />
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded bg-orange-100 border border-orange-200" />
-              <span>No Show</span>
+              <InterviewStatusBadge status="no_show" />
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded bg-red-100 border border-red-200" />
-              <span>Cancelled</span>
+              <InterviewStatusBadge status="cancelled" />
             </div>
           </div>
         </CardContent>

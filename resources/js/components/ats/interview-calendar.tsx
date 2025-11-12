@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { CalendarMonthView } from '@/components/ats/calendar-month-view';
+import { CalendarWeekView } from '@/components/ats/calendar-week-view';
+import { CalendarDayView } from '@/components/ats/calendar-day-view';
 import type { Interview } from '@/types/ats-pages';
 
 interface InterviewCalendarProps {
@@ -147,6 +149,7 @@ export function InterviewCalendar({
           <CalendarMonthView
             interviews={interviews}
             currentDate={currentDate}
+            onDateChange={setCurrentDate}
             onSelectDate={onSelectDate}
             onReschedule={onReschedule}
             onAddFeedback={onAddFeedback}
@@ -154,18 +157,28 @@ export function InterviewCalendar({
           />
         )}
 
-        {/* Placeholder for week/day views */}
-        {(view === 'week' || view === 'day') && (
-          <div className="flex items-center justify-center rounded-lg border border-dashed p-12 text-center">
-            <div className="space-y-2">
-              <p className="text-lg font-semibold text-muted-foreground">
-                {view === 'week' ? 'Week View' : 'Day View'} - Coming Soon
-              </p>
-              <p className="text-sm text-muted-foreground">
-                This view will be implemented in the next phase
-              </p>
-            </div>
-          </div>
+        {view === 'week' && (
+          <CalendarWeekView
+            interviews={interviews}
+            currentDate={currentDate}
+            onDateChange={setCurrentDate}
+            onSelectDate={onSelectDate}
+            onReschedule={onReschedule}
+            onAddFeedback={onAddFeedback}
+            onCancel={onCancel}
+          />
+        )}
+
+        {view === 'day' && (
+          <CalendarDayView
+            interviews={interviews}
+            currentDate={currentDate}
+            onDateChange={setCurrentDate}
+            onSelectDate={onSelectDate}
+            onReschedule={onReschedule}
+            onAddFeedback={onAddFeedback}
+            onCancel={onCancel}
+          />
         )}
       </div>
     </Card>

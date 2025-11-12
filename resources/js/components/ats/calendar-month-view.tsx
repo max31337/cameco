@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -7,11 +8,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
+import { InterviewStatusBadge } from './interview-status-badge';
 import type { Interview } from '@/types/ats-pages';
 
 interface CalendarMonthViewProps {
   interviews: Interview[];
   currentDate: Date;
+  onDateChange: (date: Date) => void;
   onSelectDate: () => void;
   onReschedule: (interview: Interview) => void;
   onAddFeedback: (interview: Interview) => void;
@@ -26,6 +29,7 @@ interface CalendarMonthViewProps {
 export function CalendarMonthView({
   interviews,
   currentDate,
+  onDateChange,
   onSelectDate,
   onReschedule,
   onAddFeedback,
@@ -90,8 +94,97 @@ export function CalendarMonthView({
   // Day names
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  // Generate month and year options
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+
+  // Generate year options (current year - 5 to current year + 5)
+  const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+
+  const handleMonthChange = (monthIndex: number) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(monthIndex);
+    // Ensure we have a valid date in the new month
+    onDateChange(newDate);
+  };
+
+  const handleYearChange = (year: number) => {
+    const newDate = new Date(currentDate);
+    newDate.setFullYear(year);
+    // Ensure we have a valid date in the new year
+    onDateChange(newDate);
+  };
+
+  // Get available years and months from interview data
+  const getAvailableYearsAndMonths = () => {
+    const yearsMap = new Map<number, Set<number>>();
+    
+    interviews.forEach((interview) => {
+      const date = new Date(interview.scheduled_date);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      
+      if (!yearsMap.has(year)) {
+        yearsMap.set(year, new Set());
+      }
+      yearsMap.get(year)!.add(month);
+    });
+    
+    return yearsMap;
+  };
+
+  const yearsAndMonthsMap = getAvailableYearsAndMonths();
+  
+  // Available years with data
+  // const availableYears = Array.from(yearsAndMonthsMap.keys()).sort() as number[]; for future use
+  const availableMonthsInYear = Array.from(yearsAndMonthsMap.get(currentYear) || new Set()).sort() as number[];
+
   return (
     <div className="space-y-4">
+      {/* Date Picker Controls */}
+      <div className="flex items-center justify-between gap-2 rounded-lg border p-4 bg-muted/50">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">Select Month:</span>
+          <select
+            value={currentMonth}
+            onChange={(e) => handleMonthChange(parseInt(e.target.value))}
+            className="px-3 py-2 rounded-md border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {months.map((month, idx) => {
+              const hasData = availableMonthsInYear.includes(idx);
+              return (
+                <option key={month} value={idx} disabled={!hasData}>
+                  {month} {!hasData ? '(no data)' : ''}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">Year:</span>
+          <select
+            value={currentYear}
+            onChange={(e) => handleYearChange(parseInt(e.target.value))}
+            className="px-3 py-2 rounded-md border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {yearOptions.map((year) => {
+              const hasData = yearsAndMonthsMap.has(year);
+              return (
+                <option key={year} value={year} disabled={!hasData}>
+                  {year} {!hasData ? '(no data)' : ''}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
+
       {/* Day Headers */}
       <div className="grid grid-cols-7 gap-1">
         {dayNames.map((day) => (
@@ -136,20 +229,45 @@ export function CalendarMonthView({
               {/* Interview Count */}
               {dayInterviews.length > 0 && (
                 <div className="mt-1 space-y-1">
-                  {dayInterviews.slice(0, 2).map((interview) => (
-                    <div
+                  {dayInterviews.slice(0, 2).map((interview) => {
+                    // Get status color
+                    const getStatusColor = (status: string) => {
+                      switch (status) {
+                        case 'scheduled':
+                          return { bg: 'bg-blue-100 hover:bg-blue-200', text: 'text-blue-900', subtext: 'text-blue-800' };
+                        case 'completed':
+                          return { bg: 'bg-green-100 hover:bg-green-200', text: 'text-green-900', subtext: 'text-green-800' };
+                        case 'cancelled':
+                          return { bg: 'bg-red-100 hover:bg-red-200', text: 'text-red-900', subtext: 'text-red-800' };
+                        case 'no_show':
+                          return { bg: 'bg-orange-100 hover:bg-orange-200', text: 'text-orange-900', subtext: 'text-orange-800' };
+                        default:
+                          return { bg: 'bg-blue-100 hover:bg-blue-200', text: 'text-blue-900', subtext: 'text-blue-800' };
+                      }
+                    };
+                    const colors = getStatusColor(interview.status);
+
+                    return (
+                    <Link
                       key={interview.id}
-                      className="group relative rounded bg-blue-100 p-1 text-xs"
+                      href={interview.id ? `/hr/ats/interviews/${interview.id}` : '#'}
+                      className={`group relative block rounded ${colors.bg} p-1 text-xs transition-colors ${!interview.id ? 'pointer-events-none opacity-50' : ''}`}
+                      onClick={(e) => {
+                        if (!interview.id) {
+                          e.preventDefault();
+                          console.warn('Interview ID is missing', interview);
+                        }
+                      }}
                     >
-                      <div className="truncate font-medium text-blue-900">
+                      <div className={`truncate font-medium ${colors.text}`}>
                         {interview.candidate_name}
                       </div>
-                      <div className="truncate text-blue-800">
+                      <div className={`truncate ${colors.subtext}`}>
                         {interview.scheduled_time}
                       </div>
 
                       {/* Action Menu on Hover */}
-                      <div className="absolute right-0 top-0 hidden group-hover:flex">
+                      <div className="absolute right-0 top-0 hidden group-hover:flex" onClick={(e) => e.preventDefault()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
@@ -182,8 +300,9 @@ export function CalendarMonthView({
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                    </div>
-                  ))}
+                    </Link>
+                    );
+                  })}
 
                   {dayInterviews.length > 2 && (
                     <div className="text-xs text-muted-foreground">
@@ -212,20 +331,16 @@ export function CalendarMonthView({
       {/* Legend */}
       <div className="flex flex-wrap gap-4 border-t pt-4 text-xs">
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded bg-blue-100" />
-          <span>Scheduled</span>
+          <InterviewStatusBadge status="scheduled" />
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded bg-green-100" />
-          <span>Completed</span>
+          <InterviewStatusBadge status="completed" />
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded bg-orange-100" />
-          <span>No Show</span>
+          <InterviewStatusBadge status="no_show" />
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded bg-red-100" />
-          <span>Cancelled</span>
+          <InterviewStatusBadge status="cancelled" />
         </div>
       </div>
     </div>

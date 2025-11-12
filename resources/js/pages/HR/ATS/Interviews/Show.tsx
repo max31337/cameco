@@ -5,6 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -23,6 +29,7 @@ import {
   ArrowRight,
   Star,
   FileText,
+  Cloud,
 } from 'lucide-react';
 import type { PageProps } from '@inertiajs/core';
 import type { Interview, InterviewStatus } from '@/types/ats-pages';
@@ -193,6 +200,25 @@ export default function InterviewShow({
                   Cancel Interview
                 </DropdownMenuItem>
               )}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem
+                      disabled
+                      className="cursor-not-allowed opacity-50"
+                    >
+                      <Cloud className="mr-2 h-4 w-4" />
+                      Sync with Google Calendar
+                      <Badge variant="outline" className="ml-auto text-xs">
+                        Phase 2
+                      </Badge>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Google Calendar integration coming in Phase 2</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

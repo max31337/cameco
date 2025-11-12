@@ -183,32 +183,70 @@ export default function InterviewsIndex({
           </Card>
         </div>
 
-        {/* View Toggle & Filters */}
+        {/* Controls & Filters Card */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between gap-4">
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === 'calendar' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('calendar')}
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Calendar
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="mr-2 h-4 w-4" />
-                  List
-                </Button>
+            <div className="space-y-4">
+              {/* Top Row: View Mode & Calendar View Tabs */}
+              <div className="flex items-center justify-between gap-4">
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">View:</span>
+                  <Button
+                    variant={viewMode === 'calendar' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('calendar')}
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Calendar
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                  >
+                    <List className="mr-2 h-4 w-4" />
+                    List
+                  </Button>
+                </div>
+
+                {/* Calendar View Tabs (only show when in calendar view) */}
+                {viewMode === 'calendar' && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">Period:</span>
+                    <Button
+                      variant={
+                        calendarView === 'month' ? 'default' : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => setCalendarView('month')}
+                    >
+                      Month
+                    </Button>
+                    <Button
+                      variant={
+                        calendarView === 'week' ? 'default' : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => setCalendarView('week')}
+                    >
+                      Week
+                    </Button>
+                    <Button
+                      variant={calendarView === 'day' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setCalendarView('day')}
+                    >
+                      Day
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              {/* Filters */}
-              <div className="flex items-center gap-2">
+              {/* Bottom Row: Filters */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-medium text-muted-foreground">Filter:</span>
+                
                 {/* Status Filter */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -220,7 +258,7 @@ export default function InterviewsIndex({
                           filterStatus.slice(1)}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="start">
                     <DropdownMenuItem onClick={() => setFilterStatus('all')}>
                       All
                     </DropdownMenuItem>
@@ -255,7 +293,7 @@ export default function InterviewsIndex({
                         : filterInterviewer}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="start">
                     <DropdownMenuItem onClick={() => setFilterInterviewer('all')}>
                       All
                     </DropdownMenuItem>
@@ -277,39 +315,6 @@ export default function InterviewsIndex({
         {/* Content Section */}
         {viewMode === 'calendar' ? (
           <div className="space-y-4">
-            {/* Calendar View Selector */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={
-                      calendarView === 'month' ? 'default' : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => setCalendarView('month')}
-                  >
-                    Month
-                  </Button>
-                  <Button
-                    variant={
-                      calendarView === 'week' ? 'default' : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => setCalendarView('week')}
-                  >
-                    Week
-                  </Button>
-                  <Button
-                    variant={calendarView === 'day' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setCalendarView('day')}
-                  >
-                    Day
-                  </Button>
-                </div>
-              </CardHeader>
-            </Card>
-
             {/* Calendar Component */}
             <InterviewCalendar
               interviews={filteredInterviews}
@@ -321,6 +326,7 @@ export default function InterviewsIndex({
               onAddFeedback={handleAddFeedback}
               onCancel={handleDeleteInterview}
             />
+
           </div>
         ) : (
           <div>

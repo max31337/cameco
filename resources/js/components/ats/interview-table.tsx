@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -15,8 +16,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, MapPin, Clock } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import type { Interview, InterviewStatus } from '@/types/ats-pages';
+import { InterviewStatusBadge } from '@/components/ats/interview-status-badge';
+import type { Interview } from '@/types/ats-pages';
 import { formatDate } from '@/lib/date-utils';
 
 interface InterviewTableProps {
@@ -37,30 +38,6 @@ export function InterviewTable({
   onAddFeedback,
   onCancel,
 }: InterviewTableProps) {
-  // Get status badge color
-  const getStatusVariant = (status: InterviewStatus): 'default' | 'secondary' | 'destructive' | 'outline' => {
-    switch (status) {
-      case 'scheduled':
-        return 'default';
-      case 'completed':
-        return 'secondary';
-      case 'cancelled':
-        return 'destructive';
-      case 'no_show':
-        return 'outline';
-      default:
-        return 'default';
-    }
-  };
-
-  // Format status label
-  const formatStatus = (status: string) => {
-    return status
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
   if (interviews.length === 0) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
@@ -89,7 +66,20 @@ export function InterviewTable({
           {interviews.map((interview) => (
             <TableRow key={interview.id}>
               <TableCell className="font-medium">
-                {interview.candidate_name}
+                <Link
+                  href={interview.id ? `/hr/ats/interviews/${interview.id}` : '#'}
+                  className={`text-blue-600 hover:underline ${
+                    !interview.id ? 'pointer-events-none opacity-50 text-gray-400' : ''
+                  }`}
+                  onClick={(e) => {
+                    if (!interview.id) {
+                      e.preventDefault();
+                      console.warn('Interview ID is missing', interview);
+                    }
+                  }}
+                >
+                  {interview.candidate_name}
+                </Link>
               </TableCell>
               <TableCell>{interview.job_title}</TableCell>
               <TableCell>
@@ -111,9 +101,7 @@ export function InterviewTable({
               </TableCell>
               <TableCell>{interview.interviewer_name}</TableCell>
               <TableCell>
-                <Badge variant={getStatusVariant(interview.status)}>
-                  {formatStatus(interview.status)}
-                </Badge>
+                <InterviewStatusBadge status={interview.status} />
               </TableCell>
               <TableCell className="text-right">
                 {interview.score ? (
