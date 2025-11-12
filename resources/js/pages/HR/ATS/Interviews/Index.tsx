@@ -19,11 +19,12 @@ import type { Interview, InterviewStatus } from '@/types/ats-pages';
 interface InterviewsIndexProps extends PageProps {
   interviews: Interview[];
   statistics: {
-    total_scheduled: number;
-    total_completed: number;
-    total_cancelled: number;
-    today_interviews: number;
-    this_week_interviews: number;
+    total_interviews: number;
+    scheduled: number;
+    completed: number;
+    cancelled: number;
+    no_show: number;
+    upcoming_this_week: number;
   };
 }
 
@@ -121,11 +122,11 @@ export default function InterviewsIndex({
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Scheduled
+                Scheduled
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{statistics.total_scheduled}</p>
+              <p className="text-2xl font-bold">{statistics.scheduled}</p>
             </CardContent>
           </Card>
 
@@ -137,7 +138,7 @@ export default function InterviewsIndex({
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-green-600">
-                {statistics.total_completed}
+                {statistics.completed}
               </p>
             </CardContent>
           </Card>
@@ -150,7 +151,7 @@ export default function InterviewsIndex({
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-red-600">
-                {statistics.total_cancelled}
+                {statistics.cancelled}
               </p>
             </CardContent>
           </Card>
@@ -158,12 +159,12 @@ export default function InterviewsIndex({
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Today
+                No Show
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-blue-600">
-                {statistics.today_interviews}
+              <p className="text-2xl font-bold text-orange-600">
+                {statistics.no_show}
               </p>
             </CardContent>
           </Card>
@@ -176,7 +177,7 @@ export default function InterviewsIndex({
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-purple-600">
-                {statistics.this_week_interviews}
+                {statistics.upcoming_this_week}
               </p>
             </CardContent>
           </Card>

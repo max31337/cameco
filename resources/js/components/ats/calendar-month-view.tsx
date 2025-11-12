@@ -80,6 +80,13 @@ export function CalendarMonthView({
     return date.getMonth() === currentDate.getMonth();
   };
 
+  // Check if date is in the past
+  const isPastDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
   // Day names
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -109,10 +116,10 @@ export function CalendarMonthView({
               key={idx}
               className={`min-h-32 rounded-lg border p-2 ${
                 isTodayDate
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'border-blue-600 bg-blue-100'
                   : isCurrentMonthDay
-                    ? 'bg-white'
-                    : 'bg-gray-50'
+                    ? 'bg-neutral-300'
+                    : 'bg-neutral-500'
               }`}
             >
               {/* Date Number */}
@@ -187,7 +194,7 @@ export function CalendarMonthView({
               )}
 
               {/* Add Interview Button */}
-              {isCurrentMonthDay && dayInterviews.length === 0 && (
+              {isCurrentMonthDay && dayInterviews.length === 0 && !isPastDate(date) && (
                 <Button
                   variant="ghost"
                   size="sm"
