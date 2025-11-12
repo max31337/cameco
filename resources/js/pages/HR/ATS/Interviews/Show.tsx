@@ -25,16 +25,16 @@ import {
   Edit,
   CheckCircle,
   XCircle,
-  AlertCircle,
   ArrowRight,
   Star,
   FileText,
   Cloud,
 } from 'lucide-react';
 import type { PageProps } from '@inertiajs/core';
-import type { Interview, InterviewStatus } from '@/types/ats-pages';
+import type { Interview } from '@/types/ats-pages';
 import { InterviewFeedbackModal } from '@/components/ats/interview-feedback-modal';
 import { InterviewScheduleModal } from '@/components/ats/interview-schedule-modal';
+import { InterviewStatusBadge } from '@/components/ats/interview-status-badge';
 
 interface InterviewShowProps extends PageProps {
   interview: Interview;
@@ -62,35 +62,6 @@ const breadcrumbs = [
   { title: 'Interview Details', href: '#' },
 ];
 
-const statusConfig: Record<
-  InterviewStatus,
-  {
-    color: 'default' | 'secondary' | 'destructive' | 'outline';
-    label: string;
-    icon: React.ReactNode;
-  }
-> = {
-  scheduled: {
-    color: 'default',
-    label: 'Scheduled',
-    icon: <Clock className="h-3 w-3" />,
-  },
-  completed: {
-    color: 'secondary',
-    label: 'Completed',
-    icon: <CheckCircle className="h-3 w-3" />,
-  },
-  cancelled: {
-    color: 'destructive',
-    label: 'Cancelled',
-    icon: <XCircle className="h-3 w-3" />,
-  },
-  no_show: {
-    color: 'outline',
-    label: 'No Show',
-    icon: <AlertCircle className="h-3 w-3" />,
-  },
-};
 
 export default function InterviewShow({
   interview,
@@ -140,8 +111,6 @@ export default function InterviewShow({
     }
   };
 
-  const statusConfig_item = statusConfig[interview.status];
-
   const isScheduled = interview.status === 'scheduled';
   const isCompleted = interview.status === 'completed';
 
@@ -157,10 +126,7 @@ export default function InterviewShow({
               <h1 className="text-3xl font-bold text-slate-900">
                 {interview.candidate_name}
               </h1>
-              <Badge className="flex items-center gap-1">
-                {statusConfig_item.icon}
-                {statusConfig_item.label}
-              </Badge>
+                  <InterviewStatusBadge status={interview.status} />
             </div>
             <p className="mt-1 text-slate-600">{interview.job_title}</p>
           </div>
@@ -521,7 +487,7 @@ export default function InterviewShow({
                   <span className="text-sm font-medium text-slate-600">
                     Status
                   </span>
-                  <Badge>{statusConfig_item.label}</Badge>
+                  <InterviewStatusBadge status={interview.status} />
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-slate-600">
