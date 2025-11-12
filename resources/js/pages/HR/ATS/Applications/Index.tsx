@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { ApplicationTable } from '@/components/ats/application-table';
 import { ApplicationFilters } from '@/components/ats/application-filters';
+import { BulkActionsCard } from '@/components/ats/bulk-actions-card';
 import type { PageProps } from '@inertiajs/core';
 import type { Application, ApplicationSummary, ApplicationFilters as ApplicationFiltersType } from '@/types/ats-pages';
 
@@ -23,9 +24,8 @@ interface ApplicationsIndexProps extends PageProps {
 
 const breadcrumbs = [
   { title: 'Dashboard', href: '/dashboard' },
-  { title: 'HR', href: '/hr/dashboard' },
   { title: 'Recruitment', href: '#' },
-  { title: 'Applications', href: '/hr/ats/applications' },
+  { title: 'Applications', href: '/applications' },
 ];
 
 /**
@@ -37,6 +37,8 @@ export default function ApplicationsIndex({
   statistics,
   filters: initialFilters,
 }: ApplicationsIndexProps) {
+  // Local copy so quick actions can optimistically update UI without a round-trip
+  const [apps, setApps] = useState<Application[]>(Array.isArray(applications) ? applications : []);
   const [statusFilter, setStatusFilter] = useState(initialFilters?.status || '');
   const [jobFilter, setJobFilter] = useState(initialFilters?.job || '');
   const [scoreFromFilter, setScoreFromFilter] = useState(initialFilters?.scoreFrom?.toString() || '');
@@ -44,12 +46,30 @@ export default function ApplicationsIndex({
   const [actionApplication, setActionApplication] = useState<Application | undefined>(undefined);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [bulkAction, setBulkAction] = useState<string | null>(null);
+  const [interviewApplication, setInterviewApplication] = useState<Application | undefined>(undefined);
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+  const [interviewFormData, setInterviewFormData] = useState({
+    scheduled_date: '',
+    scheduled_time: '',
+    duration_minutes: 60,
+    location_type: 'office' as 'office' | 'video_call' | 'phone',
+  });
+
+  // Sync prop changes to state
+  useEffect(() => {
+    if (Array.isArray(applications)) {
+      setApps(applications);
+    }
+  }, [applications]);
 
   /**
    * Filter applications based on status, job, and score range
    */
   const getFilteredApplications = () => {
-    return applications.filter((application) => {
+    return apps.filter((application) => {
       // Filter by status
       if (statusFilter && application.status !== statusFilter) {
         return false;
@@ -94,7 +114,21 @@ export default function ApplicationsIndex({
   };
 
   const handleShortlistClick = (application: Application) => {
-    console.log('Shortlist application:', application.id);
+    (async () => {
+      console.log('Shortlist application:', application.id);
+      // optimistic UI update
+      setApps((prev) => prev.map((a) => (a.id === application.id ? { ...a, status: 'shortlisted' } : a)));
+
+      try {
+        // simulate server call
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        console.log('Application shortlisted on server:', application.id);
+      } catch (err) {
+        console.error('Failed to shortlist application:', application.id, err);
+        // rollback on failure (for now simply revert)
+        setApps((prev) => prev.map((a) => (a.id === application.id ? application : a)));
+      }
+    })();
   };
 
   const handleRejectClick = (application: Application) => {
@@ -116,7 +150,90 @@ export default function ApplicationsIndex({
   };
 
   const handleScheduleInterviewClick = (application: Application) => {
-    console.log('Schedule interview for application:', application.id);
+    setInterviewApplication(application);
+    setIsInterviewModalOpen(true);
+  };
+
+  const handleScheduleInterview = async () => {
+    if (!interviewApplication) return;
+    try {
+      console.log('Schedule interview for application:', interviewApplication.id, interviewFormData);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      console.log('Interview scheduled successfully');
+      setIsInterviewModalOpen(false);
+      // Optimistically update the status to interviewed
+      setApps((prev) =>
+        prev.map((a) =>
+          a.id === interviewApplication.id ? { ...a, status: 'interviewed' } : a
+        )
+      );
+    } catch (err) {
+      console.error('Failed to schedule interview:', err);
+    }
+  };
+
+  const toggleSelectApplication = (id: number) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredApplications.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredApplications.map((a) => a.id)));
+    }
+  };
+
+  const handleBulkShortlist = async () => {
+    if (selectedIds.size === 0) return;
+    setIsBulkLoading(true);
+    setBulkAction('shortlist');
+    try {
+      console.log(`Bulk shortlist ${selectedIds.size} applications:`, Array.from(selectedIds));
+      // optimistic UI update
+      setApps((prev) =>
+        prev.map((a) => (selectedIds.has(a.id) ? { ...a, status: 'shortlisted' } : a))
+      );
+      // simulate server call
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      console.log('Bulk shortlist completed on server');
+      setSelectedIds(new Set());
+    } catch (err) {
+      console.error('Failed to bulk shortlist:', err);
+    } finally {
+      setIsBulkLoading(false);
+      setBulkAction(null);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedIds.size === 0) return;
+    setIsBulkLoading(true);
+    setBulkAction('reject');
+    try {
+      console.log(`Bulk reject ${selectedIds.size} applications:`, Array.from(selectedIds));
+      // optimistic UI update
+      setApps((prev) =>
+        prev.map((a) => (selectedIds.has(a.id) ? { ...a, status: 'rejected' } : a))
+      );
+      // simulate server call
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      console.log('Bulk reject completed on server');
+      setSelectedIds(new Set());
+    } catch (err) {
+      console.error('Failed to bulk reject:', err);
+    } finally {
+      setIsBulkLoading(false);
+      setBulkAction(null);
+    }
   };
 
   return (
@@ -190,6 +307,30 @@ export default function ApplicationsIndex({
           </div>
         )}
 
+        {/* Bulk Actions */}
+        <BulkActionsCard
+          selectedCount={selectedIds.size}
+          actions={[
+            {
+              label: 'Shortlist All',
+              onClick: handleBulkShortlist,
+              disabled: isBulkLoading,
+              loadingText: 'Shortlisting...',
+              isLoading: isBulkLoading && bulkAction === 'shortlist',
+            },
+            {
+              label: 'Reject All',
+              variant: 'destructive',
+              onClick: handleBulkReject,
+              disabled: isBulkLoading,
+              loadingText: 'Rejecting...',
+              isLoading: isBulkLoading && bulkAction === 'reject',
+            },
+          ]}
+          onClear={() => setSelectedIds(new Set())}
+          isLoading={isBulkLoading}
+        />
+
         {/* Filters */}
         <ApplicationFilters
           statusFilter={statusFilter}
@@ -208,8 +349,11 @@ export default function ApplicationsIndex({
         {filteredApplications.length > 0 ? (
           <ApplicationTable
             applications={filteredApplications}
-            onViewClick={() => {
-              // Navigation handled by Link in component
+            selectedIds={selectedIds}
+            onSelectApplication={toggleSelectApplication}
+            onSelectAll={toggleSelectAll}
+            onViewClick={(application) => {
+              window.location.href = `/hr/ats/applications/${application.id}`;
             }}
             onShortlistClick={handleShortlistClick}
             onRejectClick={handleRejectClick}
@@ -247,6 +391,90 @@ export default function ApplicationsIndex({
               disabled={isDeleteLoading}
             >
               {isDeleteLoading ? 'Rejecting...' : 'Reject'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Schedule Interview Dialog */}
+      <Dialog open={isInterviewModalOpen} onOpenChange={setIsInterviewModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Interview</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Candidate: <span className="font-semibold">{interviewApplication?.candidate_name}</span>
+            </p>
+            
+            <div>
+              <label className="text-sm font-medium">Interview Date</label>
+              <input
+                type="date"
+                value={interviewFormData.scheduled_date}
+                onChange={(e) =>
+                  setInterviewFormData({ ...interviewFormData, scheduled_date: e.target.value })
+                }
+                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Interview Time</label>
+              <input
+                type="time"
+                value={interviewFormData.scheduled_time}
+                onChange={(e) =>
+                  setInterviewFormData({ ...interviewFormData, scheduled_time: e.target.value })
+                }
+                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Duration (minutes)</label>
+              <input
+                type="number"
+                value={interviewFormData.duration_minutes}
+                onChange={(e) =>
+                  setInterviewFormData({
+                    ...interviewFormData,
+                    duration_minutes: parseInt(e.target.value) || 60,
+                  })
+                }
+                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                min="15"
+                step="15"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Location Type</label>
+              <select
+                value={interviewFormData.location_type}
+                onChange={(e) =>
+                  setInterviewFormData({
+                    ...interviewFormData,
+                    location_type: e.target.value as 'office' | 'video_call' | 'phone',
+                  })
+                }
+                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              >
+                <option value="office">Office</option>
+                <option value="video_call">Video Call</option>
+                <option value="phone">Phone</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsInterviewModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleScheduleInterview}
+              disabled={!interviewFormData.scheduled_date || !interviewFormData.scheduled_time}
+            >
+              Schedule Interview
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2,21 +2,27 @@ import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, FileText, Calendar, MessageSquare, History } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText } from 'lucide-react';
 import { ApplicationStatusBadge } from '@/components/ats/application-status-badge';
 import { ApplicationStatusModal } from '@/components/ats/application-status-modal';
 import { RejectApplicationModal } from '@/components/ats/reject-application-modal';
+import { OfferGenerationModal } from '@/components/ats/offer-generation-modal';
+import { InterviewScheduleModal } from '@/components/ats/interview-schedule-modal';
+import { AddNoteModal } from '@/components/ats/add-note-modal-v2';
+import { ApplicationDetailsTab } from '@/components/ats/application-details-tab';
+import { ApplicationInterviewsTab } from '@/components/ats/application-interviews-tab';
+import { ApplicationTimelineTab } from '@/components/ats/application-timeline-tab';
+import { ApplicationNotesTab } from '@/components/ats/application-notes-tab';
 import type { PageProps } from '@inertiajs/core';
 import type { Application, Interview, ApplicationStatusHistory, CandidateNote } from '@/types/ats-pages';
-import { formatDate, formatDateTime } from '@/lib/date-utils';
+import { formatDate } from '@/lib/date-utils';
 
 interface ApplicationShowProps extends PageProps {
   application: Application;
@@ -27,9 +33,8 @@ interface ApplicationShowProps extends PageProps {
 
 const breadcrumbs = [
   { title: 'Dashboard', href: '/dashboard' },
-  { title: 'HR', href: '/hr/dashboard' },
   { title: 'Recruitment', href: '#' },
-  { title: 'Applications', href: '/hr/ats/applications' },
+  { title: 'Applications', href: '/applications' },
   { title: 'View Application', href: '#' },
 ];
 
@@ -45,7 +50,9 @@ export default function ApplicationShow({
 }: ApplicationShowProps) {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [isScheduleInterviewModalOpen, setIsScheduleInterviewModalOpen] = useState(false);
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+  const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
 
   const handleUpdateStatus = async (data: { status: string; notes?: string }) => {
     console.log('Update application status:', application.id, data);
@@ -59,15 +66,24 @@ export default function ApplicationShow({
     console.log('Application rejected successfully');
   };
 
-  const handleScheduleInterview = async () => {
-    console.log('Schedule interview for application:', application.id);
-    // TODO: Phase 6.5 - Implement interview scheduling
+  const handleScheduleInterview = async (data: { scheduled_date: string; scheduled_time: string; duration_minutes: number; location_type: string }) => {
+    console.log('Schedule interview for application:', application.id, data);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    console.log('Interview scheduled successfully');
   };
 
-  const handleGenerateOffer = async () => {
-    console.log('Generate offer for application:', application.id);
+  const handleAddNote = async (data: { note: string; is_private: boolean }) => {
+    console.log('Add note for application:', application.id, data);
     await new Promise((resolve) => setTimeout(resolve, 500));
-    console.log('Offer generated successfully');
+    console.log('Note added successfully');
+  };
+
+  const handleOfferSubmit = async (data: { template: string; customMessage?: string }) => {
+    console.log('Generating offer for application:', application.id, data);
+    // Simulate server-side generation
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    console.log('Offer generated successfully for application:', application.id);
+    setIsOfferModalOpen(false);
   };
 
   return (
@@ -115,13 +131,13 @@ export default function ApplicationShow({
                   Update Status
                 </Button>
                 {(application.status === 'shortlisted' || application.status === 'interviewed') && (
-                  <Button onClick={() => setIsScheduleInterviewModalOpen(true)} variant="outline">
+                  <Button onClick={() => setIsInterviewModalOpen(true)} variant="outline">
                     <Calendar className="mr-2 h-4 w-4" />
                     Schedule Interview
                   </Button>
                 )}
                 {application.status === 'interviewed' && (
-                  <Button onClick={console.log} variant="outline">
+                  <Button onClick={() => setIsOfferModalOpen(true)} variant="outline">
                     <FileText className="mr-2 h-4 w-4" />
                     Generate Offer
                   </Button>
@@ -155,182 +171,25 @@ export default function ApplicationShow({
 
           {/* Details Tab */}
           <TabsContent value="details" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Application Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Candidate Information */}
-                <div>
-                  <h3 className="font-semibold mb-4">Candidate Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{application.candidate_email || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
-                      <p className="font-medium">{application.candidate_phone || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Application Details */}
-                <div>
-                  <h3 className="font-semibold mb-4">Application Details</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Applied Date</p>
-                      <p className="font-medium">{formatDateTime(application.applied_at)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Current Status</p>
-                      <ApplicationStatusBadge status={application.status} />
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-sm text-muted-foreground">Cover Letter</p>
-                      <p className="font-medium whitespace-pre-wrap">
-                        {application.cover_letter || 'No cover letter provided'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Resume */}
-                {application.resume_path && (
-                  <div>
-                    <h3 className="font-semibold mb-4">Resume</h3>
-                    <a
-                      href={`/storage/${application.resume_path}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-blue-600 hover:underline"
-                    >
-                      <FileText className="h-4 w-4" />
-                      View Resume
-                    </a>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ApplicationDetailsTab application={application} />
           </TabsContent>
 
           {/* Interviews Tab */}
           <TabsContent value="interviews" className="space-y-4">
-            {interviews.length > 0 ? (
-              interviews.map((interview) => (
-                <Card key={interview.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base">Interview</CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {formatDateTime(interview.scheduled_date)} at {interview.scheduled_time}
-                        </p>
-                      </div>
-                      <Badge variant="outline">{interview.location_type}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {interview.interviewer_name && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Interviewer</p>
-                        <p className="font-medium">{interview.interviewer_name}</p>
-                      </div>
-                    )}
-                    {interview.feedback && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Feedback</p>
-                        <p className="font-medium whitespace-pre-wrap">{interview.feedback}</p>
-                      </div>
-                    )}
-                    {interview.recommendation && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Recommendation</p>
-                        <Badge variant="outline">{interview.recommendation}</Badge>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="bg-card rounded-lg border p-8 text-center">
-                <p className="text-muted-foreground">No interviews scheduled yet</p>
-              </div>
-            )}
+            <ApplicationInterviewsTab interviews={interviews} />
           </TabsContent>
 
           {/* Timeline Tab */}
           <TabsContent value="timeline" className="space-y-4">
-            {status_history && status_history.length > 0 ? (
-              <div className="space-y-4">
-                {status_history.map((history, index) => (
-                  <Card key={`${history.id || index}`}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <History className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                        <div className="flex-grow">
-                          <p className="font-medium">
-                            Status changed to <Badge variant="outline">{history.status}</Badge>
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {formatDateTime(history.created_at)}
-                          </p>
-                          {history.changed_by_name && (
-                            <p className="text-xs text-muted-foreground">by {history.changed_by_name}</p>
-                          )}
-                          {history.notes && (
-                            <p className="text-sm mt-2 text-foreground">{history.notes}</p>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-card rounded-lg border p-8 text-center">
-                <p className="text-muted-foreground">No status changes yet</p>
-              </div>
-            )}
+            <ApplicationTimelineTab statusHistory={status_history} />
           </TabsContent>
 
           {/* Notes Tab */}
           <TabsContent value="notes" className="space-y-4">
-            {notes && notes.length > 0 ? (
-              notes.map((note) => (
-                <Card key={note.id}>
-                  <CardContent className="pt-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-sm">{note.created_by_name || 'Anonymous'}</p>
-                        {note.is_private && (
-                          <Badge variant="secondary" className="text-xs">
-                            Private
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm whitespace-pre-wrap">{note.note}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDateTime(note.created_at)}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="bg-card rounded-lg border p-8 text-center">
-                <p className="text-muted-foreground">No notes yet</p>
-                <Button
-                  onClick={() => console.log('Open add note modal')}
-                  variant="outline"
-                  className="mt-4"
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Add Note
-                </Button>
-              </div>
-            )}
+            <ApplicationNotesTab 
+              notes={notes}
+              onAddNoteClick={() => setIsAddNoteModalOpen(true)}
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -349,6 +208,32 @@ export default function ApplicationShow({
         isOpen={isRejectModalOpen}
         onClose={() => setIsRejectModalOpen(false)}
         onSubmit={handleRejectApplication}
+        candidateName={application.candidate_name}
+      />
+
+      {/* Interview Schedule Modal */}
+      <InterviewScheduleModal
+        isOpen={isInterviewModalOpen}
+        onClose={() => setIsInterviewModalOpen(false)}
+        onSubmit={handleScheduleInterview}
+        candidateName={application.candidate_name || 'Candidate'}
+        applicationId={application.id}
+      />
+
+      {/* Add Note Modal */}
+      <AddNoteModal
+        isOpen={isAddNoteModalOpen}
+        onClose={() => setIsAddNoteModalOpen(false)}
+        onSubmit={handleAddNote}
+        itemName={application.candidate_name || 'Candidate'}
+        context="for application #"
+      />
+
+      {/* Offer Generation Modal */}
+      <OfferGenerationModal
+        isOpen={isOfferModalOpen}
+        onClose={() => setIsOfferModalOpen(false)}
+        onSubmit={handleOfferSubmit}
         candidateName={application.candidate_name}
       />
     </AppLayout>

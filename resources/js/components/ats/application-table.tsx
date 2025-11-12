@@ -21,6 +21,9 @@ import { formatDate } from '@/lib/date-utils';
 
 interface ApplicationTableProps {
   applications: Application[];
+  selectedIds?: Set<number>;
+  onSelectApplication?: (id: number) => void;
+  onSelectAll?: (checked: boolean) => void;
   onViewClick?: (application: Application) => void;
   onShortlistClick?: (application: Application) => void;
   onRejectClick?: (application: Application) => void;
@@ -33,16 +36,28 @@ interface ApplicationTableProps {
  */
 export function ApplicationTable({
   applications,
+  selectedIds = new Set(),
+  onSelectApplication,
+  onSelectAll,
   onViewClick,
   onShortlistClick,
   onRejectClick,
   onScheduleInterviewClick,
 }: ApplicationTableProps) {
+  const allSelected = applications.length > 0 && selectedIds.size === applications.length;
   return (
     <div className="rounded-lg border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[40px]">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={(e) => onSelectAll?.(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+            </TableHead>
             <TableHead>Candidate Name</TableHead>
             <TableHead>Job Title</TableHead>
             <TableHead>Status</TableHead>
@@ -54,6 +69,14 @@ export function ApplicationTable({
         <TableBody>
           {applications.map((application) => (
             <TableRow key={application.id}>
+              <TableCell>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(application.id)}
+                  onChange={() => onSelectApplication?.(application.id)}
+                  className="rounded border-gray-300"
+                />
+              </TableCell>
               <TableCell className="font-medium">
                 <Link
                   href={`/hr/ats/applications/${application.id}`}

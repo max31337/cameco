@@ -211,13 +211,13 @@ class ApplicationController extends Controller
         ];
 
         return Inertia::render('HR/ATS/Applications/Index', [
-            'applications' => $paginatedApplications,
+            'applications' => $applications,
             'filters' => [
                 'search' => $request->input('search', ''),
                 'status' => $request->input('status', ''),
                 'job_id' => $request->input('job_id'),
             ],
-            'summary' => $summary,
+            'statistics' => $summary,
             'jobPostings' => $jobPostings,
         ]);
     }

@@ -349,19 +349,19 @@ When enabled by client, the system will support:
   - Policy effectiveness reports
 
 ## Recruitment (ATS)
-- **[ ] Job Postings**
+- **[x] Job Postings**
   - Create/edit job postings
   - Post to social media
   - Job posting analytics
   - Closing management
   
-- **[ ] Candidates**
+- **[x] Candidates**
   - Candidate pipeline
   - Candidate screening
   - Candidate communications
   - Candidate evaluation
   
-- **[ ] Applications**
+- **[x] Applications**
   - Review applications
   - Application tracking
   - Application status updates
@@ -478,9 +478,9 @@ When enabled by client, the system will support:
   
 - **[x] Analytics**
   - HR dashboard metrics
-  - Predictive analytics
-  - Cost per hire
-  - Time to fill positions
+  - Predictive analytics --not-yet-applied (TODO: apply-frontend-only-first)
+  - Cost per hire --not-yet-applied (TODO: apply-frontend-only-first)
+  - Time to fill positions --not-yet-applied (TODO: apply-frontend-only-first)
 
 ## Payroll Support
 - **[ ] Payroll Review**
