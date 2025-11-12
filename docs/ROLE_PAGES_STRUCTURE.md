@@ -349,19 +349,19 @@ When enabled by client, the system will support:
   - Policy effectiveness reports
 
 ## Recruitment (ATS)
-- **[x] Job Postings**
+- **[-] Job Postings**
   - Create/edit job postings
   - Post to social media
   - Job posting analytics
   - Closing management
   
-- **[x] Candidates**
+- **[-] Candidates**
   - Candidate pipeline
   - Candidate screening
   - Candidate communications
   - Candidate evaluation
   
-- **[x] Applications**
+- **[-] Applications**
   - Review applications
   - Application tracking
   - Application status updates
