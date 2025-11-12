@@ -139,7 +139,7 @@ export function CalendarDayView({
   const weeksInMonth = getWeeksInMonth();
 
   // Get available years and months from interview data
-  const getAvailableYearsAndMonths = () => {
+  const getAvailableYearsAndMonths = (): Map<number, Set<number>> => {
     const yearsMap = new Map<number, Set<number>>();
     interviews.forEach((interview) => {
       const date = new Date(interview.scheduled_date);
