@@ -75,6 +75,10 @@ export const ApplicationQuickViewModal = ({
   const sourceIcon = sourceIcons[application.candidate?.source || 'other'] || '❓';
   const nextStatus = getNextLogicalStatus(application.status);
 
+  // Determine which actions should be available based on status
+  const canScheduleInterview = ['submitted', 'shortlisted'].includes(application.status);
+  const canReject = !['hired', 'rejected', 'withdrawn'].includes(application.status);
+
   const handleReject = () => {
     if (showRejectConfirm) {
       // Trigger reject action
@@ -327,14 +331,16 @@ export const ApplicationQuickViewModal = ({
               <ExternalLink className="h-4 w-4" />
               View Full Details
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleScheduleInterview}
-              className="flex-1"
-            >
-              📅 Schedule Interview
-            </Button>
+            {canScheduleInterview && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleScheduleInterview}
+                className="flex-1"
+              >
+                📅 Schedule Interview
+              </Button>
+            )}
           </div>
 
           <div className="flex gap-2">
@@ -357,34 +363,36 @@ export const ApplicationQuickViewModal = ({
             </Button>
           </div>
 
-          {showRejectConfirm ? (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowRejectConfirm(false)}
-                className="flex-1"
-              >
-                Cancel Reject
-              </Button>
+          {canReject && (
+            showRejectConfirm ? (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowRejectConfirm(false)}
+                  className="flex-1"
+                >
+                  Cancel Reject
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleReject}
+                  className="flex-1"
+                >
+                  ⚠️ Confirm Reject
+                </Button>
+              </div>
+            ) : (
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={handleReject}
-                className="flex-1"
+                className="w-full"
               >
-                ⚠️ Confirm Reject
+                ❌ Reject Application
               </Button>
-            </div>
-          ) : (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleReject}
-              className="w-full"
-            >
-              ❌ Reject Application
-            </Button>
+            )
           )}
         </div>
         </DialogContent>
