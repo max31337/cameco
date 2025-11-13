@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\HR;
+namespace App\Http\Controllers\HR\Leave;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;

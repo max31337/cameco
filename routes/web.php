@@ -47,18 +47,21 @@ Route::middleware(['auth'])->group(function () {
 // HR Manager Routes
 // HR Manager Routes
 use App\Http\Controllers\HR\DashboardController as HRDashboardController;
-use App\Http\Controllers\HR\AnalyticsController;
-use App\Http\Controllers\HR\EmployeeController;
-use App\Http\Controllers\HR\DepartmentController;
-use App\Http\Controllers\HR\PositionController;
-use App\Http\Controllers\HR\LeaveBalanceController;
-use App\Http\Controllers\HR\LeavePolicyController;
-use App\Http\Controllers\HR\ReportController;
+use App\Http\Controllers\HR\Reports\AnalyticsController;
+use App\Http\Controllers\HR\Employee\EmployeeController;
+use App\Http\Controllers\HR\Employee\DepartmentController;
+use App\Http\Controllers\HR\Employee\PositionController;
+use App\Http\Controllers\HR\Leave\LeaveBalanceController;
+use App\Http\Controllers\HR\Leave\LeavePolicyController;
+use App\Http\Controllers\HR\Reports\ReportController;
 use App\Http\Controllers\HR\ATS\JobPostingController;
 use App\Http\Controllers\HR\ATS\CandidateController;
 use App\Http\Controllers\HR\ATS\ApplicationController;
 use App\Http\Controllers\HR\ATS\InterviewController;
 use App\Http\Controllers\HR\ATS\HiringPipelineController;
+use App\Http\Controllers\HR\Workforce\ScheduleController;
+use App\Http\Controllers\HR\Workforce\RotationController;
+use App\Http\Controllers\HR\Workforce\AssignmentController;
 use App\Http\Middleware\EnsureHRManager;
 
 
@@ -195,5 +198,83 @@ Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->n
         Route::put('/hiring-pipeline/applications/{id}/move', [HiringPipelineController::class, 'moveApplication'])
             ->middleware('permission:recruitment.hiring_pipeline.update')
             ->name('hiring-pipeline.move');
+    });
+
+    // Workforce Management Module
+    Route::prefix('workforce')->name('workforce.')->group(function () {
+        // Work Schedules
+        Route::get('/schedules', [ScheduleController::class, 'index'])
+            ->middleware('permission:workforce.schedules.view')
+            ->name('schedules.index');
+        Route::get('/schedules/create', [ScheduleController::class, 'create'])
+            ->middleware('permission:workforce.schedules.create')
+            ->name('schedules.create');
+        Route::post('/schedules', [ScheduleController::class, 'store'])
+            ->middleware('permission:workforce.schedules.create')
+            ->name('schedules.store');
+        Route::get('/schedules/{id}', [ScheduleController::class, 'show'])
+            ->middleware('permission:workforce.schedules.view')
+            ->name('schedules.show');
+        Route::get('/schedules/{id}/edit', [ScheduleController::class, 'edit'])
+            ->middleware('permission:workforce.schedules.update')
+            ->name('schedules.edit');
+        Route::put('/schedules/{id}', [ScheduleController::class, 'update'])
+            ->middleware('permission:workforce.schedules.update')
+            ->name('schedules.update');
+        Route::delete('/schedules/{id}', [ScheduleController::class, 'destroy'])
+            ->middleware('permission:workforce.schedules.delete')
+            ->name('schedules.destroy');
+
+        // Employee Rotations
+        Route::get('/rotations', [RotationController::class, 'index'])
+            ->middleware('permission:workforce.rotations.view')
+            ->name('rotations.index');
+        Route::get('/rotations/create', [RotationController::class, 'create'])
+            ->middleware('permission:workforce.rotations.create')
+            ->name('rotations.create');
+        Route::post('/rotations', [RotationController::class, 'store'])
+            ->middleware('permission:workforce.rotations.create')
+            ->name('rotations.store');
+        Route::get('/rotations/{id}', [RotationController::class, 'show'])
+            ->middleware('permission:workforce.rotations.view')
+            ->name('rotations.show');
+        Route::get('/rotations/{id}/edit', [RotationController::class, 'edit'])
+            ->middleware('permission:workforce.rotations.update')
+            ->name('rotations.edit');
+        Route::put('/rotations/{id}', [RotationController::class, 'update'])
+            ->middleware('permission:workforce.rotations.update')
+            ->name('rotations.update');
+        Route::delete('/rotations/{id}', [RotationController::class, 'destroy'])
+            ->middleware('permission:workforce.rotations.delete')
+            ->name('rotations.destroy');
+
+        // Shift Assignments
+        Route::get('/assignments', [AssignmentController::class, 'index'])
+            ->middleware('permission:workforce.assignments.view')
+            ->name('assignments.index');
+        Route::get('/assignments/create', [AssignmentController::class, 'create'])
+            ->middleware('permission:workforce.assignments.create')
+            ->name('assignments.create');
+        Route::post('/assignments', [AssignmentController::class, 'store'])
+            ->middleware('permission:workforce.assignments.create')
+            ->name('assignments.store');
+        Route::post('/assignments/bulk', [AssignmentController::class, 'bulkAssign'])
+            ->middleware('permission:workforce.assignments.create')
+            ->name('assignments.bulk');
+        Route::get('/assignments/coverage', [AssignmentController::class, 'coverage'])
+            ->middleware('permission:workforce.assignments.view')
+            ->name('assignments.coverage');
+        Route::get('/assignments/{id}', [AssignmentController::class, 'show'])
+            ->middleware('permission:workforce.assignments.view')
+            ->name('assignments.show');
+        Route::get('/assignments/{id}/edit', [AssignmentController::class, 'edit'])
+            ->middleware('permission:workforce.assignments.update')
+            ->name('assignments.edit');
+        Route::put('/assignments/{id}', [AssignmentController::class, 'update'])
+            ->middleware('permission:workforce.assignments.update')
+            ->name('assignments.update');
+        Route::delete('/assignments/{id}', [AssignmentController::class, 'destroy'])
+            ->middleware('permission:workforce.assignments.delete')
+            ->name('assignments.destroy');
     });
 });

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\HR;
+namespace App\Http\Controllers\HR\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Services\HR\HRAnalyticsService;
