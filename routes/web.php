@@ -192,7 +192,7 @@ Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->n
         Route::get('/hiring-pipeline', [HiringPipelineController::class, 'index'])
             ->middleware('permission:recruitment.hiring_pipeline.view')
             ->name('hiring-pipeline.index');
-        Route::post('/hiring-pipeline/move/{id}', [HiringPipelineController::class, 'moveApplication'])
+        Route::put('/hiring-pipeline/applications/{id}/move', [HiringPipelineController::class, 'moveApplication'])
             ->middleware('permission:recruitment.hiring_pipeline.update')
             ->name('hiring-pipeline.move');
     });
