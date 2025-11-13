@@ -77,7 +77,9 @@ export const ApplicationQuickViewModal = ({
 
   // Determine which actions should be available based on status
   const canScheduleInterview = ['submitted', 'shortlisted'].includes(application.status);
+  const canMoveToNext = !['hired', 'rejected', 'withdrawn'].includes(application.status);
   const canReject = !['hired', 'rejected', 'withdrawn'].includes(application.status);
+  const canWithdraw = !['hired', 'withdrawn'].includes(application.status);
 
   const handleReject = () => {
     if (showRejectConfirm) {
@@ -90,6 +92,14 @@ export const ApplicationQuickViewModal = ({
     } else {
       setShowRejectConfirm(true);
     }
+  };
+
+  const handleWithdraw = () => {
+    router.put(
+      `/hr/ats/pipeline/applications/${application.id}/move`,
+      { status: 'withdrawn', notes: 'Application withdrawn' },
+      { onSuccess: () => onClose() }
+    );
   };
 
   const handleViewFullDetails = () => {
@@ -348,6 +358,7 @@ export const ApplicationQuickViewModal = ({
               variant="outline"
               size="sm"
               onClick={handleMoveToNextStage}
+              disabled={!canMoveToNext}
               className="flex-1"
             >
               → Move to {nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1)}
@@ -362,6 +373,17 @@ export const ApplicationQuickViewModal = ({
               Add Note
             </Button>
           </div>
+
+          {canWithdraw && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleWithdraw}
+              className="w-full text-amber-600 border-amber-200 hover:bg-amber-50"
+            >
+              📤 Withdraw Application
+            </Button>
+          )}
 
           {canReject && (
             showRejectConfirm ? (
