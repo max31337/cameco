@@ -49,6 +49,16 @@ const summaryCards = [
  * Hiring Pipeline Index - Tasks 8.1 & 8.2
  * Main page for Kanban and List view of hiring pipeline
  */
+const applicationStatuses: Array<{ value: ApplicationStatus; label: string }> = [
+  { value: 'submitted', label: 'Submitted' },
+  { value: 'shortlisted', label: 'Shortlisted' },
+  { value: 'interviewed', label: 'Interviewed' },
+  { value: 'offered', label: 'Offered' },
+  { value: 'hired', label: 'Hired' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'withdrawn', label: 'Withdrawn' },
+];
+
 export default function HiringPipelineIndex({
   pipeline,
   summary,
@@ -60,6 +70,7 @@ export default function HiringPipelineIndex({
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>(initialViewMode);
   const [selectedJob, setSelectedJob] = useState<number | 'all'>(filters.job_posting_id || 'all');
   const [selectedSource, setSelectedSource] = useState<string | 'all'>(filters.source || 'all');
+  const [selectedStatus, setSelectedStatus] = useState<ApplicationStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleViewApplication = (app: Application) => {
@@ -105,11 +116,12 @@ export default function HiringPipelineIndex({
     applications: column.applications.filter((app) => {
       const matchesJob = selectedJob === 'all' || app.job_id === selectedJob;
       const matchesSource = selectedSource === 'all' || (app.candidate?.source === selectedSource);
+      const matchesStatus = selectedStatus === 'all' || app.status === selectedStatus;
       const matchesSearch =
         searchQuery === '' ||
         (app.candidate_name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
         (app.job_title?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
-      return matchesJob && matchesSource && matchesSearch;
+      return matchesJob && matchesSource && matchesStatus && matchesSearch;
     }),
   }));
 
@@ -196,7 +208,7 @@ export default function HiringPipelineIndex({
             <CardTitle className="text-sm">Filters</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Search</label>
                 <input
@@ -235,6 +247,22 @@ export default function HiringPipelineIndex({
                   {sources.map((source) => (
                     <option key={source.value} value={source.value}>
                       {source.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Status</label>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus((e.target.value === 'all' ? 'all' : e.target.value) as ApplicationStatus | 'all')}
+                  className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="all">All Statuses</option>
+                  {applicationStatuses.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
                     </option>
                   ))}
                 </select>
