@@ -1,15 +1,10 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreVertical, Clock, MapPin } from 'lucide-react';
+import { Clock, MapPin } from 'lucide-react';
 import { InterviewStatusBadge } from './interview-status-badge';
+import { InterviewActionsMenu } from './interview-actions-menu';
 import type { Interview } from '@/types/ats-pages';
 
 interface CalendarDayViewProps {
@@ -279,58 +274,34 @@ export function CalendarDayView({
       {sortedInterviews.length > 0 ? (
         <div className="space-y-3">
           {sortedInterviews.map((interview) => (
-            <Link
-              key={interview.id}
-              href={interview.id ? `/hr/ats/interviews/${interview.id}` : '#'}
-              className={`block no-underline hover:opacity-90 transition-opacity ${
-                !interview.id ? 'pointer-events-none opacity-50' : ''
-              }`}
-              onClick={(e) => {
-                if (!interview.id) {
-                  e.preventDefault();
-                  console.warn('Interview ID is missing', interview);
-                }
-              }}
-            >
-              <Card className={`border-2 cursor-pointer hover:shadow-lg transition-shadow ${getStatusColor(interview.status)}`}>
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    {/* Interview Header */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{interview.candidate_name}</h3>
-                        <p className="text-sm text-muted-foreground">{interview.job_title}</p>
+            <div key={interview.id} className="group relative">
+              {/* Clickable card - NO Link wrapper */}
+              <div
+                onClick={() => {
+                  if (interview.id) {
+                    router.visit(`/hr/ats/interviews/${interview.id}`);
+                  }
+                }}
+                className={`block no-underline hover:opacity-90 transition-opacity cursor-pointer ${
+                  !interview.id ? 'pointer-events-none opacity-50' : ''
+                }`}
+              >
+                <Card className={`border-2 hover:shadow-lg transition-shadow ${getStatusColor(interview.status)}`}>
+                  <CardContent className="pt-6">
+                    <div className="space-y-3">
+                      {/* Interview Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{interview.candidate_name}</h3>
+                          <p className="text-sm text-muted-foreground">{interview.job_title}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <InterviewStatusBadge status={interview.status} />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
-                        <InterviewStatusBadge status={interview.status} />
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onReschedule(interview)}>
-                              Reschedule
-                            </DropdownMenuItem>
-                            {interview.status === 'scheduled' && (
-                              <DropdownMenuItem onClick={() => onAddFeedback(interview)}>
-                                Add Feedback
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => onCancel(interview)}
-                              className="text-red-600"
-                            >
-                              Cancel
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
 
-                  {/* Interview Details */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {/* Interview Details */}
+                    <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <div>
@@ -400,7 +371,19 @@ export function CalendarDayView({
                 </div>
               </CardContent>
             </Card>
-          </Link>
+              </div>
+
+              {/* Action Menu - Positioned outside card */}
+              {/* Portal container - prevents transform/overflow issues */}
+              <div className="absolute right-4 top-6 hidden group-hover:block z-50 pointer-events-auto" style={{ transform: 'none' }}>
+                <InterviewActionsMenu
+                  interview={interview}
+                  onReschedule={onReschedule}
+                  onAddFeedback={onAddFeedback}
+                  onCancel={onCancel}
+                />
+              </div>
+            </div>
           ))}
         </div>
       ) : (
