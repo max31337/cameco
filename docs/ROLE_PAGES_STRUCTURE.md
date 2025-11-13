@@ -385,7 +385,7 @@ When enabled by client, the system will support:
   - Application status updates
   - Application analytics
   
-- **[ ] Interviews**
+- **[-] Interviews**
   - Schedule interviews
   - Interview feedback
   - Interview evaluation
