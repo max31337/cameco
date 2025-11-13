@@ -391,7 +391,7 @@ When enabled by client, the system will support:
   - Interview evaluation
   - Interview analytics
   
-- **[ ] Hiring Pipeline**
+- **[-] Hiring Pipeline**
   - Pipeline overview
   - Offer management
   - Pre-employment requirements
