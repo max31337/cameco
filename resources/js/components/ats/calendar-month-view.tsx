@@ -265,7 +265,7 @@ export function CalendarMonthView({
                         </div>
                         
                         {/* Menu button - positioned top-right */}
-                        <div className="flex-shrink-0 flex items-center">
+                              <div className="absolute top-0 right-0 flex items-start">
                           <InterviewActionsMenu
                             interview={interview}
                             onReschedule={onReschedule}
