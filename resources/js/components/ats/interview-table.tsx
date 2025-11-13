@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -9,14 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreVertical, MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock } from 'lucide-react';
 import { InterviewStatusBadge } from '@/components/ats/interview-status-badge';
+import { InterviewActionsMenu } from '@/components/ats/interview-actions-menu';
 import type { Interview } from '@/types/ats-pages';
 import { formatDate } from '@/lib/date-utils';
 
@@ -95,7 +89,7 @@ export function InterviewTable({
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm capitalize">
-                    {interview.location_type.replace('_', ' ')}
+                    {(interview.location_type || 'office').replace('_', ' ')}
                   </span>
                 </div>
               </TableCell>
@@ -111,33 +105,12 @@ export function InterviewTable({
                 )}
               </TableCell>
               <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => onReschedule(interview)}
-                    >
-                      Reschedule
-                    </DropdownMenuItem>
-                    {interview.status === 'scheduled' && (
-                      <DropdownMenuItem
-                        onClick={() => onAddFeedback(interview)}
-                      >
-                        Add Feedback
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem
-                      onClick={() => onCancel(interview)}
-                      className="text-red-600"
-                    >
-                      Cancel
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <InterviewActionsMenu
+                  interview={interview}
+                  onReschedule={onReschedule}
+                  onAddFeedback={onAddFeedback}
+                  onCancel={onCancel}
+                />
               </TableCell>
             </TableRow>
           ))}

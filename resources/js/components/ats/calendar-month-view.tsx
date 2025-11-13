@@ -1,14 +1,8 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreVertical } from 'lucide-react';
 import { InterviewStatusBadge } from './interview-status-badge';
+import { InterviewActionsMenu } from './interview-actions-menu';
 import type { Interview } from '@/types/ats-pages';
 
 interface CalendarMonthViewProps {
@@ -35,6 +29,9 @@ export function CalendarMonthView({
   onAddFeedback,
   onCancel,
 }: CalendarMonthViewProps) {
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  
   // Get first day of month and number of days
   const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -99,9 +96,6 @@ export function CalendarMonthView({
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
-
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth();
 
   // Generate year options (current year - 5 to current year + 5)
   const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
@@ -198,7 +192,7 @@ export function CalendarMonthView({
       </div>
 
       {/* Calendar Days */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1 relative">
         {days.map((date, idx) => {
           const dayInterviews = getInterviewsForDate(date);
           const isCurrentMonthDay = isCurrentMonth(date);
@@ -207,7 +201,7 @@ export function CalendarMonthView({
           return (
             <div
               key={idx}
-              className={`min-h-32 rounded-lg border p-2 ${
+              className={`min-h-32 rounded-lg border p-2 relative overflow-visible ${
                 isTodayDate
                   ? 'border-blue-600 bg-blue-100'
                   : isCurrentMonthDay
@@ -248,59 +242,40 @@ export function CalendarMonthView({
                     const colors = getStatusColor(interview.status);
 
                     return (
-                    <Link
+                    <div
                       key={interview.id}
-                      href={interview.id ? `/hr/ats/interviews/${interview.id}` : '#'}
-                      className={`group relative block rounded ${colors.bg} p-1 text-xs transition-colors ${!interview.id ? 'pointer-events-none opacity-50' : ''}`}
-                      onClick={(e) => {
-                        if (!interview.id) {
-                          e.preventDefault();
-                          console.warn('Interview ID is missing', interview);
-                        }
-                      }}
+                      className="relative w-full"
                     >
-                      <div className={`truncate font-medium ${colors.text}`}>
-                        {interview.candidate_name}
+                      {/* Clickable card with menu button in top-right corner */}
+                      <div className="flex items-start justify-between gap-1">
+                        <div
+                          onClick={() => {
+                            if (interview.id) {
+                              router.visit(`/hr/ats/interviews/${interview.id}`);
+                            }
+                          }}
+                          className={`flex-1 block rounded cursor-pointer ${colors.bg} p-1 text-xs transition-colors ${!interview.id ? 'pointer-events-none opacity-50' : ''}`}
+                        >
+                          <div className={`truncate font-medium ${colors.text}`}>
+                            {interview.candidate_name}
+                          </div>
+                          <div className={`truncate ${colors.subtext}`}>
+                            {interview.scheduled_time}
+                          </div>
+                        </div>
+                        
+                        {/* Menu button - positioned top-right */}
+                        <div className="flex-shrink-0">
+                          <InterviewActionsMenu
+                            interview={interview}
+                            onReschedule={onReschedule}
+                            onAddFeedback={onAddFeedback}
+                            onCancel={onCancel}
+                            size="sm"
+                          />
+                        </div>
                       </div>
-                      <div className={`truncate ${colors.subtext}`}>
-                        {interview.scheduled_time}
-                      </div>
-
-                      {/* Action Menu on Hover */}
-                      <div className="absolute right-0 top-0 hidden group-hover:flex" onClick={(e) => e.preventDefault()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-5 w-5 p-0"
-                            >
-                              <MoreVertical className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-32">
-                            <DropdownMenuItem
-                              onClick={() => onReschedule(interview)}
-                            >
-                              Reschedule
-                            </DropdownMenuItem>
-                            {interview.status === 'scheduled' && (
-                              <DropdownMenuItem
-                                onClick={() => onAddFeedback(interview)}
-                              >
-                                Add Feedback
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => onCancel(interview)}
-                              className="text-red-600"
-                            >
-                              Cancel
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </Link>
+                    </div>
                     );
                   })}
 

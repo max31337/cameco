@@ -1,14 +1,7 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreVertical } from 'lucide-react';
+import { router } from '@inertiajs/react';
 import { InterviewStatusBadge } from './interview-status-badge';
+import { InterviewActionsMenu } from './interview-actions-menu';
 import type { Interview } from '@/types/ats-pages';
 
 interface CalendarWeekViewProps {
@@ -270,7 +263,7 @@ export function CalendarWeekView({
                   return (
                     <div
                       key={`${dayIdx}-${timeIdx}`}
-                      className="min-h-16 border rounded-lg p-1 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="min-h-16 border rounded-lg p-1 bg-white hover:bg-gray-50 transition-colors cursor-pointer overflow-visible relative"
                       onClick={onSelectDate}
                     >
                       {dayInterviews.length > 0 && (
@@ -294,62 +287,37 @@ export function CalendarWeekView({
                             const colors = getStatusColor(interview.status);
 
                             return (
-                            <Link
-                              key={interview.id}
-                              href={interview.id ? `/hr/ats/interviews/${interview.id}` : '#'}
-                              className={`group relative block rounded ${colors.bg} p-1 text-xs transition-colors ${
-                                !interview.id ? 'pointer-events-none opacity-50' : ''
-                              }`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (!interview.id) {
-                                  e.preventDefault();
-                                  console.warn('Interview ID is missing', interview);
-                                }
-                              }}
-                            >
-                              <div className={`truncate font-medium ${colors.text}`}>
-                                {interview.candidate_name}
+                            <div key={interview.id} className="relative w-full">
+                              {/* Clickable card - NO Link, NO onClick handler inside the menu area */}
+                              <div
+                                onClick={() => {
+                                  if (interview.id) {
+                                    router.visit(`/hr/ats/interviews/${interview.id}`);
+                                  }
+                                }}
+                                className={`block rounded cursor-pointer ${colors.bg} p-1 text-xs transition-colors ${
+                                  !interview.id ? 'pointer-events-none opacity-50' : ''
+                                }`}
+                              >
+                                <div className={`truncate font-medium ${colors.text}`}>
+                                  {interview.candidate_name}
+                                </div>
+                                <div className={`truncate ${colors.subtext}`}>
+                                  {interview.job_title}
+                                </div>
                               </div>
-                              <div className={`truncate ${colors.subtext}`}>
-                                {interview.job_title}
+                              
+                              {/* Menu button - ALWAYS VISIBLE in week view */}
+                              <div className="flex justify-end -mt-5 pr-0.5">
+                                <InterviewActionsMenu
+                                  interview={interview}
+                                  onReschedule={onReschedule}
+                                  onAddFeedback={onAddFeedback}
+                                  onCancel={onCancel}
+                                  size="sm"
+                                />
                               </div>
-
-                              {/* Action Menu on Hover */}
-                              <div className="absolute right-0 top-0 hidden group-hover:flex" onClick={(e) => e.preventDefault()}>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-5 w-5 p-0"
-                                    >
-                                      <MoreVertical className="h-3 w-3" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-32">
-                                    <DropdownMenuItem
-                                      onClick={() => onReschedule(interview)}
-                                    >
-                                      Reschedule
-                                    </DropdownMenuItem>
-                                    {interview.status === 'scheduled' && (
-                                      <DropdownMenuItem
-                                        onClick={() => onAddFeedback(interview)}
-                                      >
-                                        Add Feedback
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem
-                                      onClick={() => onCancel(interview)}
-                                      className="text-red-600"
-                                    >
-                                      Cancel
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </Link>
+                            </div>
                             );
                           })}
                         </div>
