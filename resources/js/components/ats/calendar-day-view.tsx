@@ -41,21 +41,6 @@ export function CalendarDayView({
   const closeScheduleModal = () => {
     setShowScheduleModal(false);
   };
-  const dayInterviews = interviews.filter((interview) => {
-    const interviewDate = new Date(interview.scheduled_date);
-    return (
-      interviewDate.getFullYear() === currentDate.getFullYear() &&
-      interviewDate.getMonth() === currentDate.getMonth() &&
-      interviewDate.getDate() === currentDate.getDate()
-    );
-  });
-
-  // Sort interviews by time
-  const sortedInterviews = dayInterviews.sort((a, b) => {
-    const timeA = parseTime(a.scheduled_time);
-    const timeB = parseTime(b.scheduled_time);
-    return timeA - timeB;
-  });
 
   // Parse time string to minutes since 8 AM
   const parseTime = (timeStr: string): number => {
@@ -71,6 +56,22 @@ export function CalendarDayView({
 
     return (hour - 8) * 60 + minute;
   };
+
+  const dayInterviews = interviews.filter((interview) => {
+    const interviewDate = new Date(interview.scheduled_date);
+    return (
+      interviewDate.getFullYear() === currentDate.getFullYear() &&
+      interviewDate.getMonth() === currentDate.getMonth() &&
+      interviewDate.getDate() === currentDate.getDate()
+    );
+  });
+
+  // Sort interviews by time
+  const sortedInterviews = dayInterviews.sort((a, b) => {
+    const timeA = parseTime(a.scheduled_time);
+    const timeB = parseTime(b.scheduled_time);
+    return timeA - timeB;
+  });
 
   // Get status color
   const getStatusColor = (status: string) => {

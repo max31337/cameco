@@ -95,6 +95,36 @@ class InterviewController extends Controller
     }
 
     /**
+     * Check if two time ranges conflict
+     * 
+     * @param int $startHour1 Start hour of first time range (24-hour format)
+     * @param int $startMinute1 Start minute of first time range
+     * @param int $duration1 Duration in minutes of first time range
+     * @param int $startHour2 Start hour of second time range
+     * @param int $startMinute2 Start minute of second time range
+     * @param int $duration2 Duration in minutes of second time range
+     * @return bool True if ranges conflict, false otherwise
+     */
+    private function hasTimeConflict(
+        int $startHour1,
+        int $startMinute1,
+        int $duration1,
+        int $startHour2,
+        int $startMinute2,
+        int $duration2
+    ): bool {
+        // Convert both times to minutes since start of day
+        $start1 = $startHour1 * 60 + $startMinute1;
+        $end1 = $start1 + $duration1;
+
+        $start2 = $startHour2 * 60 + $startMinute2;
+        $end2 = $start2 + $duration2;
+
+        // Check if there's any overlap
+        return !($end1 <= $start2 || $end2 <= $start1);
+    }
+
+    /**
      * Display a listing of interviews.
      */
     public function index(Request $request): Response
@@ -1196,6 +1226,28 @@ class InterviewController extends Controller
             return back()->withErrors(['time' => $officeHoursCheck['message']])->withInput();
         }
 
+        // Note: In production, you would also check for conflicts with existing interviews
+        // Example:
+        // $existingInterviews = Interview::where('scheduled_date', $validated['interview_date'])
+        //     ->where('interviewer_id', $validated['interviewer_id'])
+        //     ->get();
+        // 
+        // foreach ($existingInterviews as $interview) {
+        //     $timeParts = explode(':', $interview->scheduled_time);
+        //     $existingHour = (int)$timeParts[0];
+        //     $existingMinute = (int)$timeParts[1] ?? 0;
+        //     
+        //     $newTimeParts = explode(':', $validated['interview_time']);
+        //     $newHour = (int)$newTimeParts[0];
+        //     $newMinute = (int)$newTimeParts[1] ?? 0;
+        //     
+        //     if ($this->hasTimeConflict($newHour, $newMinute, $validated['duration_minutes'],
+        //                                 $existingHour, $existingMinute, $interview->duration_minutes)) {
+        //         return back()->withErrors(['time' => 'This time slot conflicts with an existing interview'])
+        //             ->withInput();
+        //     }
+        // }
+
         // Mock response - would normally save to database
         return back()->with('success', 'Interview scheduled successfully');
     }
@@ -1227,6 +1279,14 @@ class InterviewController extends Controller
             if (!$officeHoursCheck['valid']) {
                 return back()->withErrors(['time' => $officeHoursCheck['message']])->withInput();
             }
+
+            // Note: In production, also check for conflicts with other interviews
+            // Example conflict checking logic:
+            // $existingInterviews = Interview::where('id', '!=', $id)
+            //     ->where('scheduled_date', $validated['interview_date'])
+            //     ->where('interviewer_id', $validated['interviewer_id'] ?? auth()->id())
+            //     ->get();
+            // (... same conflict checking as store() ...)
         }
 
         // Mock response
