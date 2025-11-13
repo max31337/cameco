@@ -49,3 +49,10 @@ export interface User {
 
 // Export all ATS types for use across the application
 export * from './ats-pages';
+
+// ============================================================================
+// WORKFORCE MANAGEMENT MODULE TYPES
+// ============================================================================
+
+// Export all Workforce Management types for use across the application
+export * from './workforce-pages';
