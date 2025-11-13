@@ -215,6 +215,19 @@ export interface ScheduleTemplate {
     shift_end: string;
     is_active: boolean;
     usage_count?: number;
+    shift_pattern?: ShiftPattern;
+    work_days?: string[];
+    rest_days?: string[];
+}
+
+/**
+ * Shift Pattern structure for templates
+ */
+export interface ShiftPattern {
+    [day: string]: {
+        start_time: string;
+        end_time: string;
+    };
 }
 
 /**

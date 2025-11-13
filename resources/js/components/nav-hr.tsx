@@ -18,7 +18,9 @@ import {
     UserCheck,
     ClipboardList,
     Shield,
-    GitBranch
+    GitBranch,
+    Repeat,
+    ClipboardCheck
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -89,6 +91,24 @@ export function NavHR() {
         },
     ];
 
+    const workforceManagementItems = [
+        {
+            title: 'Work Schedules',
+            icon: Calendar,
+            href: '/hr/workforce/schedules',
+        },
+        {
+            title: 'Employee Rotations',
+            icon: Repeat,
+            href: '/hr/workforce/rotations',
+        },
+        {
+            title: 'Shift Assignments',
+            icon: ClipboardCheck,
+            href: '/hr/workforce/assignments',
+        },
+    ];
+
     const reportsItems = [
         {
             title: 'Employee Reports',
@@ -111,6 +131,7 @@ export function NavHR() {
     const isLeaveManagementActive = page.url.startsWith('/hr/leave');
     const isReportsActive = page.url.startsWith('/hr/reports');
     const isRecruitmentActive = page.url.startsWith('/hr/ats');
+    const isWorkforceManagementActive = page.url.startsWith('/hr/workforce');
 
     return (
         <>
@@ -192,6 +213,38 @@ export function NavHR() {
                         <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2">
                             <SidebarMenuSub className="space-y-1">
                                 {recruitmentItems.map((item) => (
+                                    <SidebarMenuSubItem key={item.title}>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={page.url.startsWith(item.href)}
+                                        >
+                                            <Link href={item.href} prefetch>
+                                                <item.icon className="h-4 w-4" />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                ))}
+                            </SidebarMenuSub>
+                        </CollapsibleContent>
+                    </SidebarMenuItem>
+                </Collapsible>
+            </SidebarGroup>
+
+            {/* Workforce Management Section */}
+            <SidebarGroup className="px-2 py-0">
+                <Collapsible defaultOpen={isWorkforceManagementActive} className="group/collapsible">
+                    <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                            <SidebarMenuButton tooltip="Workforce Management">
+                                <ClipboardCheck />
+                                <span>Workforce Management</span>
+                                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2">
+                            <SidebarMenuSub className="space-y-1">
+                                {workforceManagementItems.map((item) => (
                                     <SidebarMenuSubItem key={item.title}>
                                         <SidebarMenuSubButton
                                             asChild
