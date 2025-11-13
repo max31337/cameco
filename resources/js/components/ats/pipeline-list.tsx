@@ -8,9 +8,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronUp, ChevronDown, Eye, Edit2, Trash2 } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ApplicationListActions } from './application-list-actions';
 import type { Application, ApplicationStatus } from '@/types/ats-pages';
 
 interface PipelineColumn {
@@ -22,6 +22,9 @@ interface PipelineColumn {
 
 interface PipelineListProps {
   pipeline: PipelineColumn[];
+  onViewApplication?: (app: Application) => void;
+  onChangeApplicationStatus?: (app: Application, newStatus: ApplicationStatus, notes?: string) => void;
+  onDeleteApplication?: (app: Application) => void;
 }
 
 type SortField = 'candidate_name' | 'job_title' | 'status' | 'applied_at';
@@ -51,7 +54,12 @@ const statusLabels: Record<ApplicationStatus, string> = {
  * Pipeline List View - Task 8.2
  * Displays applications in a sortable table format
  */
-export function PipelineList({ pipeline }: PipelineListProps) {
+export function PipelineList({ 
+  pipeline,
+  onViewApplication,
+  onChangeApplicationStatus,
+  onDeleteApplication,
+}: PipelineListProps) {
   const [sortField, setSortField] = useState<SortField>('applied_at');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
@@ -167,17 +175,13 @@ export function PipelineList({ pipeline }: PipelineListProps) {
                         {app.candidate_phone || '-'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <ApplicationListActions
+                          application={app}
+                          onView={onViewApplication}
+                          onChangeStatus={onChangeApplicationStatus}
+                          onDelete={onDeleteApplication}
+                          isCompact={false}
+                        />
                       </TableCell>
                     </TableRow>
                   );

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,6 +61,40 @@ export default function HiringPipelineIndex({
   const [selectedJob, setSelectedJob] = useState<number | 'all'>(filters.job_posting_id || 'all');
   const [selectedSource, setSelectedSource] = useState<string | 'all'>(filters.source || 'all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleViewApplication = (app: Application) => {
+    // Navigate to the application detail page
+    window.location.href = `/hr/ats/applications/${app.id}`;
+  };
+
+  const handleChangeApplicationStatus = (app: Application, newStatus: ApplicationStatus, notes?: string) => {
+    // Call router to update the status via API
+    router.put(`/hr/ats/applications/${app.id}/status`, {
+      status: newStatus,
+      notes: notes || '',
+    }, {
+      onSuccess: () => {
+        // Page will auto-reload due to Inertia response
+      },
+      onError: (errors) => {
+        console.error('Failed to update status:', errors);
+        // Could add toast notification here for error handling
+      },
+    });
+  };
+
+  const handleDeleteApplication = (app: Application) => {
+    // Call router to delete the application via API
+    router.delete(`/hr/ats/applications/${app.id}`, {
+      onSuccess: () => {
+        // Page will auto-reload due to Inertia response
+      },
+      onError: (errors) => {
+        console.error('Failed to delete application:', errors);
+        // Could add toast notification here for error handling
+      },
+    });
+  };
 
   useEffect(() => {
     localStorage.setItem('hiring-pipeline-view', viewMode);
@@ -212,7 +246,12 @@ export default function HiringPipelineIndex({
         {viewMode === 'kanban' ? (
           <PipelineKanban pipeline={filteredPipeline} />
         ) : (
-          <PipelineList pipeline={filteredPipeline} />
+          <PipelineList 
+            pipeline={filteredPipeline}
+            onViewApplication={handleViewApplication}
+            onChangeApplicationStatus={handleChangeApplicationStatus}
+            onDeleteApplication={handleDeleteApplication}
+          />
         )}
       </div>
     </AppLayout>

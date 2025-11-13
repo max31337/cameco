@@ -11,6 +11,7 @@ import {
 import { Plus, ChevronDown } from 'lucide-react';
 import { MoveApplicationModal } from './move-application-modal';
 import { ApplicationQuickViewModal } from './application-quick-view-modal';
+import { AddApplicationModal, type ApplicationFormData } from './add-application-modal';
 import type { Application, ApplicationStatus } from '@/types/ats-pages';
 
 interface PipelineColumn {
@@ -47,6 +48,8 @@ export const PipelineKanban = ({ pipeline }: PipelineKanbanProps) => {
   const [isMoving, setIsMoving] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [quickViewApplication, setQuickViewApplication] = useState<Application | null>(null);
+  const [addApplicationModalOpen, setAddApplicationModalOpen] = useState(false);
+  const [selectedStatusForAdd, setSelectedStatusForAdd] = useState<ApplicationStatus | null>(null);
 
   const handleDragStart = (e: React.DragEvent, app: Application) => {
     setDraggedCard(app);
@@ -99,6 +102,24 @@ export const PipelineKanban = ({ pipeline }: PipelineKanbanProps) => {
     setTargetStatus(null);
   };
 
+  const handleOpenAddApplicationModal = (status: ApplicationStatus) => {
+    setSelectedStatusForAdd(status);
+    setAddApplicationModalOpen(true);
+  };
+
+  const handleCloseAddApplicationModal = () => {
+    setAddApplicationModalOpen(false);
+    setSelectedStatusForAdd(null);
+  };
+
+  const handleAddApplication = async (applicationData: ApplicationFormData) => {
+    // This will be called when the form is submitted
+    // For now, just close the modal
+    // Backend integration will happen when API is ready
+    console.log('Adding application with status:', selectedStatusForAdd, applicationData);
+    handleCloseAddApplicationModal();
+  };
+
   const handleOpenQuickView = (app: Application) => {
     setQuickViewApplication(app);
     setQuickViewOpen(true);
@@ -136,6 +157,12 @@ export const PipelineKanban = ({ pipeline }: PipelineKanbanProps) => {
         onClose={handleCloseQuickView}
         onMoveStatus={handleMoveStatusFromQuickView}
       />
+      <AddApplicationModal
+        isOpen={addApplicationModalOpen}
+        initialStatus={selectedStatusForAdd || 'submitted'}
+        onClose={handleCloseAddApplicationModal}
+        onSubmit={handleAddApplication}
+      />
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
       {pipeline.map((column) => {
         const colors = statusColors[column.status];
@@ -148,7 +175,12 @@ export const PipelineKanban = ({ pipeline }: PipelineKanbanProps) => {
                   {column.count}
                 </span>
               </div>
-              <Button variant="outline" size="sm" className="w-full justify-start h-8 text-xs">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full justify-start h-8 text-xs"
+                onClick={() => handleOpenAddApplicationModal(column.status)}
+              >
                 <Plus className="h-3 w-3 mr-2" />
                 Add
               </Button>
