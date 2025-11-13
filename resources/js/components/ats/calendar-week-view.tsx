@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { InterviewStatusBadge } from './interview-status-badge';
 import { InterviewActionsMenu } from './interview-actions-menu';
+import { InterviewScheduleModal } from './interview-schedule-modal';
+import { Plus } from 'lucide-react';
+import { hasAvailableSlots, getAvailableTimeSlots } from '@/utils/office-hours';
 import type { Interview } from '@/types/ats-pages';
 
 interface CalendarWeekViewProps {
@@ -24,12 +27,22 @@ export function CalendarWeekView({
   interviews,
   currentDate,
   onDateChange,
-  onSelectDate,
   onReschedule,
   onAddFeedback,
   onCancel,
 }: CalendarWeekViewProps) {
-  // Get the start of the week (Sunday)
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [selectedDateForScheduling, setSelectedDateForScheduling] = useState<Date | null>(null);
+
+  const openScheduleModal = (date: Date) => {
+    setSelectedDateForScheduling(date);
+    setShowScheduleModal(true);
+  };
+
+  const closeScheduleModal = () => {
+    setShowScheduleModal(false);
+    setSelectedDateForScheduling(null);
+  };
   const startOfWeek = new Date(currentDate);
   startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
 
@@ -263,8 +276,7 @@ export function CalendarWeekView({
                   return (
                     <div
                       key={`${dayIdx}-${timeIdx}`}
-                      className="min-h-16 border rounded-lg p-1 bg-white hover:bg-gray-50 transition-colors cursor-pointer overflow-visible relative"
-                      onClick={onSelectDate}
+                      className="min-h-16 border rounded-lg p-1 bg-white hover:bg-gray-50 transition-colors overflow-visible relative flex flex-col justify-between"
                     >
                       {dayInterviews.length > 0 && (
                         <div className="space-y-1">
@@ -322,6 +334,15 @@ export function CalendarWeekView({
                           })}
                         </div>
                       )}
+                      {dayInterviews.length === 0 && hasAvailableSlots(day, interviews) && (
+                        <button
+                          onClick={() => openScheduleModal(day)}
+                          className="text-xs text-muted-foreground hover:text-foreground cursor-pointer py-1 rounded hover:bg-blue-50 transition-colors w-full"
+                          title="Add interview"
+                        >
+                          <Plus className="h-3 w-3 mx-auto" />
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -346,6 +367,21 @@ export function CalendarWeekView({
           <InterviewStatusBadge status="cancelled" />
         </div>
       </div>
+
+      {/* Schedule Interview Modal */}
+      {selectedDateForScheduling && (
+        <InterviewScheduleModal
+          isOpen={showScheduleModal}
+          onClose={closeScheduleModal}
+          onSubmit={async (data) => {
+            // Handle scheduling logic here
+            console.log('Schedule interview:', data);
+          }}
+          selectedDate={selectedDateForScheduling}
+          interviews={interviews}
+          availableTimeSlots={getAvailableTimeSlots(selectedDateForScheduling, interviews)}
+        />
+      )}
     </div>
   );
 }

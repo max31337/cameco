@@ -9,258 +9,569 @@ use Inertia\Response;
 
 class InterviewController extends Controller
 {
+    // Office hours: 9 AM to 6 PM (Monday-Friday)
+    private const OFFICE_HOURS_START = 9;      // 9 AM
+    private const OFFICE_HOURS_END = 18;       // 6 PM
+    private const OFFICE_HOURS_DAYS = [1, 2, 3, 4, 5]; // Monday to Friday (1-5)
+
+    /**
+     * Validate if interview time falls within office hours.
+     * 
+     * @param string $date Interview date (YYYY-MM-DD format)
+     * @param string $time Interview time (HH:MM format or with AM/PM)
+     * @param int $durationMinutes Interview duration in minutes
+     * @return array ['valid' => bool, 'message' => string]
+     */
+    private function validateOfficeHours(string $date, string $time, int $durationMinutes): array
+    {
+        // Parse the date
+        $dateObj = \DateTime::createFromFormat('Y-m-d', $date);
+        if (!$dateObj) {
+            return ['valid' => false, 'message' => 'Invalid date format'];
+        }
+
+        // Check if it's a weekday (Monday-Friday)
+        $dayOfWeek = (int)$dateObj->format('N');
+        if (!in_array($dayOfWeek, self::OFFICE_HOURS_DAYS)) {
+            return ['valid' => false, 'message' => 'Interviews can only be scheduled on weekdays (Monday-Friday)'];
+        }
+
+        // Parse the time
+        $timeStr = trim($time);
+        
+        // Handle both "HH:MM AM/PM" and "HH:MM" formats
+        if (preg_match('/(\d{1,2}):(\d{2})\s*(AM|PM)?/i', $timeStr, $matches)) {
+            $hour = (int)$matches[1];
+            $minute = (int)$matches[2];
+            $meridiem = $matches[3] ?? null;
+
+            // Convert to 24-hour format if AM/PM provided
+            if ($meridiem) {
+                if (strtoupper($meridiem) === 'PM' && $hour !== 12) {
+                    $hour += 12;
+                } elseif (strtoupper($meridiem) === 'AM' && $hour === 12) {
+                    $hour = 0;
+                }
+            }
+        } else {
+            return ['valid' => false, 'message' => 'Invalid time format'];
+        }
+
+        // Calculate end time
+        $endHour = $hour;
+        $endMinute = $minute + $durationMinutes;
+
+        if ($endMinute >= 60) {
+            $endHour += (int)floor($endMinute / 60);
+            $endMinute = $endMinute % 60;
+        }
+
+        // Check if start time is within office hours
+        if ($hour < self::OFFICE_HOURS_START || $hour >= self::OFFICE_HOURS_END) {
+            return [
+                'valid' => false,
+                'message' => sprintf(
+                    'Interview start time must be between %d:00 AM and %d:00 PM',
+                    self::OFFICE_HOURS_START,
+                    self::OFFICE_HOURS_END
+                )
+            ];
+        }
+
+        // Check if end time exceeds office hours
+        if ($endHour > self::OFFICE_HOURS_END) {
+            return [
+                'valid' => false,
+                'message' => sprintf(
+                    'Interview end time (%d:%02d) exceeds office hours (ends at %d:00 PM). Duration is too long.',
+                    $endHour,
+                    $endMinute,
+                    self::OFFICE_HOURS_END
+                )
+            ];
+        }
+
+        return ['valid' => true, 'message' => 'Time slot is available'];
+    }
+
     /**
      * Display a listing of interviews.
      */
     public function index(Request $request): Response
     {
-        // Mock data: 15 interviews with different statuses
+        // Mock data: 20+ interviews with multiple scheduled per day
         $interviews = [
+            // ===== November 15 - 3 scheduled interviews =====
             [
                 'id' => 1,
                 'application_id' => 1,
                 'candidate_name' => 'John Doe',
+                'candidate_id' => 101,
+                'job_id' => 1,
                 'job_title' => 'Senior Software Engineer',
                 'interview_type' => 'technical',
                 'scheduled_date' => '2025-11-15',
                 'scheduled_time' => '10:00 AM',
+                'duration_minutes' => 60,
+                'location_type' => 'office',
+                'location' => 'Conference Room A',
                 'interviewer_name' => 'Sarah Johnson',
                 'interviewer_id' => 5,
-                'location' => 'Conference Room A',
                 'status' => 'scheduled',
                 'notes' => 'First technical round',
                 'created_at' => '2025-11-08',
+                'updated_at' => '2025-11-08',
             ],
             [
                 'id' => 2,
                 'application_id' => 3,
                 'candidate_name' => 'Jane Smith',
+                'candidate_id' => 103,
+                'job_id' => 2,
                 'job_title' => 'Marketing Manager',
                 'interview_type' => 'hr',
-                'scheduled_date' => '2025-11-14',
-                'scheduled_time' => '2:00 PM',
+                'scheduled_date' => '2025-11-15',
+                'scheduled_time' => '11:30 AM',
+                'duration_minutes' => 45,
+                'location_type' => 'video_call',
+                'location' => 'Zoom Meeting',
+                'meeting_link' => 'https://zoom.us/j/123456789',
                 'interviewer_name' => 'Michael Chen',
                 'interviewer_id' => 8,
-                'location' => 'Zoom Meeting',
                 'status' => 'scheduled',
                 'notes' => 'Initial HR screening',
                 'created_at' => '2025-11-07',
+                'updated_at' => '2025-11-07',
             ],
             [
                 'id' => 3,
                 'application_id' => 5,
                 'candidate_name' => 'Robert Martinez',
-                'job_title' => 'Financial Analyst',
+                'candidate_id' => 105,
+                'job_id' => 1,
+                'job_title' => 'Senior Software Engineer',
                 'interview_type' => 'panel',
-                'scheduled_date' => '2025-11-10',
-                'scheduled_time' => '11:00 AM',
+                'scheduled_date' => '2025-11-15',
+                'scheduled_time' => '2:00 PM',
+                'duration_minutes' => 90,
+                'location_type' => 'office',
+                'location' => 'Finance Department',
                 'interviewer_name' => 'Emily Davis, David Wilson',
                 'interviewer_id' => 12,
-                'location' => 'Finance Department',
-                'status' => 'completed',
+                'status' => 'scheduled',
                 'notes' => 'Panel interview with finance team',
-                'feedback' => 'Strong analytical skills, good cultural fit',
-                'score' => 8,
-                'recommendation' => 'hire',
                 'created_at' => '2025-11-05',
-                'completed_at' => '2025-11-10',
+                'updated_at' => '2025-11-05',
             ],
+            // ===== November 14 - 3 scheduled interviews =====
             [
                 'id' => 4,
                 'application_id' => 7,
                 'candidate_name' => 'Lisa Anderson',
+                'candidate_id' => 107,
+                'job_id' => 3,
                 'job_title' => 'HR Coordinator',
                 'interview_type' => 'behavioral',
-                'scheduled_date' => '2025-11-09',
-                'scheduled_time' => '3:00 PM',
+                'scheduled_date' => '2025-11-14',
+                'scheduled_time' => '9:00 AM',
+                'duration_minutes' => 45,
+                'location_type' => 'office',
+                'location' => 'HR Office',
                 'interviewer_name' => 'Sarah Johnson',
                 'interviewer_id' => 5,
-                'location' => 'HR Office',
-                'status' => 'completed',
+                'status' => 'scheduled',
                 'notes' => 'Behavioral assessment',
-                'feedback' => 'Excellent communication skills, lacks experience in HRIS',
-                'score' => 7,
-                'recommendation' => 'pending',
                 'created_at' => '2025-11-04',
-                'completed_at' => '2025-11-09',
+                'updated_at' => '2025-11-04',
             ],
             [
                 'id' => 5,
                 'application_id' => 2,
                 'candidate_name' => 'Michael Brown',
+                'candidate_id' => 102,
+                'job_id' => 1,
                 'job_title' => 'Senior Software Engineer',
                 'interview_type' => 'technical',
-                'scheduled_date' => '2025-11-12',
+                'scheduled_date' => '2025-11-14',
                 'scheduled_time' => '1:00 PM',
+                'duration_minutes' => 60,
+                'location_type' => 'office',
+                'location' => 'Conference Room B',
                 'interviewer_name' => 'James Wilson',
                 'interviewer_id' => 15,
-                'location' => 'Conference Room B',
-                'status' => 'cancelled',
-                'notes' => 'Candidate withdrew application',
-                'cancellation_reason' => 'Candidate accepted another offer',
+                'status' => 'scheduled',
+                'notes' => 'Technical coding assessment',
                 'created_at' => '2025-11-06',
-                'cancelled_at' => '2025-11-11',
+                'updated_at' => '2025-11-06',
             ],
             [
                 'id' => 6,
                 'application_id' => 8,
                 'candidate_name' => 'Patricia Garcia',
+                'candidate_id' => 108,
+                'job_id' => 4,
                 'job_title' => 'Customer Service Representative',
                 'interview_type' => 'hr',
-                'scheduled_date' => '2025-11-16',
-                'scheduled_time' => '9:00 AM',
+                'scheduled_date' => '2025-11-14',
+                'scheduled_time' => '3:30 PM',
+                'duration_minutes' => 45,
+                'location_type' => 'video_call',
+                'location' => 'Teams Meeting',
+                'meeting_link' => 'https://teams.microsoft.com/l/meetup-join/123',
                 'interviewer_name' => 'Michael Chen',
                 'interviewer_id' => 8,
-                'location' => 'Main Office',
                 'status' => 'scheduled',
-                'notes' => 'Walk-in candidate',
+                'notes' => 'Customer service evaluation',
                 'created_at' => '2025-11-09',
+                'updated_at' => '2025-11-09',
             ],
+            // ===== November 10 - 2 completed interviews =====
             [
                 'id' => 7,
                 'application_id' => 10,
+                'candidate_name' => 'Thomas Wilson',
+                'candidate_id' => 110,
+                'job_id' => 5,
+                'job_title' => 'Product Manager',
+                'interview_type' => 'panel',
+                'scheduled_date' => '2025-11-10',
+                'scheduled_time' => '10:00 AM',
+                'duration_minutes' => 90,
+                'location_type' => 'office',
+                'location' => 'Executive Suite',
+                'interviewer_name' => 'Emily Davis, David Wilson',
+                'interviewer_id' => 12,
+                'status' => 'completed',
+                'notes' => 'Final round interview',
+                'feedback' => 'Excellent product vision and strategic thinking',
+                'score' => 9,
+                'recommendation' => 'hire',
+                'created_at' => '2025-11-05',
+                'updated_at' => '2025-11-10',
+                'completed_at' => '2025-11-10',
+            ],
+            [
+                'id' => 8,
+                'application_id' => 11,
+                'candidate_name' => 'Christina Lee',
+                'candidate_id' => 111,
+                'job_id' => 6,
+                'job_title' => 'UX Designer',
+                'interview_type' => 'technical',
+                'scheduled_date' => '2025-11-10',
+                'scheduled_time' => '2:00 PM',
+                'duration_minutes' => 60,
+                'location_type' => 'office',
+                'location' => 'Design Studio',
+                'interviewer_name' => 'James Wilson',
+                'interviewer_id' => 15,
+                'status' => 'completed',
+                'notes' => 'Portfolio review and design challenge',
+                'feedback' => 'Strong design skills, needs more UX research experience',
+                'score' => 7,
+                'recommendation' => 'pending',
+                'created_at' => '2025-11-03',
+                'updated_at' => '2025-11-10',
+                'completed_at' => '2025-11-10',
+            ],
+            // ===== November 16 - 3 scheduled interviews =====
+            [
+                'id' => 9,
+                'application_id' => 12,
+                'candidate_name' => 'Daniel Rodriguez',
+                'candidate_id' => 112,
+                'job_id' => 7,
+                'job_title' => 'DevOps Engineer',
+                'interview_type' => 'technical',
+                'scheduled_date' => '2025-11-16',
+                'scheduled_time' => '9:00 AM',
+                'duration_minutes' => 60,
+                'location_type' => 'office',
+                'location' => 'Conference Room A',
+                'interviewer_name' => 'James Wilson',
+                'interviewer_id' => 15,
+                'status' => 'scheduled',
+                'notes' => 'Infrastructure discussion',
+                'created_at' => '2025-11-09',
+                'updated_at' => '2025-11-09',
+            ],
+            [
+                'id' => 10,
+                'application_id' => 13,
+                'candidate_name' => 'Sarah Thompson',
+                'candidate_id' => 113,
+                'job_id' => 8,
+                'job_title' => 'Data Analyst',
+                'interview_type' => 'technical',
+                'scheduled_date' => '2025-11-16',
+                'scheduled_time' => '10:45 AM',
+                'duration_minutes' => 60,
+                'location_type' => 'video_call',
+                'location' => 'Google Meet',
+                'meeting_link' => 'https://meet.google.com/abc-defg-hij',
+                'interviewer_name' => 'David Wilson',
+                'interviewer_id' => 20,
+                'status' => 'scheduled',
+                'notes' => 'SQL and analytics assessment',
+                'created_at' => '2025-11-09',
+                'updated_at' => '2025-11-09',
+            ],
+            [
+                'id' => 11,
+                'application_id' => 14,
+                'candidate_name' => 'James Martinez',
+                'candidate_id' => 114,
+                'job_id' => 1,
+                'job_title' => 'Senior Software Engineer',
+                'interview_type' => 'technical',
+                'scheduled_date' => '2025-11-16',
+                'scheduled_time' => '2:00 PM',
+                'duration_minutes' => 75,
+                'location_type' => 'office',
+                'location' => 'Conference Room B',
+                'interviewer_name' => 'Sarah Johnson',
+                'interviewer_id' => 5,
+                'status' => 'scheduled',
+                'notes' => 'API design and architecture discussion',
+                'created_at' => '2025-11-08',
+                'updated_at' => '2025-11-08',
+            ],
+            // ===== November 12 - 2 interviews (1 cancelled, 1 scheduled) =====
+            [
+                'id' => 12,
+                'application_id' => 15,
+                'candidate_name' => 'Angela White',
+                'candidate_id' => 115,
+                'job_id' => 9,
+                'job_title' => 'Business Analyst',
+                'interview_type' => 'hr',
+                'scheduled_date' => '2025-11-12',
+                'scheduled_time' => '10:00 AM',
+                'duration_minutes' => 45,
+                'location_type' => 'video_call',
+                'location' => 'Zoom Meeting',
+                'meeting_link' => 'https://zoom.us/j/987654321',
+                'interviewer_name' => 'Michael Chen',
+                'interviewer_id' => 8,
+                'status' => 'cancelled',
+                'notes' => 'Initial HR screening',
+                'cancellation_reason' => 'Candidate requested reschedule',
+                'created_at' => '2025-11-06',
+                'updated_at' => '2025-11-11',
+                'cancelled_at' => '2025-11-11',
+            ],
+            [
+                'id' => 13,
+                'application_id' => 16,
+                'candidate_name' => 'Kevin Johnson',
+                'candidate_id' => 116,
+                'job_id' => 10,
+                'job_title' => 'QA Engineer',
+                'interview_type' => 'technical',
+                'scheduled_date' => '2025-11-12',
+                'scheduled_time' => '1:30 PM',
+                'duration_minutes' => 60,
+                'location_type' => 'office',
+                'location' => 'Conference Room A',
+                'interviewer_name' => 'James Wilson',
+                'interviewer_id' => 15,
+                'status' => 'scheduled',
+                'notes' => 'QA testing framework discussion',
+                'created_at' => '2025-11-08',
+                'updated_at' => '2025-11-08',
+            ],
+            // ===== Additional single interviews on different dates =====
+            [
+                'id' => 14,
+                'application_id' => 17,
                 'candidate_name' => 'Christopher Lee',
+                'candidate_id' => 117,
+                'job_id' => 11,
                 'job_title' => 'Project Manager',
                 'interview_type' => 'panel',
                 'scheduled_date' => '2025-11-17',
                 'scheduled_time' => '10:30 AM',
+                'duration_minutes' => 75,
+                'location_type' => 'office',
+                'location' => 'Conference Room C',
                 'interviewer_name' => 'David Wilson, Emily Davis',
                 'interviewer_id' => 12,
-                'location' => 'Conference Room C',
                 'status' => 'scheduled',
                 'notes' => 'Final round interview',
                 'created_at' => '2025-11-08',
+                'updated_at' => '2025-11-08',
             ],
             [
-                'id' => 8,
-                'application_id' => 12,
+                'id' => 15,
+                'application_id' => 18,
                 'candidate_name' => 'Amanda White',
+                'candidate_id' => 118,
+                'job_id' => 2,
                 'job_title' => 'Marketing Manager',
                 'interview_type' => 'technical',
                 'scheduled_date' => '2025-11-08',
                 'scheduled_time' => '2:30 PM',
+                'duration_minutes' => 60,
+                'location_type' => 'office',
+                'location' => 'Marketing Department',
                 'interviewer_name' => 'Sarah Johnson',
                 'interviewer_id' => 5,
-                'location' => 'Marketing Department',
                 'status' => 'completed',
                 'notes' => 'Marketing strategy assessment',
                 'feedback' => 'Creative thinking, strong portfolio, good presentation skills',
                 'score' => 9,
                 'recommendation' => 'hire',
                 'created_at' => '2025-11-03',
+                'updated_at' => '2025-11-08',
                 'completed_at' => '2025-11-08',
             ],
             [
-                'id' => 9,
-                'application_id' => 15,
+                'id' => 16,
+                'application_id' => 19,
                 'candidate_name' => 'Daniel Thomas',
-                'job_title' => 'Financial Analyst',
+                'candidate_id' => 119,
+                'job_id' => 8,
+                'job_title' => 'Data Analyst',
                 'interview_type' => 'hr',
                 'scheduled_date' => '2025-11-11',
                 'scheduled_time' => '4:00 PM',
+                'duration_minutes' => 45,
+                'location_type' => 'video_call',
+                'location' => 'Zoom Meeting',
+                'meeting_link' => 'https://zoom.us/j/111111111',
                 'interviewer_name' => 'Michael Chen',
                 'interviewer_id' => 8,
-                'location' => 'Zoom Meeting',
                 'status' => 'no_show',
                 'notes' => 'Candidate did not attend',
                 'created_at' => '2025-11-06',
+                'updated_at' => '2025-11-11',
             ],
             [
-                'id' => 10,
-                'application_id' => 18,
+                'id' => 17,
+                'application_id' => 20,
                 'candidate_name' => 'Jessica Martinez',
-                'job_title' => 'Data Analyst',
+                'candidate_id' => 120,
+                'job_id' => 7,
+                'job_title' => 'DevOps Engineer',
                 'interview_type' => 'technical',
                 'scheduled_date' => '2025-11-18',
                 'scheduled_time' => '11:00 AM',
+                'duration_minutes' => 60,
+                'location_type' => 'office',
+                'location' => 'IT Department',
                 'interviewer_name' => 'James Wilson',
                 'interviewer_id' => 15,
-                'location' => 'IT Department',
                 'status' => 'scheduled',
                 'notes' => 'Technical skills assessment',
                 'created_at' => '2025-11-09',
+                'updated_at' => '2025-11-09',
             ],
             [
-                'id' => 11,
-                'application_id' => 20,
+                'id' => 18,
+                'application_id' => 21,
                 'candidate_name' => 'David Rodriguez',
+                'candidate_id' => 121,
+                'job_id' => 12,
                 'job_title' => 'Sales Executive',
                 'interview_type' => 'behavioral',
                 'scheduled_date' => '2025-11-07',
                 'scheduled_time' => '1:30 PM',
+                'duration_minutes' => 50,
+                'location_type' => 'office',
+                'location' => 'Sales Office',
                 'interviewer_name' => 'Emily Davis',
                 'interviewer_id' => 12,
-                'location' => 'Sales Office',
                 'status' => 'completed',
                 'notes' => 'Sales role play and behavioral questions',
                 'feedback' => 'Good interpersonal skills, needs improvement in closing techniques',
                 'score' => 6,
                 'recommendation' => 'reject',
                 'created_at' => '2025-11-02',
+                'updated_at' => '2025-11-07',
                 'completed_at' => '2025-11-07',
             ],
             [
-                'id' => 12,
+                'id' => 19,
                 'application_id' => 22,
-                'candidate_name' => 'Sarah Johnson',
+                'candidate_name' => 'Sarah Jackson',
+                'candidate_id' => 122,
+                'job_id' => 3,
                 'job_title' => 'HR Coordinator',
                 'interview_type' => 'hr',
                 'scheduled_date' => '2025-11-19',
                 'scheduled_time' => '10:00 AM',
+                'duration_minutes' => 45,
+                'location_type' => 'office',
+                'location' => 'HR Office',
                 'interviewer_name' => 'Michael Chen',
                 'interviewer_id' => 8,
-                'location' => 'HR Office',
                 'status' => 'scheduled',
                 'notes' => 'Initial screening',
                 'created_at' => '2025-11-10',
+                'updated_at' => '2025-11-10',
             ],
             [
-                'id' => 13,
-                'application_id' => 25,
+                'id' => 20,
+                'application_id' => 23,
                 'candidate_name' => 'Kevin Brown',
+                'candidate_id' => 123,
+                'job_id' => 13,
                 'job_title' => 'Operations Manager',
                 'interview_type' => 'panel',
                 'scheduled_date' => '2025-11-20',
                 'scheduled_time' => '2:00 PM',
+                'duration_minutes' => 90,
+                'location_type' => 'office',
+                'location' => 'Operations Center',
                 'interviewer_name' => 'David Wilson, James Wilson',
                 'interviewer_id' => 12,
-                'location' => 'Operations Center',
                 'status' => 'scheduled',
                 'notes' => 'Operations leadership assessment',
                 'created_at' => '2025-11-10',
+                'updated_at' => '2025-11-10',
             ],
             [
-                'id' => 14,
-                'application_id' => 28,
+                'id' => 21,
+                'application_id' => 24,
                 'candidate_name' => 'Michelle Davis',
+                'candidate_id' => 124,
+                'job_id' => 4,
                 'job_title' => 'Customer Service Representative',
                 'interview_type' => 'hr',
                 'scheduled_date' => '2025-11-13',
                 'scheduled_time' => '3:30 PM',
+                'duration_minutes' => 45,
+                'location_type' => 'office',
+                'location' => 'Customer Service Dept',
                 'interviewer_name' => 'Sarah Johnson',
                 'interviewer_id' => 5,
-                'location' => 'Customer Service Dept',
                 'status' => 'scheduled',
                 'notes' => 'Customer service skills evaluation',
                 'created_at' => '2025-11-08',
+                'updated_at' => '2025-11-08',
             ],
             [
-                'id' => 15,
-                'application_id' => 30,
+                'id' => 22,
+                'application_id' => 25,
                 'candidate_name' => 'Brian Wilson',
+                'candidate_id' => 125,
+                'job_id' => 11,
                 'job_title' => 'Project Manager',
                 'interview_type' => 'technical',
                 'scheduled_date' => '2025-11-06',
                 'scheduled_time' => '11:30 AM',
+                'duration_minutes' => 60,
+                'location_type' => 'office',
+                'location' => 'Project Management Office',
                 'interviewer_name' => 'Emily Davis',
                 'interviewer_id' => 12,
-                'location' => 'Project Management Office',
                 'status' => 'completed',
                 'notes' => 'Project management methodology assessment',
                 'feedback' => 'Strong PMP background, excellent organizational skills',
                 'score' => 8,
                 'recommendation' => 'hire',
                 'created_at' => '2025-11-01',
+                'updated_at' => '2025-11-06',
                 'completed_at' => '2025-11-06',
             ],
         ];
@@ -765,6 +1076,34 @@ class InterviewController extends Controller
                 'completed_at' => '2025-11-06',
                 'cancelled_at' => null,
             ],
+                        [
+                'id' => 16,
+                'application_id' => 16,
+                'candidate_name' => 'Mark Santos',
+                'job_title' => 'Project Manager',
+                'interview_type' => 'technical',
+                'scheduled_date' => '2025-11-06',
+                'scheduled_time' => '11:30 AM',
+                'duration_minutes' => 60,
+                'location_type' => 'office',
+                'meeting_link' => null,
+                'interviewer_name' => 'Emily Davis',
+                'interviewer_id' => 12,
+                'status' => 'completed',
+                'notes' => 'Project management methodology assessment',
+                'score' => 8,
+                'feedback' => 'Strong PMP background, excellent organizational skills. Ready for immediate hire.',
+                'recommendation' => 'hire',
+                'strengths' => 'Project management expertise, leadership skills, strategic thinking',
+                'weaknesses' => 'Limited experience with Agile methodologies',
+                'technical_skills_score' => 8,
+                'communication_score' => 8,
+                'cultural_fit_score' => 9,
+                'interviewer_notes' => 'Highly recommended for hire. Strong leader for project management role.',
+                'created_at' => '2025-11-01',
+                'completed_at' => '2025-11-06',
+                'cancelled_at' => null,
+            ],
         ];
 
         // Find the interview by ID
@@ -840,10 +1179,22 @@ class InterviewController extends Controller
             'interview_type' => 'required|in:hr,technical,behavioral,panel',
             'interview_date' => 'required|date|after:today',
             'interview_time' => 'required',
+            'duration_minutes' => 'required|integer|min:15|max:480',
             'interviewer_id' => 'required|integer',
             'location' => 'required|string|max:255',
             'notes' => 'nullable|string',
         ]);
+
+        // Validate office hours
+        $officeHoursCheck = $this->validateOfficeHours(
+            $validated['interview_date'],
+            $validated['interview_time'],
+            $validated['duration_minutes']
+        );
+
+        if (!$officeHoursCheck['valid']) {
+            return back()->withErrors(['time' => $officeHoursCheck['message']])->withInput();
+        }
 
         // Mock response - would normally save to database
         return back()->with('success', 'Interview scheduled successfully');
@@ -858,10 +1209,25 @@ class InterviewController extends Controller
             'interview_type' => 'sometimes|in:hr,technical,behavioral,panel',
             'interview_date' => 'sometimes|date',
             'interview_time' => 'sometimes',
+            'duration_minutes' => 'sometimes|integer|min:15|max:480',
             'interviewer_id' => 'sometimes|integer',
             'location' => 'sometimes|string|max:255',
             'notes' => 'nullable|string',
         ]);
+
+        // Validate office hours if date/time is being updated
+        if (isset($validated['interview_date']) && isset($validated['interview_time'])) {
+            $duration = $validated['duration_minutes'] ?? 60; // Default to 60 minutes
+            $officeHoursCheck = $this->validateOfficeHours(
+                $validated['interview_date'],
+                $validated['interview_time'],
+                $duration
+            );
+
+            if (!$officeHoursCheck['valid']) {
+                return back()->withErrors(['time' => $officeHoursCheck['message']])->withInput();
+            }
+        }
 
         // Mock response
         return back()->with('success', 'Interview rescheduled successfully');

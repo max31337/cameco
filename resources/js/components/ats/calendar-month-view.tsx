@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { InterviewStatusBadge } from './interview-status-badge';
 import { InterviewActionsMenu } from './interview-actions-menu';
+import { InterviewScheduleModal } from './interview-schedule-modal';
+import { X, Plus } from 'lucide-react';
+import { hasAvailableSlots, getAvailableTimeSlots } from '@/utils/office-hours';
 import type { Interview } from '@/types/ats-pages';
 
 interface CalendarMonthViewProps {
@@ -29,6 +32,31 @@ export function CalendarMonthView({
   onAddFeedback,
   onCancel,
 }: CalendarMonthViewProps) {
+  const [showAllInterviewsModal, setShowAllInterviewsModal] = useState(false);
+  const [selectedDateForModal, setSelectedDateForModal] = useState<Date | null>(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [selectedDateForScheduling, setSelectedDateForScheduling] = useState<Date | null>(null);
+
+  const openAllInterviewsModal = (date: Date) => {
+    setSelectedDateForModal(date);
+    setShowAllInterviewsModal(true);
+  };
+
+  const closeAllInterviewsModal = () => {
+    setShowAllInterviewsModal(false);
+    setSelectedDateForModal(null);
+  };
+
+  const openScheduleModal = (date: Date) => {
+    setSelectedDateForScheduling(date);
+    setShowScheduleModal(true);
+  };
+
+  const closeScheduleModal = () => {
+    setShowScheduleModal(false);
+    setSelectedDateForScheduling(null);
+  };
+
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
   
@@ -280,9 +308,25 @@ export function CalendarMonthView({
                   })}
 
                   {dayInterviews.length > 2 && (
-                    <div className="text-xs text-muted-foreground">
+                    <button
+                      onClick={() => openAllInterviewsModal(date)}
+                      className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium cursor-pointer"
+                    >
                       +{dayInterviews.length - 2} more
-                    </div>
+                    </button>
+                  )}
+
+                  {/* Add Interview Button - Show if available slots */}
+                  {isCurrentMonthDay && !isPastDate(date) && hasAvailableSlots(date, interviews) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-1 h-6 text-xs text-muted-foreground hover:text-foreground w-full"
+                      onClick={() => openScheduleModal(date)}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add
+                    </Button>
                   )}
                 </div>
               )}
@@ -318,6 +362,129 @@ export function CalendarMonthView({
           <InterviewStatusBadge status="cancelled" />
         </div>
       </div>
+
+      {/* All Interviews Modal */}
+      {showAllInterviewsModal && selectedDateForModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b p-4 sticky top-0 bg-white">
+              <h2 className="text-lg font-semibold">
+                All Interviews for {selectedDateForModal.toLocaleDateString('en-US', { 
+                  month: 'long', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </h2>
+              <button
+                onClick={closeAllInterviewsModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-4 space-y-3">
+              {getInterviewsForDate(selectedDateForModal).map((interview) => {
+                const getStatusColor = (status: string) => {
+                  switch (status) {
+                    case 'scheduled':
+                      return { bg: 'bg-blue-100 hover:bg-blue-200', text: 'text-blue-900', subtext: 'text-blue-800' };
+                    case 'completed':
+                      return { bg: 'bg-green-100 hover:bg-green-200', text: 'text-green-900', subtext: 'text-green-800' };
+                    case 'cancelled':
+                      return { bg: 'bg-red-100 hover:bg-red-200', text: 'text-red-900', subtext: 'text-red-800' };
+                    case 'no_show':
+                      return { bg: 'bg-orange-100 hover:bg-orange-200', text: 'text-orange-900', subtext: 'text-orange-800' };
+                    default:
+                      return { bg: 'bg-blue-100 hover:bg-blue-200', text: 'text-blue-900', subtext: 'text-blue-800' };
+                  }
+                };
+                const colors = getStatusColor(interview.status);
+
+                return (
+                  <div
+                    key={interview.id}
+                    className="relative"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div
+                        onClick={() => {
+                          if (interview.id) {
+                            closeAllInterviewsModal();
+                            router.visit(`/hr/ats/interviews/${interview.id}`);
+                          }
+                        }}
+                        className={`flex-1 block rounded cursor-pointer ${colors.bg} p-2 transition-colors`}
+                      >
+                        <div className={`font-medium text-sm ${colors.text}`}>
+                          {interview.candidate_name}
+                        </div>
+                        <div className={`text-xs ${colors.subtext}`}>
+                          {interview.job_title} • {interview.scheduled_time}
+                        </div>
+                      </div>
+                      
+                      {/* Menu button */}
+                      <div className="flex-shrink-0">
+                        <InterviewActionsMenu
+                          interview={interview}
+                          onReschedule={onReschedule}
+                          onAddFeedback={onAddFeedback}
+                          onCancel={onCancel}
+                          size="sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t p-4 flex justify-between gap-2 sticky bottom-0 bg-white">
+              {selectedDateForModal && hasAvailableSlots(selectedDateForModal, interviews) && (
+                <Button
+                  onClick={() => {
+                    closeAllInterviewsModal();
+                    openScheduleModal(selectedDateForModal);
+                  }}
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Interview
+                </Button>
+              )}
+              <div className="ml-auto">
+                <Button
+                  variant="outline"
+                  onClick={closeAllInterviewsModal}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule Interview Modal */}
+      {selectedDateForScheduling && (
+        <InterviewScheduleModal
+          isOpen={showScheduleModal}
+          onClose={closeScheduleModal}
+          onSubmit={async (data) => {
+            // Handle scheduling logic here
+            console.log('Schedule interview:', data);
+          }}
+          candidateName=""
+          applicationId={0}
+          selectedDate={selectedDateForScheduling}
+          interviews={interviews}
+          availableTimeSlots={getAvailableTimeSlots(selectedDateForScheduling, interviews)}
+        />
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Calendar, Clock, MapPin } from 'lucide-react';
-import type { InterviewLocationType } from '@/types/ats-pages';
+import type { Interview, InterviewLocationType } from '@/types/ats-pages';
 
 interface ScheduleInterviewData {
   scheduled_date: string;
@@ -31,8 +31,11 @@ interface InterviewScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: ScheduleInterviewData) => Promise<void>;
-  candidateName: string;
-  applicationId: number;
+  candidateName?: string;
+  applicationId?: number;
+  selectedDate?: Date;
+  availableTimeSlots?: string[];
+  interviews?: Interview[];
 }
 
 /**
@@ -43,52 +46,30 @@ export function InterviewScheduleModal({
   isOpen,
   onClose,
   onSubmit,
-  candidateName,
-  applicationId,
+  candidateName = 'Candidate',
+  selectedDate,
+  availableTimeSlots = [],
 }: InterviewScheduleModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<ScheduleInterviewData>({
     scheduled_date: '',
     scheduled_time: '',
     duration_minutes: 30,
     location_type: 'office',
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleChange = (field: string, value: string | number) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    // Clear error for this field
-    if (errors[field]) {
-      setErrors((prev) => ({
+  // Set the scheduled date when selectedDate changes
+  React.useEffect(() => {
+    if (selectedDate && isOpen) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      setFormData((prev) => ({
         ...prev,
-        [field]: '',
+        scheduled_date: dateStr,
       }));
     }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.scheduled_date) {
-      newErrors.scheduled_date = 'Interview date is required';
-    }
-
-    if (!formData.scheduled_time) {
-      newErrors.scheduled_time = 'Interview time is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  }, [selectedDate, isOpen]);
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
     try {
       await onSubmit(formData);
@@ -99,6 +80,8 @@ export function InterviewScheduleModal({
         location_type: 'office',
       });
       onClose();
+    } catch (error) {
+      console.error('Error submitting form:', error);
     } finally {
       setIsLoading(false);
     }
@@ -110,89 +93,117 @@ export function InterviewScheduleModal({
         <DialogHeader>
           <DialogTitle>Schedule Interview</DialogTitle>
           <DialogDescription>
-            Schedule an interview with {candidateName} for application #{applicationId}
+            Schedule a new interview for {candidateName}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Interview Date */}
+          {/* Date Selection */}
           <div className="space-y-2">
-            <Label htmlFor="interview-date" className="flex items-center gap-2">
+            <Label htmlFor="scheduled_date" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Interview Date
+              Date
             </Label>
             <Input
-              id="interview-date"
+              id="scheduled_date"
               type="date"
               value={formData.scheduled_date}
-              onChange={(e) => handleChange('scheduled_date', e.target.value)}
-              className={errors.scheduled_date ? 'border-red-500' : ''}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  scheduled_date: e.target.value,
+                }))
+              }
+              disabled={isLoading}
             />
-            {errors.scheduled_date && (
-              <p className="text-xs text-red-500">{errors.scheduled_date}</p>
+          </div>
+
+          {/* Time Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="scheduled_time" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Time
+            </Label>
+            {availableTimeSlots.length > 0 ? (
+              <Select
+                value={formData.scheduled_time}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    scheduled_time: value,
+                  }))
+                }
+                disabled={isLoading}
+              >
+                <SelectTrigger id="scheduled_time">
+                  <SelectValue placeholder="Select available time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTimeSlots.map((slot) => (
+                    <SelectItem key={slot} value={slot}>
+                      {slot}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="p-3 rounded-md bg-yellow-50 border border-yellow-200">
+                <p className="text-sm text-yellow-800">
+                  No available time slots on this day within office hours
+                </p>
+              </div>
             )}
           </div>
 
-          {/* Interview Time */}
+          {/* Duration Selection */}
           <div className="space-y-2">
-            <Label htmlFor="interview-time" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Interview Time
-            </Label>
-            <Input
-              id="interview-time"
-              type="time"
-              value={formData.scheduled_time}
-              onChange={(e) => handleChange('scheduled_time', e.target.value)}
-              className={errors.scheduled_time ? 'border-red-500' : ''}
-            />
-            {errors.scheduled_time && (
-              <p className="text-xs text-red-500">{errors.scheduled_time}</p>
-            )}
-          </div>
-
-          {/* Duration */}
-          <div className="space-y-2">
-            <Label htmlFor="duration" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Duration (minutes)
-            </Label>
+            <Label htmlFor="duration_minutes">Duration (minutes)</Label>
             <Select
-              value={String(formData.duration_minutes)}
-              onValueChange={(value) => handleChange('duration_minutes', parseInt(value))}
+              value={formData.duration_minutes.toString()}
+              onValueChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  duration_minutes: parseInt(value),
+                }))
+              }
+              disabled={isLoading}
             >
-              <SelectTrigger id="duration">
-                <SelectValue />
+              <SelectTrigger id="duration_minutes">
+                <SelectValue placeholder="Select duration" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="15">15 minutes</SelectItem>
                 <SelectItem value="30">30 minutes</SelectItem>
                 <SelectItem value="45">45 minutes</SelectItem>
-                <SelectItem value="60">60 minutes</SelectItem>
-                <SelectItem value="90">90 minutes</SelectItem>
+                <SelectItem value="60">1 hour</SelectItem>
+                <SelectItem value="90">1.5 hours</SelectItem>
+                <SelectItem value="120">2 hours</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Location Type */}
+          {/* Location Type Selection */}
           <div className="space-y-2">
-            <Label htmlFor="location-type" className="flex items-center gap-2">
+            <Label htmlFor="location_type" className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              Interview Location
+              Location Type
             </Label>
             <Select
               value={formData.location_type}
               onValueChange={(value) =>
-                handleChange('location_type', value as InterviewLocationType)
+                setFormData((prev) => ({
+                  ...prev,
+                  location_type: value as InterviewLocationType,
+                }))
               }
+              disabled={isLoading}
             >
-              <SelectTrigger id="location-type">
-                <SelectValue />
+              <SelectTrigger id="location_type">
+                <SelectValue placeholder="Select location" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="office">Office</SelectItem>
-                <SelectItem value="video_call">Video Call</SelectItem>
-                <SelectItem value="phone">Phone Call</SelectItem>
+                <SelectItem value="phone">Phone</SelectItem>
+                <SelectItem value="video">Video Conference</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -202,7 +213,11 @@ export function InterviewScheduleModal({
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading}>
+          <Button
+            onClick={handleSubmit}
+            disabled={!formData.scheduled_date || !formData.scheduled_time || isLoading}
+            className="gap-2"
+          >
             {isLoading ? 'Scheduling...' : 'Schedule Interview'}
           </Button>
         </DialogFooter>

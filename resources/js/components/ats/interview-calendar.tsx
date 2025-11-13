@@ -174,7 +174,6 @@ export function InterviewCalendar({
             interviews={interviews}
             currentDate={currentDate}
             onDateChange={setCurrentDate}
-            onSelectDate={onSelectDate}
             onReschedule={onReschedule}
             onAddFeedback={onAddFeedback}
             onCancel={onCancel}

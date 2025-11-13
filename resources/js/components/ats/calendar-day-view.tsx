@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, MapPin } from 'lucide-react';
+import { Clock, MapPin, Plus } from 'lucide-react';
 import { InterviewStatusBadge } from './interview-status-badge';
 import { InterviewActionsMenu } from './interview-actions-menu';
+import { InterviewScheduleModal } from './interview-schedule-modal';
+import { hasAvailableSlots, getAvailableTimeSlots } from '@/utils/office-hours';
 import type { Interview } from '@/types/ats-pages';
 
 interface CalendarDayViewProps {
   interviews: Interview[];
   currentDate: Date;
   onDateChange: (date: Date) => void;
-  onSelectDate: () => void;
   onReschedule: (interview: Interview) => void;
   onAddFeedback: (interview: Interview) => void;
   onCancel: (interview: Interview) => void;
@@ -27,12 +28,19 @@ export function CalendarDayView({
   interviews,
   currentDate,
   onDateChange,
-  onSelectDate,
   onReschedule,
   onAddFeedback,
   onCancel,
 }: CalendarDayViewProps) {
-  // Filter interviews for the current day
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+  const openScheduleModal = () => {
+    setShowScheduleModal(true);
+  };
+
+  const closeScheduleModal = () => {
+    setShowScheduleModal(false);
+  };
   const dayInterviews = interviews.filter((interview) => {
     const interviewDate = new Date(interview.scheduled_date);
     return (
@@ -272,126 +280,145 @@ export function CalendarDayView({
 
       {/* Interviews */}
       {sortedInterviews.length > 0 ? (
-        <div className="space-y-3">
-          {sortedInterviews.map((interview) => (
-            <div key={interview.id} className="group relative">
-              {/* Clickable card - NO Link wrapper */}
-              <div
-                onClick={() => {
-                  if (interview.id) {
-                    router.visit(`/hr/ats/interviews/${interview.id}`);
-                  }
-                }}
-                className={`block no-underline hover:opacity-90 transition-opacity cursor-pointer ${
-                  !interview.id ? 'pointer-events-none opacity-50' : ''
-                }`}
-              >
-                <Card className={`border-2 hover:shadow-lg transition-shadow ${getStatusColor(interview.status)}`}>
-                  <CardContent className="pt-6">
-                    <div className="space-y-3">
-                      {/* Interview Header */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{interview.candidate_name}</h3>
-                          <p className="text-sm text-muted-foreground">{interview.job_title}</p>
+        <>
+          <div className="space-y-3">
+            {sortedInterviews.map((interview) => (
+              <div key={interview.id} className="group relative">
+                {/* Clickable card - NO Link wrapper */}
+                <div
+                  onClick={() => {
+                    if (interview.id) {
+                      router.visit(`/hr/ats/interviews/${interview.id}`);
+                    }
+                  }}
+                  className={`block no-underline hover:opacity-90 transition-opacity cursor-pointer ${
+                    !interview.id ? 'pointer-events-none opacity-50' : ''
+                  }`}
+                >
+                  <Card className={`border-2 hover:shadow-lg transition-shadow ${getStatusColor(interview.status)}`}>
+                    <CardContent className="pt-6">
+                      <div className="space-y-3">
+                        {/* Interview Header */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">{interview.candidate_name}</h3>
+                            <p className="text-sm text-muted-foreground">{interview.job_title}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <InterviewStatusBadge status={interview.status} />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <InterviewStatusBadge status={interview.status} />
+
+                        {/* Interview Details */}
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-muted-foreground text-xs">Time</p>
+                              <p className="font-medium">{interview.scheduled_time}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs">Duration</p>
+                            <p className="font-medium">{interview.duration_minutes} min</p>
+                          </div>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-muted-foreground text-xs">Location</p>
+                              <p className="font-medium capitalize">
+                                {interview.location_type ? interview.location_type.replace('_', ' ') : 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs">Interviewer</p>
+                            <p className="font-medium">{interview.interviewer_name || 'N/A'}</p>
+                          </div>
+                        </div>
+
+                        {/* Additional Info */}
+                        {interview.notes && (
+                          <div className="border-t pt-3">
+                            <p className="text-muted-foreground text-xs">Notes</p>
+                            <p className="text-sm">{interview.notes}</p>
+                          </div>
+                        )}
+
+                        {interview.feedback && (
+                          <div className="border-t pt-3">
+                            <p className="text-muted-foreground text-xs">Feedback</p>
+                            <p className="text-sm">{interview.feedback}</p>
+                            {interview.score && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">Score:</span>
+                                <span className="font-semibold">{interview.score}/10</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Score Display for Completed */}
+                        {interview.status === 'completed' && interview.score && (
+                          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded border border-green-200">
+                            <p className="text-xs text-muted-foreground">Overall Score</p>
+                            <p className="text-lg font-bold text-green-700">{interview.score}/10</p>
+                            {interview.recommendation && (
+                              <p className="text-xs mt-1 text-green-600">
+                                Recommendation:{' '}
+                                <span className="font-semibold">
+                                  {interview.recommendation.charAt(0).toUpperCase() +
+                                    interview.recommendation.slice(1)}
+                                </span>
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
-
-                    {/* Interview Details */}
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-muted-foreground text-xs">Time</p>
-                        <p className="font-medium">{interview.scheduled_time}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Duration</p>
-                      <p className="font-medium">{interview.duration_minutes} min</p>
-                    </div>
-                  </div>
-
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-muted-foreground text-xs">Location</p>
-                          <p className="font-medium capitalize">
-                            {interview.location_type ? interview.location_type.replace('_', ' ') : 'N/A'}
-                          </p>
-                        </div>
-                      </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Interviewer</p>
-                      <p className="font-medium">{interview.interviewer_name || 'N/A'}</p>
-                    </div>
-                  </div>
-
-                  {/* Additional Info */}
-                  {interview.notes && (
-                    <div className="border-t pt-3">
-                      <p className="text-muted-foreground text-xs">Notes</p>
-                      <p className="text-sm">{interview.notes}</p>
-                    </div>
-                  )}
-
-                  {interview.feedback && (
-                    <div className="border-t pt-3">
-                      <p className="text-muted-foreground text-xs">Feedback</p>
-                      <p className="text-sm">{interview.feedback}</p>
-                      {interview.score && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Score:</span>
-                          <span className="font-semibold">{interview.score}/10</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Score Display for Completed */}
-                  {interview.status === 'completed' && interview.score && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded border border-green-200">
-                      <p className="text-xs text-muted-foreground">Overall Score</p>
-                      <p className="text-lg font-bold text-green-700">{interview.score}/10</p>
-                      {interview.recommendation && (
-                        <p className="text-xs mt-1 text-green-600">
-                          Recommendation:{' '}
-                          <span className="font-semibold">
-                            {interview.recommendation.charAt(0).toUpperCase() +
-                              interview.recommendation.slice(1)}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                  )}
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
-              </div>
 
-              {/* Action Menu - Positioned outside card */}
-              {/* Portal container - prevents transform/overflow issues */}
-              <div className="absolute right-6 top-4 hidden group-hover:block z-50 pointer-events-auto" style={{ transform: 'none' }}>
-                <InterviewActionsMenu
-                  interview={interview}
-                  onReschedule={onReschedule}
-                  onAddFeedback={onAddFeedback}
-                  onCancel={onCancel}
-                />
+                {/* Action Menu - Positioned outside card */}
+                {/* Portal container - prevents transform/overflow issues */}
+                <div className="absolute right-6 top-4 hidden group-hover:block z-50 pointer-events-auto" style={{ transform: 'none' }}>
+                  <InterviewActionsMenu
+                    interview={interview}
+                    onReschedule={onReschedule}
+                    onAddFeedback={onAddFeedback}
+                    onCancel={onCancel}
+                  />
+                </div>
               </div>
+            ))}
+          </div>
+
+          {/* Add Interview Button - Show if there are interviews but available slots */}
+          {hasAvailableSlots(currentDate, interviews) && (
+            <div className="flex justify-center">
+              <Button onClick={openScheduleModal} variant="outline" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Another Interview
+              </Button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       ) : (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">No interviews scheduled for this day</p>
-              <Button onClick={onSelectDate}>Schedule Interview</Button>
+              {hasAvailableSlots(currentDate, interviews) ? (
+                <Button onClick={openScheduleModal} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Schedule Interview
+                </Button>
+              ) : (
+                <p className="text-sm text-yellow-600">No available time slots within office hours</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -419,6 +446,19 @@ export function CalendarDayView({
           </div>
         </CardContent>
       </Card>
+
+      {/* Schedule Interview Modal */}
+      <InterviewScheduleModal
+        isOpen={showScheduleModal}
+        onClose={closeScheduleModal}
+        onSubmit={async (data) => {
+          // Handle scheduling logic here
+          console.log('Schedule interview:', data);
+        }}
+        selectedDate={currentDate}
+        interviews={interviews}
+        availableTimeSlots={getAvailableTimeSlots(currentDate, interviews)}
+      />
     </div>
   );
 }
