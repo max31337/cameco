@@ -308,7 +308,7 @@ export function CalendarWeekView({
                               </div>
                               
                               {/* Menu button - ALWAYS VISIBLE in week view */}
-                              <div className="flex justify-end -mt-5 pr-0.5">
+                              <div className="absolute top-0 right-0 flex items-start">
                                 <InterviewActionsMenu
                                   interview={interview}
                                   onReschedule={onReschedule}

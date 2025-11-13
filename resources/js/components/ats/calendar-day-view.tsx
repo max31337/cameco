@@ -375,7 +375,7 @@ export function CalendarDayView({
 
               {/* Action Menu - Positioned outside card */}
               {/* Portal container - prevents transform/overflow issues */}
-              <div className="absolute right-4 top-6 hidden group-hover:block z-50 pointer-events-auto" style={{ transform: 'none' }}>
+              <div className="absolute right-6 top-4 hidden group-hover:block z-50 pointer-events-auto" style={{ transform: 'none' }}>
                 <InterviewActionsMenu
                   interview={interview}
                   onReschedule={onReschedule}

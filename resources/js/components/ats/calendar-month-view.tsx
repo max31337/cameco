@@ -247,7 +247,7 @@ export function CalendarMonthView({
                       className="relative w-full"
                     >
                       {/* Clickable card with menu button in top-right corner */}
-                      <div className="flex items-start justify-between gap-1">
+                      <div className="flex items-center justify-between gap-1">
                         <div
                           onClick={() => {
                             if (interview.id) {
@@ -265,7 +265,7 @@ export function CalendarMonthView({
                         </div>
                         
                         {/* Menu button - positioned top-right */}
-                        <div className="flex-shrink-0">
+                        <div className="flex-shrink-0 flex items-center">
                           <InterviewActionsMenu
                             interview={interview}
                             onReschedule={onReschedule}
