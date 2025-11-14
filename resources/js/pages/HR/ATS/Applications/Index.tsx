@@ -15,6 +15,7 @@ import { ApplicationFilters } from '@/components/ats/application-filters';
 import { BulkActionsCard } from '@/components/ats/bulk-actions-card';
 import type { PageProps } from '@inertiajs/core';
 import type { Application, ApplicationSummary, ApplicationFilters as ApplicationFiltersType } from '@/types/ats-pages';
+import { Heading, HeadingSmall } from '@/components/heading';
 
 interface ApplicationsIndexProps extends PageProps {
   applications: Application[];
@@ -239,17 +240,14 @@ export default function ApplicationsIndex({
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Applications" />
+            <Head title="Applications" />
 
-      <div className="space-y-6 p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Applications</h1>
-            <p className="text-muted-foreground mt-2">
-              Manage and track job applications
-            </p>
-          </div>
-        </div>
+            <div className="space-y-6 p-6">
+                {/* Header */}
+                <div>
+                    <Heading title="Applications" />
+                    <HeadingSmall title="Manage and track job applications" />
+                </div>
 
         {/* Summary Cards */}
         {statistics && (

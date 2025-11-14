@@ -3,9 +3,9 @@ import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Download, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { LeaveReportsPageProps } from '@/types/hr-pages';
+import Heading, { HeadingSmall } from '@/components/heading';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -18,39 +18,21 @@ export default function LeaveReports({ summary, by_type, by_status }: LeaveRepor
     const totalRequests = (summary?.total_pending_requests || 0) + (summary?.total_approved_requests || 0) + (summary?.total_rejected_requests || 0);
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Leave Reports" />
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
-                {/* Breadcrumbs */}
-                <Breadcrumb>
-                    <BreadcrumbList>
-                        {breadcrumbs.map((crumb, index) => (
-                            <div key={index} className="flex items-center">
-                                {index > 0 && <BreadcrumbSeparator />}
-                                <BreadcrumbItem>
-                                    {crumb.href && crumb.href !== '#' ? (
-                                        <BreadcrumbLink href={crumb.href}>{crumb.title}</BreadcrumbLink>
-                                    ) : (
-                                        <BreadcrumbPage>{crumb.title}</BreadcrumbPage>
-                                    )}
-                                </BreadcrumbItem>
-                            </div>
-                        ))}
-                    </BreadcrumbList>
-                </Breadcrumb>
-
+            <div className="space-y-6 p-6">
                 {/* Header */}
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold tracking-tight">Leave Reports</h1>
+                        <div>
+                        <Heading title="Leave Reports" />
+                        <HeadingSmall title="Analyze leave request trends and statistics" />
+                        </div>
                         <Button variant="outline">
                             <Download className="h-4 w-4 mr-2" />
                             Export Report
                         </Button>
                     </div>
-                    <p className="text-muted-foreground">
-                        Analyze leave request patterns and usage trends
-                    </p>
                 </div>
 
                 {/* Summary Statistics Cards */}

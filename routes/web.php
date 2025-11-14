@@ -62,6 +62,10 @@ use App\Http\Controllers\HR\ATS\HiringPipelineController;
 use App\Http\Controllers\HR\Workforce\ScheduleController;
 use App\Http\Controllers\HR\Workforce\RotationController;
 use App\Http\Controllers\HR\Workforce\AssignmentController;
+use App\Http\Controllers\HR\Timekeeping\AttendanceController;
+use App\Http\Controllers\HR\Timekeeping\OvertimeController;
+use App\Http\Controllers\HR\Timekeeping\ImportController;
+use App\Http\Controllers\HR\Timekeeping\AnalyticsController as TimekeepingAnalyticsController;
 use App\Http\Middleware\EnsureHRManager;
 
 
@@ -276,5 +280,103 @@ Route::middleware(['auth', 'verified', EnsureHRManager::class])->prefix('hr')->n
         Route::delete('/assignments/{id}', [AssignmentController::class, 'destroy'])
             ->middleware('permission:workforce.assignments.delete')
             ->name('assignments.destroy');
+    });
+
+    // Timekeeping Module
+    Route::prefix('timekeeping')->name('timekeeping.')->group(function () {
+        // Attendance Management
+        Route::get('/attendance', [AttendanceController::class, 'index'])
+            ->middleware('permission:timekeeping.attendance.view')
+            ->name('attendance.index');
+        Route::get('/attendance/create', [AttendanceController::class, 'create'])
+            ->middleware('permission:timekeeping.attendance.create')
+            ->name('attendance.create');
+        Route::post('/attendance', [AttendanceController::class, 'store'])
+            ->middleware('permission:timekeeping.attendance.create')
+            ->name('attendance.store');
+        Route::post('/attendance/bulk', [AttendanceController::class, 'bulkEntry'])
+            ->middleware('permission:timekeeping.attendance.create')
+            ->name('attendance.bulk');
+        Route::get('/attendance/daily/{date}', [AttendanceController::class, 'daily'])
+            ->middleware('permission:timekeeping.attendance.view')
+            ->name('attendance.daily');
+        Route::get('/attendance/{id}', [AttendanceController::class, 'show'])
+            ->middleware('permission:timekeeping.attendance.view')
+            ->name('attendance.show');
+        Route::get('/attendance/{id}/edit', [AttendanceController::class, 'edit'])
+            ->middleware('permission:timekeeping.attendance.update')
+            ->name('attendance.edit');
+        Route::put('/attendance/{id}', [AttendanceController::class, 'update'])
+            ->middleware('permission:timekeeping.attendance.update')
+            ->name('attendance.update');
+        Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy'])
+            ->middleware('permission:timekeeping.attendance.delete')
+            ->name('attendance.destroy');
+        Route::post('/attendance/{id}/correct', [AttendanceController::class, 'correctAttendance'])
+            ->middleware('permission:timekeeping.attendance.correct')
+            ->name('attendance.correct');
+        Route::get('/attendance/{id}/history', [AttendanceController::class, 'correctionHistory'])
+            ->middleware('permission:timekeeping.attendance.view')
+            ->name('attendance.history');
+
+        // Overtime Management
+        Route::get('/overtime', [OvertimeController::class, 'index'])
+            ->middleware('permission:timekeeping.overtime.view')
+            ->name('overtime.index');
+        Route::get('/overtime/create', [OvertimeController::class, 'create'])
+            ->middleware('permission:timekeeping.overtime.create')
+            ->name('overtime.create');
+        Route::post('/overtime', [OvertimeController::class, 'store'])
+            ->middleware('permission:timekeeping.overtime.create')
+            ->name('overtime.store');
+        Route::get('/overtime/{id}', [OvertimeController::class, 'show'])
+            ->middleware('permission:timekeeping.overtime.view')
+            ->name('overtime.show');
+        Route::get('/overtime/{id}/edit', [OvertimeController::class, 'edit'])
+            ->middleware('permission:timekeeping.overtime.update')
+            ->name('overtime.edit');
+        Route::put('/overtime/{id}', [OvertimeController::class, 'update'])
+            ->middleware('permission:timekeeping.overtime.update')
+            ->name('overtime.update');
+        Route::delete('/overtime/{id}', [OvertimeController::class, 'destroy'])
+            ->middleware('permission:timekeeping.overtime.delete')
+            ->name('overtime.destroy');
+        Route::post('/overtime/{id}/process', [OvertimeController::class, 'processOvertime'])
+            ->middleware('permission:timekeeping.overtime.update')
+            ->name('overtime.process');
+        Route::get('/overtime/budget/{departmentId}', [OvertimeController::class, 'getBudget'])
+            ->middleware('permission:timekeeping.overtime.view')
+            ->name('overtime.budget');
+
+        // Import Management
+        Route::get('/import', [ImportController::class, 'index'])
+            ->middleware('permission:timekeeping.import.view')
+            ->name('import.index');
+        Route::post('/import/upload', [ImportController::class, 'upload'])
+            ->middleware('permission:timekeeping.import.create')
+            ->name('import.upload');
+        Route::post('/import/{id}/process', [ImportController::class, 'process'])
+            ->middleware('permission:timekeeping.import.create')
+            ->name('import.process');
+        Route::get('/import/history', [ImportController::class, 'history'])
+            ->middleware('permission:timekeeping.import.view')
+            ->name('import.history');
+        Route::get('/import/{id}/errors', [ImportController::class, 'errors'])
+            ->middleware('permission:timekeeping.import.view')
+            ->name('import.errors');
+
+        // Analytics & Reports
+        Route::get('/overview', [TimekeepingAnalyticsController::class, 'overview'])
+            ->middleware('permission:timekeeping.analytics.view')
+            ->name('overview');
+        Route::get('/analytics', [TimekeepingAnalyticsController::class, 'overview'])
+            ->middleware('permission:timekeeping.analytics.view')
+            ->name('analytics.overview');
+        Route::get('/analytics/department/{id}', [TimekeepingAnalyticsController::class, 'department'])
+            ->middleware('permission:timekeeping.analytics.view')
+            ->name('analytics.department');
+        Route::get('/analytics/employee/{id}', [TimekeepingAnalyticsController::class, 'employee'])
+            ->middleware('permission:timekeeping.analytics.view')
+            ->name('analytics.employee');
     });
 });

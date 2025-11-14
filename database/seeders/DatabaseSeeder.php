@@ -65,6 +65,11 @@ class DatabaseSeeder extends Seeder
             $this->call(\Database\Seeders\ATSPermissionsSeeder::class);
         }
 
+        // Seed Timekeeping permissions
+        if (class_exists(\Database\Seeders\TimekeepingPermissionsSeeder::class)) {
+            $this->call(\Database\Seeders\TimekeepingPermissionsSeeder::class);
+        }
+
         if (class_exists(\Database\Seeders\SLASeeder::class)) {
             $this->call(\Database\Seeders\SLASeeder::class);
         }

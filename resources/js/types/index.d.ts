@@ -56,3 +56,10 @@ export * from './ats-pages';
 
 // Export all Workforce Management types for use across the application
 export * from './workforce-pages';
+
+// ============================================================================
+// TIMEKEEPING MODULE TYPES
+// ============================================================================
+
+// Export all Timekeeping types for use across the application
+export * from './timekeeping-pages';
