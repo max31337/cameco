@@ -43,11 +43,10 @@ use Illuminate\Support\Facades\DB;
 
 class AnalyticsService
 {
-    protected DatabaseCompatibilityService $dbCompat;
-    public function __construct(DatabaseCompatibilityService $dbCompat)
-    {
-        $this->dbCompat = $dbCompat;
-    }
+    public function __construct(
+        protected DatabaseCompatibilityService $dbCompat
+    ) {}
+
 
     /**
      * Get user login statistics
