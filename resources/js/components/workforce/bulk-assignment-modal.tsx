@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
@@ -27,7 +27,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AlertTriangle, CheckCircle, Clock, X } from 'lucide-react';
+import { AlertTriangle, Clock } from 'lucide-react';
 import { ShiftAssignment, Department, EmployeeReference } from '@/types/workforce-pages';
 import {
     formatTime,
@@ -186,7 +186,7 @@ export default function BulkAssignmentModal({
                     shift_type: 'standard',
                     location: formData.location || undefined,
                     is_overtime: formData.is_overtime,
-                    department_id: employee.department_id,
+                    department_id: employee.department_id || parseInt(formData.department_id) || 0,
                 });
             }
         }
@@ -201,14 +201,14 @@ export default function BulkAssignmentModal({
 
             for (const assignment of previewAssignments) {
                 try {
-                    const hasConflict = await detectConflicts(
+                    const result = await detectConflicts(
                         assignment.employee_id,
                         assignment.date,
-                        assignment.shift_start || '09:00',
-                        assignment.shift_end || '17:00'
+                        assignment.shift_start,
+                        assignment.shift_end
                     );
 
-                    if (hasConflict) {
+                    if (result.hasConflict) {
                         conflicts[assignment.employee_id] = true;
                     }
                 } catch (err) {

@@ -217,11 +217,15 @@ export function getStatusColorClasses(status: string): string {
  * Simulate conflict detection (in real app, this would call backend API)
  * @param employeeId - Employee ID
  * @param date - Date in YYYY-MM-DD format
+ * @param shiftStart - Start time in HH:MM:SS format
+ * @param shiftEnd - End time in HH:MM:SS format
  * @returns Promise with conflict detection result
  */
 export async function detectConflicts(
     employeeId: number,
-    date: string
+    date: string,
+    shiftStart: string,
+    shiftEnd: string
 ): Promise<{
     hasConflict: boolean;
     conflictMessage?: string;
@@ -235,7 +239,7 @@ export async function detectConflicts(
             if (hasConflict) {
                 resolve({
                     hasConflict: true,
-                    conflictMessage: `Employee already has a shift assigned on ${formatDate(date)} (10:00 AM - 6:00 PM)`,
+                    conflictMessage: `Employee already has a shift assigned on ${formatDate(date)} (${formatTime(shiftStart)} - ${formatTime(shiftEnd)})`,
                 });
             } else {
                 resolve({
