@@ -3,7 +3,7 @@ import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Eye } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { ImportDetailModal } from '@/components/timekeeping/import-detail-modal';
 import { ImportBatch, ImportError } from '@/types/timekeeping-pages';
 
@@ -209,7 +209,7 @@ export default function ImportManagement() {
                                 <li>Employee ID or Employee Number</li>
                                 <li>Attendance Date</li>
                                 <li>Time In</li>
-                                <li>Time Out (optional)</li>
+                                <li>Time Out</li>
                             </ul>
                         </div>
                     </CardContent>
