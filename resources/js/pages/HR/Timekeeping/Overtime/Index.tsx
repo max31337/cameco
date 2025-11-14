@@ -1,18 +1,55 @@
 import { Head, usePage } from '@inertiajs/react';
+import { useState, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { OvertimeRequestsIndexProps } from '@/types/timekeeping-pages';
+import { Plus, Eye, Edit } from 'lucide-react';
+import { OvertimeFormModal } from '@/components/timekeeping/overtime-form-modal';
+import { OvertimeDetailModal } from '@/components/timekeeping/overtime-detail-modal';
+import { OvertimeRecord, EmployeeBasic } from '@/types/timekeeping-pages';
+
+interface OvertimeRequestsIndexProps {
+    overtime: OvertimeRecord[];
+    employees: EmployeeBasic[];
+    summary: {
+        total_records: number;
+        planned: number;
+        in_progress: number;
+        completed: number;
+        total_ot_hours: number;
+    };
+}
 
 export default function OvertimeIndex() {
-    const { overtime, summary } = usePage().props as unknown as OvertimeRequestsIndexProps;
+    const { overtime = [], employees = [], summary } = usePage().props as unknown as OvertimeRequestsIndexProps;
+
+    // Modal states
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState<OvertimeRecord | null>(null);
 
     const breadcrumbs = [
         { title: 'HR', href: '/hr' },
         { title: 'Timekeeping', href: '/hr/timekeeping' },
         { title: 'Overtime', href: '/hr/timekeeping/overtime' },
     ];
+
+    const handleViewRecord = (record: OvertimeRecord) => {
+        setSelectedRecord(record);
+        setIsDetailModalOpen(true);
+    };
+
+    const handleEditRecord = (record: OvertimeRecord) => {
+        setSelectedRecord(record);
+        setIsFormModalOpen(true);
+    };
+
+    const handleSaveForm = (data: any) => {
+        console.log('Save overtime record:', data);
+        setIsFormModalOpen(false);
+        setSelectedRecord(null);
+        // API call would go here
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -26,7 +63,7 @@ export default function OvertimeIndex() {
                         <p className="text-gray-600">Track and manage overtime records</p>
                     </div>
 
-                    <Button className="gap-2">
+                    <Button onClick={() => setIsFormModalOpen(true)} className="gap-2">
                         <Plus className="h-4 w-4" />
                         Create Overtime Record
                     </Button>
@@ -124,7 +161,7 @@ export default function OvertimeIndex() {
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4 text-right">
-                                                <Button variant="outline" size="sm">View</Button>
+                                                <Button variant="outline" size="sm" onClick={() => handleViewRecord(record)}>View</Button>
                                             </td>
                                         </tr>
                                     ))}
@@ -133,6 +170,40 @@ export default function OvertimeIndex() {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Modals */}
+                <OvertimeFormModal
+                    isOpen={isFormModalOpen && !selectedRecord}
+                    onClose={() => setIsFormModalOpen(false)}
+                    onSave={handleSaveForm}
+                    employees={employees}
+                    record={null}
+                />
+
+                {selectedRecord && (
+                    <>
+                        <OvertimeDetailModal
+                            isOpen={isDetailModalOpen}
+                            onClose={() => {
+                                setIsDetailModalOpen(false);
+                                setSelectedRecord(null);
+                            }}
+                            record={selectedRecord}
+                            onEdit={() => handleEditRecord(selectedRecord)}
+                        />
+
+                        <OvertimeFormModal
+                            isOpen={isFormModalOpen && selectedRecord?.status === 'planned'}
+                            onClose={() => {
+                                setIsFormModalOpen(false);
+                                setSelectedRecord(null);
+                            }}
+                            onSave={handleSaveForm}
+                            employees={employees}
+                            record={selectedRecord}
+                        />
+                    </>
+                )}
             </div>
         </AppLayout>
     );

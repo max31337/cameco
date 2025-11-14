@@ -1,18 +1,53 @@
 import { Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload } from 'lucide-react';
-import { ImportManagementProps } from '@/types/timekeeping-pages';
+import { Upload, Eye } from 'lucide-react';
+import { ImportDetailModal } from '@/components/timekeeping/import-detail-modal';
+import { ImportBatch, ImportError } from '@/types/timekeeping-pages';
+
+interface ImportManagementProps {
+    batches: ImportBatch[];
+    summary: {
+        total_imports: number;
+        pending: number;
+        successful: number;
+        records_imported: number;
+        failed: number;
+    };
+}
 
 export default function ImportManagement() {
-    const { batches, summary } = usePage().props as unknown as ImportManagementProps;
+    const { batches = [], summary } = usePage().props as unknown as ImportManagementProps;
+
+    // Modal states
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [selectedBatch, setSelectedBatch] = useState<ImportBatch | null>(null);
+    const [batchErrors, setBatchErrors] = useState<ImportError[]>([]);
 
     const breadcrumbs = [
         { title: 'HR', href: '/hr' },
         { title: 'Timekeeping', href: '/hr/timekeeping' },
         { title: 'Import Management', href: '/hr/timekeeping/import' },
     ];
+
+    const handleViewBatch = (batch: ImportBatch) => {
+        setSelectedBatch(batch);
+        // In a real app, fetch errors for this batch
+        setBatchErrors([]);
+        setIsDetailModalOpen(true);
+    };
+
+    const handleRetryImport = (batch: ImportBatch) => {
+        console.log('Retry import for batch:', batch.id);
+        // API call would go here
+    };
+
+    const handleUploadFile = () => {
+        console.log('Upload file clicked');
+        // File upload dialog would open here
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -25,7 +60,7 @@ export default function ImportManagement() {
                         <h1 className="text-3xl font-bold">Import Management</h1>
                         <p className="text-gray-600">Bulk upload and manage attendance imports</p>
                     </div>
-                    <Button className="gap-2">
+                    <Button onClick={handleUploadFile} className="gap-2">
                         <Upload className="h-4 w-4" />
                         Upload File
                     </Button>
@@ -126,7 +161,7 @@ export default function ImportManagement() {
                                             </td>
                                             <td className="py-3 px-4 text-xs">{batch.created_at}</td>
                                             <td className="py-3 px-4 text-right">
-                                                <Button variant="outline" size="sm">Details</Button>
+                                                <Button variant="outline" size="sm" onClick={() => handleViewBatch(batch)}>Details</Button>
                                             </td>
                                         </tr>
                                     ))}
@@ -135,6 +170,24 @@ export default function ImportManagement() {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Import Detail Modal */}
+                {selectedBatch && (
+                    <ImportDetailModal
+                        isOpen={isDetailModalOpen}
+                        onClose={() => {
+                            setIsDetailModalOpen(false);
+                            setSelectedBatch(null);
+                            setBatchErrors([]);
+                        }}
+                        batch={selectedBatch}
+                        errors={batchErrors}
+                        onRetry={() => {
+                            handleRetryImport(selectedBatch);
+                            setIsDetailModalOpen(false);
+                        }}
+                    />
+                )}
 
                 {/* Upload Instructions */}
                 <Card>
