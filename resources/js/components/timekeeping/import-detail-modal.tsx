@@ -91,22 +91,27 @@ export function ImportDetailModal({
                                     File Information
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="grid grid-cols-2 gap-4">
+                            <CardContent className="space-y-4">
+                                {/* File Name - Full Width */}
                                 <div>
-                                    <p className="text-xs text-gray-600 font-semibold">File Name</p>
-                                    <p className="text-lg mt-2">{batch.file_name}</p>
+                                    <p className="text-xs text-gray-600 font-semibold mb-2">File Name</p>
+                                    <p className="text-sm font-mono bg-gray-50 p-3 rounded-lg break-all">{batch.file_name}</p>
                                 </div>
-                                <div>
-                                    <p className="text-xs text-gray-600 font-semibold">File Size</p>
-                                    <p className="text-lg mt-2">{(batch.file_size / 1024).toFixed(2)} KB</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Import Type</p>
-                                    <p className="text-lg mt-2 capitalize">{batch.import_type}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Upload Time</p>
-                                    <p className="text-lg mt-2">{batch.created_at}</p>
+
+                                {/* File Size, Import Type, Upload Time - Grid */}
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <p className="text-xs text-gray-600 font-semibold mb-2">File Size</p>
+                                        <p className="text-sm font-semibold text-gray-900">{(batch.file_size / 1024).toFixed(2)} KB</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-600 font-semibold mb-2">Import Type</p>
+                                        <p className="text-sm font-semibold text-gray-900 capitalize">{batch.import_type}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-600 font-semibold mb-2">Upload Time</p>
+                                        <p className="text-sm font-semibold text-gray-900">{batch.created_at}</p>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

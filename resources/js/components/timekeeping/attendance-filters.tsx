@@ -9,14 +9,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Filter, X } from 'lucide-react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from '@/components/ui/dialog';
+import { X } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 export interface AttendanceFiltersState {
     department_id?: string;
@@ -29,8 +23,6 @@ export interface AttendanceFiltersState {
 }
 
 interface AttendanceFiltersProps {
-    departments?: Array<{ id: number; name: string }>;
-    employees?: Array<{ id: number; name: string; employee_number: string }>;
     filters: AttendanceFiltersState;
     onFiltersChange: (filters: AttendanceFiltersState) => void;
 }
@@ -51,12 +43,10 @@ const sourceOptions = [
 ];
 
 export function AttendanceFilters({
-    _departments = [],
-    _employees = [],
     filters,
     onFiltersChange,
 }: AttendanceFiltersProps) {
-    const [isOpen, setIsOpen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const handleFilterChange = (key: string, value: string) => {
         onFiltersChange({
@@ -67,54 +57,57 @@ export function AttendanceFilters({
 
     const handleReset = () => {
         onFiltersChange({});
+        setIsExpanded(false);
     };
 
     const activeFiltersCount = Object.values(filters).filter(v => v && v !== '').length;
 
     return (
-        <>
-            <Button
-                variant={activeFiltersCount > 0 ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setIsOpen(true)}
-                className="gap-2"
-            >
-                <Filter className="h-4 w-4" />
-                Filters
-                {activeFiltersCount > 0 && (
-                    <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-white text-xs text-blue-600">
-                        {activeFiltersCount}
-                    </span>
-                )}
-            </Button>
+        <Card className="p-4 border border-gray-200">
+            <div className="grid grid-cols-2 gap-4">
+                {/* Left Column - Search */}
+                <div className="space-y-2">
+                    <Label htmlFor="search" className="text-xs font-medium text-gray-700">Search</Label>
+                    <Input
+                        id="search"
+                        placeholder="Search by employee name..."
+                        value={filters.search || ''}
+                        onChange={(e) => handleFilterChange('search', e.target.value)}
+                        className="h-9 text-sm"
+                    />
+                </div>
 
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Filter Attendance Records</DialogTitle>
-                    </DialogHeader>
+                {/* Right Column - Advanced Filters Toggle */}
+                <div className="flex items-end">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="px-0 h-auto text-xs text-gray-600 hover:text-gray-900"
+                    >
+                        {isExpanded ? '▼' : '▶'} Advanced Filters
+                        {activeFiltersCount > 0 && (
+                            <span className="ml-2 inline-flex items-center justify-center px-1.5 py-0.5 rounded text-xs bg-blue-100 text-blue-600 font-medium">
+                                {activeFiltersCount}
+                            </span>
+                        )}
+                    </Button>
+                </div>
+            </div>
 
-                    <div className="space-y-4 py-4">
-                        {/* Search */}
-                        <div className="space-y-2">
-                            <Label htmlFor="search">Search</Label>
-                            <Input
-                                id="search"
-                                placeholder="Employee name or ID..."
-                                value={filters.search || ''}
-                                onChange={(e) => handleFilterChange('search', e.target.value)}
-                            />
-                        </div>
-
+            {/* Advanced Filters - Full Width */}
+            {isExpanded && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="grid grid-cols-2 gap-4">
                         {/* Status Filter */}
-                        <div className="space-y-2">
-                            <Label htmlFor="status">Status</Label>
-                            <Select value={filters.status || ''} onValueChange={(value) => handleFilterChange('status', value)}>
-                                <SelectTrigger id="status">
-                                    <SelectValue placeholder="Select status..." />
+                        <div className="space-y-1.5">
+                            <Label htmlFor="status" className="text-xs font-medium text-gray-700">Status</Label>
+                            <Select value={filters.status || 'all'} onValueChange={(value) => handleFilterChange('status', value === 'all' ? '' : value)}>
+                                <SelectTrigger id="status" className="h-8 text-sm">
+                                    <SelectValue placeholder="All statuses" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">All Statuses</SelectItem>
+                                    <SelectItem value="all">All Statuses</SelectItem>
                                     {statusOptions.map(option => (
                                         <SelectItem key={option.value} value={option.value}>
                                             {option.label}
@@ -125,14 +118,14 @@ export function AttendanceFilters({
                         </div>
 
                         {/* Source Filter */}
-                        <div className="space-y-2">
-                            <Label htmlFor="source">Source</Label>
-                            <Select value={filters.source || ''} onValueChange={(value) => handleFilterChange('source', value)}>
-                                <SelectTrigger id="source">
-                                    <SelectValue placeholder="Select source..." />
+                        <div className="space-y-1.5">
+                            <Label htmlFor="source" className="text-xs font-medium text-gray-700">Source</Label>
+                            <Select value={filters.source || 'all'} onValueChange={(value) => handleFilterChange('source', value === 'all' ? '' : value)}>
+                                <SelectTrigger id="source" className="h-8 text-sm">
+                                    <SelectValue placeholder="All sources" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">All Sources</SelectItem>
+                                    <SelectItem value="all">All Sources</SelectItem>
                                     {sourceOptions.map(option => (
                                         <SelectItem key={option.value} value={option.value}>
                                             {option.label}
@@ -142,52 +135,45 @@ export function AttendanceFilters({
                             </Select>
                         </div>
 
-                        {/* Date Range */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                                <Label htmlFor="date-from">Date From</Label>
-                                <Input
-                                    id="date-from"
-                                    type="date"
-                                    value={filters.date_from || ''}
-                                    onChange={(e) => handleFilterChange('date_from', e.target.value)}
-                                />
-                            </div>
+                        {/* Date From */}
+                        <div className="space-y-1.5">
+                            <Label htmlFor="date-from" className="text-xs font-medium text-gray-700">Date From</Label>
+                            <Input
+                                id="date-from"
+                                type="date"
+                                value={filters.date_from || ''}
+                                onChange={(e) => handleFilterChange('date_from', e.target.value)}
+                                className="h-8 text-sm"
+                            />
+                        </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="date-to">Date To</Label>
-                                <Input
-                                    id="date-to"
-                                    type="date"
-                                    value={filters.date_to || ''}
-                                    onChange={(e) => handleFilterChange('date_to', e.target.value)}
-                                />
-                            </div>
+                        {/* Date To */}
+                        <div className="space-y-1.5">
+                            <Label htmlFor="date-to" className="text-xs font-medium text-gray-700">Date To</Label>
+                            <Input
+                                id="date-to"
+                                type="date"
+                                value={filters.date_to || ''}
+                                onChange={(e) => handleFilterChange('date_to', e.target.value)}
+                                className="h-8 text-sm"
+                            />
                         </div>
                     </div>
 
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={handleReset} size="sm">
-                            Reset
+                    {/* Clear Button */}
+                    {activeFiltersCount > 0 && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleReset}
+                            className="w-full h-8 text-xs mt-4"
+                        >
+                            <X className="h-3 w-3 mr-1" />
+                            Clear All Filters
                         </Button>
-                        <Button onClick={() => setIsOpen(false)} size="sm">
-                            Apply Filters
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {activeFiltersCount > 0 && (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleReset}
-                    className="gap-1 ml-2"
-                >
-                    <X className="h-4 w-4" />
-                    Clear
-                </Button>
+                    )}
+                </div>
             )}
-        </>
+        </Card>
     );
 }

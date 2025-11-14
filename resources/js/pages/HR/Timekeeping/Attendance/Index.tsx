@@ -68,6 +68,7 @@ export default function AttendanceIndex() {
 
     const handleEditRecord = (record: AttendanceRecord) => {
         setSelectedRecord(record);
+        setIsDetailModalOpen(false);
         setIsEntryModalOpen(true);
     };
 
@@ -165,11 +166,14 @@ export default function AttendanceIndex() {
 
                 {/* Modals */}
                 <AttendanceEntryModal
-                    isOpen={isEntryModalOpen && !selectedRecord}
-                    onClose={() => setIsEntryModalOpen(false)}
+                    isOpen={isEntryModalOpen}
+                    onClose={() => {
+                        setIsEntryModalOpen(false);
+                        setSelectedRecord(null);
+                    }}
                     onSave={handleSaveEntry}
                     employees={employees}
-                    record={null}
+                    record={selectedRecord}
                 />
 
                 {selectedRecord && (
