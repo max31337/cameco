@@ -398,19 +398,19 @@ When enabled by client, the system will support:
   - Onboarding handoff
 
 ## Workforce Management
-- **[ ] Work Schedules**
+- **[-] Work Schedules**
   - Create/edit schedules
   - Schedule templates
   - Schedule assignments
   - Schedule conflicts
   
-- **[ ] Employee Rotations**
+- **[-] Employee Rotations**
   - Rotation planning
   - Rotation patterns (4x2, 6x1, etc.)
   - Rotation assignments
   - Rotation analytics
   
-- **[ ] Shift Assignments**
+- **[-] Shift Assignments**
   - Daily assignments
   - Shift coverage
   - Assignment conflicts
