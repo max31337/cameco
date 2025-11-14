@@ -114,16 +114,32 @@ export default function BulkAssignmentModal({
     const [isLoading, setIsLoading] = useState(false);
     const [previewConflicts, setPreviewConflicts] = useState<Record<number, boolean>>({});
     const [operationStep, setOperationStep] = useState<'form' | 'preview' | 'processing'>('form');
+    const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
 
-    // Filter employees by department if specified
+    // Filter employees by department and search term
     const filteredEmployees = useMemo(() => {
-        if (formData.department_id === 'all') {
-            return employees;
+        let filtered = employees;
+        
+        // Filter by department
+        if (formData.department_id !== 'all') {
+            filtered = filtered.filter(
+                (e) => e.department_id === parseInt(formData.department_id)
+            );
         }
-        return employees.filter(
-            (e) => e.department_id === parseInt(formData.department_id)
-        );
-    }, [employees, formData.department_id]);
+        
+        // Filter by search term (search in name and employee number)
+        if (employeeSearchTerm.trim()) {
+            const searchLower = employeeSearchTerm.toLowerCase();
+            filtered = filtered.filter(
+                (e) =>
+                    e.full_name.toLowerCase().includes(searchLower) ||
+                    e.employee_number.toLowerCase().includes(searchLower) ||
+                    (e.position_name?.toLowerCase().includes(searchLower) || false)
+            );
+        }
+        
+        return filtered;
+    }, [employees, formData.department_id, employeeSearchTerm]);
 
     // Get selected schedule details
     const selectedSchedule = useMemo(() => {
@@ -179,26 +195,33 @@ export default function BulkAssignmentModal({
     }, [formData.employees, selectedSchedule, dateRange, employees, formData.location, formData.is_overtime]);
 
     // Check conflicts for preview
-    const conflictSummary = useMemo(async () => {
-        const conflicts: Record<number, boolean> = {};
-        let conflictCount = 0;
+    React.useEffect(() => {
+        const checkConflicts = async () => {
+            const conflicts: Record<number, boolean> = {};
 
-        for (const assignment of previewAssignments) {
-            const hasConflict = await detectConflicts(
-                assignment.employee_id,
-                assignment.date,
-                assignment.shift_start,
-                assignment.shift_end
-            );
+            for (const assignment of previewAssignments) {
+                try {
+                    const hasConflict = await detectConflicts(
+                        assignment.employee_id,
+                        assignment.date,
+                        assignment.shift_start || '09:00',
+                        assignment.shift_end || '17:00'
+                    );
 
-            if (hasConflict) {
-                conflicts[assignment.employee_id] = true;
-                conflictCount++;
+                    if (hasConflict) {
+                        conflicts[assignment.employee_id] = true;
+                    }
+                } catch (err) {
+                    console.error('Conflict detection error:', err);
+                }
             }
-        }
 
-        setPreviewConflicts(conflicts);
-        return conflictCount;
+            setPreviewConflicts(conflicts);
+        };
+
+        if (previewAssignments.length > 0) {
+            checkConflicts();
+        }
     }, [previewAssignments]);
 
     const handleEmployeeToggle = (employeeId: number) => {
@@ -246,7 +269,8 @@ export default function BulkAssignmentModal({
             });
             setOperationStep('form');
             onClose();
-        } catch (error) {
+        } catch {
+            // Conflict detected or other error, stay in preview mode
             setOperationStep('preview');
         } finally {
             setIsLoading(false);
@@ -330,6 +354,31 @@ export default function BulkAssignmentModal({
                                     </Button>
                                 )}
                             </div>
+                            
+                            {/* Employee Search Input */}
+                            <Input
+                                placeholder="Search by name, employee ID, or position..."
+                                value={employeeSearchTerm}
+                                onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+                                className="mb-3"
+                            />
+                            
+                            {/* Selected Employees Display */}
+                            {formData.employees.length > 0 && (
+                                <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p className="text-xs font-medium text-blue-900 mb-2">Selected Employees:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {employees
+                                            .filter((e) => formData.employees.includes(e.id))
+                                            .map((employee) => (
+                                                <Badge key={employee.id} variant="secondary" className="whitespace-nowrap">
+                                                    {employee.full_name} ({employee.employee_number})
+                                                </Badge>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
+                            
                             <Card className="max-h-40 overflow-y-auto">
                                 <CardContent className="pt-4">
                                     {filteredEmployees.length > 0 ? (
@@ -348,7 +397,7 @@ export default function BulkAssignmentModal({
                                                         }
                                                     />
                                                     <span className="text-sm">
-                                                        {employee.name} ({employee.employee_number})
+                                                        {employee.full_name} ({employee.employee_number})
                                                     </span>
                                                 </div>
                                             ))}
@@ -534,7 +583,12 @@ export default function BulkAssignmentModal({
                                                     }
                                                 >
                                                     <TableCell className="font-medium">
-                                                        {employee?.name}
+                                                        <div className="flex flex-col">
+                                                            <span>{employee?.full_name}</span>
+                                                            <span className="text-xs text-gray-500">
+                                                                ID: {employee?.employee_number}
+                                                            </span>
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         {new Date(
