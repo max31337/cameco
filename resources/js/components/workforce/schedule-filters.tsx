@@ -44,15 +44,19 @@ export default function ScheduleFilters({
             setLocalFilters(newFilters);
         }
     };
-    };
 
     const handleReset = () => {
-        setFilters({
+        const defaultFilters = {
             department_id: 0,
             status: 'all',
             search: '',
             date_range: 'all',
-        });
+        };
+        if (onFiltersChange) {
+            onFiltersChange(defaultFilters);
+        } else {
+            setLocalFilters(defaultFilters);
+        }
     };
 
     const isFiltered = Object.values(filters).some(
