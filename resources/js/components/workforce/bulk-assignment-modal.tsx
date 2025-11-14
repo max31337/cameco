@@ -28,12 +28,10 @@ import {
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertTriangle, Clock } from 'lucide-react';
-import { ShiftAssignment, Department, EmployeeReference } from '@/types/workforce-pages';
+import { Department, EmployeeReference } from '@/types/workforce-pages';
 import {
     formatTime,
     calculateShiftDuration,
-    getShiftTypeColorClasses,
-    getStatusColorClasses,
     detectConflicts,
 } from '@/lib/workforce-utils';
 
@@ -192,7 +190,7 @@ export default function BulkAssignmentModal({
         }
 
         return assignments;
-    }, [formData.employees, selectedSchedule, dateRange, employees, formData.location, formData.is_overtime]);
+    }, [formData.employees, selectedSchedule, dateRange, employees, formData.location, formData.is_overtime, formData.department_id]);
 
     // Check conflicts for preview
     React.useEffect(() => {
