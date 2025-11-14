@@ -24,11 +24,12 @@ export default function RotationsIndex({ rotations, summary, departments, patter
 
     // Filter rotations based on search and filters
     const filteredRotations = (Array.isArray(rotations) ? rotations : rotations.data || []).filter((rotation) => {
-        const matchesSearch = rotation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch = !searchTerm || 
+            rotation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             rotation.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesPattern = filters.pattern_type === 'all' || rotation.pattern_type === filters.pattern_type;
-        const matchesDept = filters.department_id === 'all' || rotation.department_id === parseInt(filters.department_id);
+        const matchesDept = filters.department_id === 'all' || (rotation.department_id != null && rotation.department_id.toString() === filters.department_id);
         const matchesStatus = filters.status === 'all' ||
             (filters.status === 'active' && rotation.is_active) ||
             (filters.status === 'inactive' && !rotation.is_active);
@@ -172,6 +173,13 @@ export default function RotationsIndex({ rotations, summary, departments, patter
                         />
                     )}
                 </div>
+
+                {/* Results Count */}
+                {filteredRotations.length > 0 && (
+                    <p className="text-sm text-gray-600">
+                        Showing {filteredRotations.length} of {(Array.isArray(rotations) ? rotations : rotations.data || []).length} rotations
+                    </p>
+                )}
 
                 {/* Rotations Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

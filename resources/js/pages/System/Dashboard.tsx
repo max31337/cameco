@@ -1,9 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import SuperadminOnboardingCard from '@/components/superadmin-onboarding-card';
-import { SystemHealthWidgets, CronJobsCard } from '@/components/system-health-widgets';
-import SLAWidgets from '@/components/sla-widgets';
+import SuperadminOnboardingCard from '@/components/system/superadmin-onboarding-card';
+import { SystemHealthWidgets, CronJobsCard } from '@/components/system/system-health-widgets';
+import SLAWidgets from '@/components/system/sla-widgets';
 import { ModuleGrid } from '@/components/module-grid';
 import { ModuleCategory } from '@/types/modules';
 

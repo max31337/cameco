@@ -215,12 +215,12 @@ export function CreateEditRotationModal({
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Department</label>
-                                <Select value={formData.department_id} onValueChange={(v) => handleInputChange('department_id', v)}>
+                                <Select value={formData.department_id || 'none'} onValueChange={(v) => handleInputChange('department_id', v === 'none' ? '' : v)}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select department..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">No Department</SelectItem>
+                                        <SelectItem value="none">No Department</SelectItem>
                                         {departments.map((dept) => (
                                             <SelectItem key={dept.id} value={dept.id.toString()}>
                                                 {dept.name}
@@ -322,18 +322,6 @@ export function CreateEditRotationModal({
                                     ))}
                                 </div>
                             )}
-
-                            {/* Pattern JSON Preview */}
-                            <div className="p-3 bg-gray-50 rounded text-xs font-mono text-gray-600 overflow-x-auto">
-                                <pre>
-                                    {JSON.stringify({
-                                        pattern: patternInput,
-                                        work_days: patternStats.workDays,
-                                        rest_days: patternStats.restDays,
-                                        cycle_length: patternStats.cycleLength,
-                                    }, null, 2)}
-                                </pre>
-                            </div>
                         </div>
                     </div>
 

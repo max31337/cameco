@@ -13,12 +13,16 @@ interface FilterState {
 
 interface ScheduleFiltersProps {
     departments: Array<{ id: number; name: string }>;
+    filters?: FilterState;
+    onFiltersChange?: (filters: FilterState) => void;
 }
 
 export default function ScheduleFilters({
     departments,
+    filters: externalFilters,
+    onFiltersChange,
 }: ScheduleFiltersProps) {
-    const [filters, setFilters] = useState<FilterState>({
+    const [localFilters, setLocalFilters] = useState<FilterState>({
         department_id: 0,
         status: 'all',
         search: '',
@@ -27,11 +31,19 @@ export default function ScheduleFilters({
 
     const [isOpen, setIsOpen] = useState(false);
 
+    const filters = externalFilters || localFilters;
+
     const handleFilterChange = (key: string, value: string | number) => {
-        setFilters((prev) => ({
-            ...prev,
+        const newFilters = {
+            ...filters,
             [key]: value,
-        }));
+        };
+        if (onFiltersChange) {
+            onFiltersChange(newFilters);
+        } else {
+            setLocalFilters(newFilters);
+        }
+    };
     };
 
     const handleReset = () => {

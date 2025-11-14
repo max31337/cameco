@@ -17,6 +17,30 @@ export default function SchedulesIndex() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedSchedule, setSelectedSchedule] = useState<WorkSchedule | null>(null);
     const [schedules, setSchedules] = useState<WorkSchedule[]>(initialSchedules as WorkSchedule[]);
+    const [filters, setFilters] = useState({
+        department_id: 0,
+        status: 'all',
+        search: '',
+        date_range: 'all',
+    });
+
+    // Filter schedules based on filters
+    const filteredSchedules = schedules.filter((schedule) => {
+        const matchesSearch =
+            !filters.search ||
+            schedule.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+            schedule.description?.toLowerCase().includes(filters.search.toLowerCase());
+
+        const matchesDept =
+            !filters.department_id ||
+            schedule.department_id === filters.department_id;
+
+        const matchesStatus =
+            filters.status === 'all' ||
+            schedule.status === filters.status;
+
+        return matchesSearch && matchesDept && matchesStatus;
+    });
 
     const handleEditClick = (schedule: WorkSchedule) => {
         setSelectedSchedule(schedule);
@@ -126,7 +150,11 @@ export default function SchedulesIndex() {
 
                 {/* Filters and View Toggle */}
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <ScheduleFilters departments={departments} />
+                    <ScheduleFilters 
+                        departments={departments}
+                        filters={filters}
+                        onFiltersChange={setFilters}
+                    />
                     <div className="flex gap-2">
                         <Button
                             variant={viewMode === 'card' ? 'default' : 'outline'}
@@ -149,10 +177,14 @@ export default function SchedulesIndex() {
                     </div>
                 </div>
 
-                {/* Schedules Display */}
-                {viewMode === 'card' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {schedules.map((schedule) => (
+                {/* Results Count */}
+                <p className="text-sm text-gray-600">Showing {filteredSchedules.length} of {schedules.length} schedules</p>
+
+                {/* Schedules Grid/List */}
+                {filteredSchedules.length > 0 ? (
+                    viewMode === 'card' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredSchedules.map((schedule) => (
                             <ScheduleCard
                                 key={schedule.id}
                                 schedule={schedule}
@@ -178,7 +210,7 @@ export default function SchedulesIndex() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {schedules.map((schedule) => (
+                                        {filteredSchedules.map((schedule) => (
                                             <tr key={schedule.id} className="border-b hover:bg-gray-50">
                                                 <td className="py-3 px-4 font-medium">{schedule.name}</td>
                                                 <td className="py-3 px-4">{schedule.department_name || 'N/A'}</td>
@@ -224,10 +256,9 @@ export default function SchedulesIndex() {
                             </div>
                         </CardContent>
                     </Card>
-                )}
-
-                {schedules.length === 0 && (
-                    <Card className="text-center py-12">
+                )
+                ) : (
+                    <div className="text-center py-12">
                         <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                         <h3 className="text-lg font-semibold text-gray-900">No schedules found</h3>
                         <p className="text-gray-600 mt-2">Create your first schedule to get started</p>
@@ -235,7 +266,7 @@ export default function SchedulesIndex() {
                             <Plus className="h-4 w-4" />
                             Create Schedule
                         </Button>
-                    </Card>
+                    </div>
                 )}
             </div>
 

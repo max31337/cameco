@@ -7,7 +7,7 @@ import {
     DepartmentBreakdownCard, 
     RecentHiresCard, 
     PendingActionsCard 
-} from '@/components/hr-metrics-widgets';
+} from '@/components/hr/hr-metrics-widgets';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface HRMetrics {
