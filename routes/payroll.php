@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsurePayrollOfficer;
 use App\Http\Controllers\Payroll\DashboardController as PayrollDashboardController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollPeriodController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollCalculationController;
+use App\Http\Controllers\Payroll\PayrollProcessing\PayrollAdjustmentController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -32,5 +33,14 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::post('/calculations/{id}/recalculate', [PayrollCalculationController::class, 'recalculate'])->name('calculations.recalculate');
         Route::post('/calculations/{id}/approve', [PayrollCalculationController::class, 'approve'])->name('calculations.approve');
         Route::delete('/calculations/{id}', [PayrollCalculationController::class, 'destroy'])->name('calculations.destroy');
+
+        // Payroll Adjustments - Phase 1.4
+        Route::get('/adjustments', [PayrollAdjustmentController::class, 'index'])->name('adjustments.index');
+        Route::post('/adjustments', [PayrollAdjustmentController::class, 'store'])->name('adjustments.store');
+        Route::get('/adjustments/{id}', [PayrollAdjustmentController::class, 'show'])->name('adjustments.show');
+        Route::put('/adjustments/{id}', [PayrollAdjustmentController::class, 'update'])->name('adjustments.update');
+        Route::delete('/adjustments/{id}', [PayrollAdjustmentController::class, 'destroy'])->name('adjustments.destroy');
+        Route::post('/adjustments/{id}/approve', [PayrollAdjustmentController::class, 'approve'])->name('adjustments.approve');
+        Route::post('/adjustments/{id}/reject', [PayrollAdjustmentController::class, 'reject'])->name('adjustments.reject');
     });
 });
