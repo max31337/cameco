@@ -275,3 +275,134 @@ export interface PayrollPeriodsPageProps {
         year?: number;
     };
 }
+
+// ============================================================================
+// Phase 1.3: Payroll Calculations
+// ============================================================================
+
+/**
+ * Payroll Calculation Entity
+ * Represents a payroll calculation run for a specific period
+ */
+export interface PayrollCalculation {
+    id: number;
+    payroll_period_id: number;
+    payroll_period: PayrollPeriod;
+    calculation_type: 'regular' | 'adjustment' | 'final' | 're-calculation';
+    status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+    total_employees: number;
+    processed_employees: number;
+    failed_employees: number;
+    progress_percentage: number;           // 0-100
+    total_gross_pay: number;
+    total_deductions: number;
+    total_net_pay: number;
+    calculation_date: string;
+    started_at?: string;
+    completed_at?: string;
+    error_message?: string;
+    calculated_by?: string;                // User name
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Employee Calculation Detail
+ * Individual employee's payroll calculation breakdown
+ */
+export interface EmployeeCalculation {
+    id: number;
+    employee_id: number;
+    employee_name: string;
+    employee_number: string;
+    department: string;
+    position: string;
+    calculation_id: number;
+    status: 'pending' | 'calculated' | 'failed' | 'adjusted';
+    basic_pay: number;
+    earnings: Record<string, number>;      // { "overtime": 5000, "holiday_pay": 2000 }
+    deductions: Record<string, number>;    // { "sss": 1500, "philhealth": 800 }
+    gross_pay: number;
+    total_deductions: number;
+    net_pay: number;
+    error_message?: string;
+    calculated_at?: string;
+}
+
+/**
+ * Payroll Calculations Page Props
+ */
+export interface PayrollCalculationsPageProps {
+    calculations: PayrollCalculation[];
+    available_periods: PayrollPeriod[];
+    filters: {
+        period_id?: number;
+        status?: string;
+        calculation_type?: string;
+    };
+}
+
+// ============================================================================
+// Phase 1.4: Payroll Adjustments
+// ============================================================================
+
+/**
+ * Payroll Adjustment Entity
+ * Manual adjustments to employee payroll
+ */
+export interface PayrollAdjustment {
+    id: number;
+    payroll_period_id: number;
+    payroll_period: PayrollPeriod;
+    employee_id: number;
+    employee_name: string;
+    employee_number: string;
+    department: string;
+    adjustment_type: 'earning' | 'deduction' | 'correction' | 'backpay' | 'refund';
+    adjustment_category: string;           // e.g., "Overtime Correction", "Tax Refund"
+    amount: number;
+    reason: string;
+    reference_number?: string;
+    status: 'pending' | 'approved' | 'rejected' | 'applied' | 'cancelled';
+    requested_by: string;                  // User name
+    requested_at: string;
+    reviewed_by?: string;
+    reviewed_at?: string;
+    review_notes?: string;
+    applied_at?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Adjustment Form Data for Create/Edit
+ */
+export interface PayrollAdjustmentFormData {
+    payroll_period_id: number;
+    employee_id: number;
+    adjustment_type: 'earning' | 'deduction' | 'correction' | 'backpay' | 'refund';
+    adjustment_category: string;
+    amount: number;
+    reason: string;
+    reference_number?: string;
+}
+
+/**
+ * Payroll Adjustments Page Props
+ */
+export interface PayrollAdjustmentsPageProps {
+    adjustments: PayrollAdjustment[];
+    available_periods: PayrollPeriod[];
+    available_employees: Array<{
+        id: number;
+        name: string;
+        employee_number: string;
+        department: string;
+    }>;
+    filters: {
+        period_id?: number;
+        employee_id?: number;
+        status?: string;
+        adjustment_type?: string;
+    };
+}

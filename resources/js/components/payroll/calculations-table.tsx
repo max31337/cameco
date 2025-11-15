@@ -16,31 +16,31 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { 
-    Calendar, 
+    Calculator, 
     Users, 
     DollarSign, 
     MoreHorizontal, 
     Eye, 
-    Edit2, 
-    Trash2,
-    Zap,
+    RefreshCw,
     CheckCircle,
-    AlertCircle
+    AlertCircle,
+    XCircle,
+    Loader2
 } from 'lucide-react';
-import { PayrollPeriod } from '@/types/payroll-pages';
+import { PayrollCalculation } from '@/types/payroll-pages';
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
-interface PeriodsTableProps {
-    periods: PayrollPeriod[];
-    onView?: (period: PayrollPeriod) => void;
-    onEdit?: (period: PayrollPeriod) => void;
-    onDelete?: (period: PayrollPeriod) => void;
-    onCalculate?: (period: PayrollPeriod) => void;
-    onApprove?: (period: PayrollPeriod) => void;
+interface CalculationsTableProps {
+    calculations: PayrollCalculation[];
+    onViewDetails?: (calculation: PayrollCalculation) => void;
+    onRecalculate?: (calculation: PayrollCalculation) => void;
+    onApprove?: (calculation: PayrollCalculation) => void;
+    onCancel?: (calculation: PayrollCalculation) => void;
     isLoading?: boolean;
 }
 
@@ -54,71 +54,37 @@ interface StatusConfig {
     icon?: React.ReactNode;
 }
 
-const statusConfigMap: Record<PayrollPeriod['status'], StatusConfig> = {
-    draft: {
-        label: 'Draft',
+const statusConfigMap: Record<PayrollCalculation['status'], StatusConfig> = {
+    pending: {
+        label: 'Pending',
         variant: 'secondary',
         icon: <AlertCircle className="h-3 w-3" />,
     },
-    importing: {
-        label: 'Importing',
+    processing: {
+        label: 'Processing',
         variant: 'outline',
-        icon: <Zap className="h-3 w-3" />,
+        icon: <Loader2 className="h-3 w-3 animate-spin" />,
     },
-    calculating: {
-        label: 'Calculating',
-        variant: 'outline',
-        icon: <Zap className="h-3 w-3" />,
+    completed: {
+        label: 'Completed',
+        variant: 'default',
+        icon: <CheckCircle className="h-3 w-3" />,
     },
-    calculated: {
-        label: 'Calculated',
+    failed: {
+        label: 'Failed',
+        variant: 'destructive',
+        icon: <XCircle className="h-3 w-3" />,
+    },
+    cancelled: {
+        label: 'Cancelled',
         variant: 'secondary',
-        icon: <CheckCircle className="h-3 w-3" />,
-    },
-    reviewing: {
-        label: 'Under Review',
-        variant: 'outline',
-    },
-    approved: {
-        label: 'Approved',
-        variant: 'default',
-        icon: <CheckCircle className="h-3 w-3" />,
-    },
-    bank_file_generated: {
-        label: 'Bank File Ready',
-        variant: 'default',
-        icon: <CheckCircle className="h-3 w-3" />,
-    },
-    paid: {
-        label: 'Paid',
-        variant: 'default',
-        icon: <CheckCircle className="h-3 w-3" />,
-    },
-    closed: {
-        label: 'Closed',
-        variant: 'secondary',
+        icon: <XCircle className="h-3 w-3" />,
     },
 };
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Format date for display
- */
-function formatDate(dateString: string): string {
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-    } catch {
-        return dateString;
-    }
-}
 
 /**
  * Format currency for display
@@ -132,14 +98,32 @@ function formatCurrency(amount: number): string {
 }
 
 /**
- * Get period type label
+ * Format date for display
  */
-function getPeriodTypeLabel(type: PayrollPeriod['period_type']): string {
-    const labels: Record<PayrollPeriod['period_type'], string> = {
-        weekly: 'Weekly',
-        bi_weekly: 'Bi-weekly',
-        semi_monthly: 'Semi-monthly',
-        monthly: 'Monthly',
+function formatDate(dateString: string): string {
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    } catch {
+        return dateString;
+    }
+}
+
+/**
+ * Get calculation type label
+ */
+function getCalculationTypeLabel(type: PayrollCalculation['calculation_type']): string {
+    const labels: Record<PayrollCalculation['calculation_type'], string> = {
+        regular: 'Regular',
+        adjustment: 'Adjustment',
+        final: 'Final',
+        're-calculation': 'Re-calculation',
     };
     return labels[type] || type;
 }
@@ -147,22 +131,22 @@ function getPeriodTypeLabel(type: PayrollPeriod['period_type']): string {
 /**
  * Determine which actions should be available based on status
  */
-function getAvailableActions(status: PayrollPeriod['status']): string[] {
-    const actions: string[] = ['view', 'edit'];
+function getAvailableActions(status: PayrollCalculation['status']): string[] {
+    const actions: string[] = ['view'];
 
-    // Can only calculate draft periods
-    if (status === 'draft') {
-        actions.push('calculate');
+    // Can recalculate failed or completed calculations
+    if (status === 'failed' || status === 'completed') {
+        actions.push('recalculate');
     }
 
-    // Can approve calculated periods
-    if (status === 'calculated' || status === 'reviewing') {
+    // Can approve completed calculations
+    if (status === 'completed') {
         actions.push('approve');
     }
 
-    // Can't delete periods that are being processed or paid
-    if (status === 'draft' || status === 'calculated') {
-        actions.push('delete');
+    // Can cancel pending or processing calculations
+    if (status === 'pending' || status === 'processing') {
+        actions.push('cancel');
     }
 
     return actions;
@@ -172,24 +156,23 @@ function getAvailableActions(status: PayrollPeriod['status']): string[] {
 // Component
 // ============================================================================
 
-export function PeriodsTable({
-    periods,
-    onView,
-    onEdit,
-    onDelete,
-    onCalculate,
+export function CalculationsTable({
+    calculations,
+    onViewDetails,
+    onRecalculate,
     onApprove,
+    onCancel,
     isLoading = false,
-}: PeriodsTableProps) {
-    if (periods.length === 0) {
+}: CalculationsTableProps) {
+    if (calculations.length === 0) {
         return (
             <Card>
                 <CardContent className="pt-6">
                     <div className="text-center py-8">
-                        <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                        <p className="text-muted-foreground mb-2">No payroll periods found</p>
+                        <Calculator className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                        <p className="text-muted-foreground mb-2">No calculations found</p>
                         <p className="text-sm text-gray-500">
-                            Create a new payroll period to get started
+                            Start a new payroll calculation to get started
                         </p>
                     </div>
                 </CardContent>
@@ -201,8 +184,8 @@ export function PeriodsTable({
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Payroll Periods
+                    <Calculator className="h-5 w-5" />
+                    Payroll Calculations
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -210,55 +193,61 @@ export function PeriodsTable({
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Period Name</TableHead>
+                                <TableHead>Period</TableHead>
                                 <TableHead>Type</TableHead>
-                                <TableHead>Period Dates</TableHead>
-                                <TableHead>Pay Date</TableHead>
+                                <TableHead>Progress</TableHead>
                                 <TableHead>Employees</TableHead>
-                                <TableHead>Net Pay</TableHead>
+                                <TableHead>Total Net Pay</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead>Date</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {periods.map((period) => {
-                                const statusConfig = statusConfigMap[period.status];
-                                const availableActions = getAvailableActions(period.status);
-                                const periodStartDate = formatDate(period.start_date);
-                                const periodEndDate = formatDate(period.end_date);
-                                const payDate = formatDate(period.pay_date);
+                            {calculations.map((calculation) => {
+                                const statusConfig = statusConfigMap[calculation.status];
+                                const availableActions = getAvailableActions(calculation.status);
+                                const calculationDate = formatDate(calculation.calculation_date);
 
                                 return (
-                                    <TableRow key={period.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
+                                    <TableRow key={calculation.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
                                         <TableCell className="font-medium">
-                                            {period.name}
+                                            {calculation.payroll_period.name}
                                         </TableCell>
                                         <TableCell>
                                             <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                {getPeriodTypeLabel(period.period_type)}
+                                                {getCalculationTypeLabel(calculation.calculation_type)}
                                             </span>
                                         </TableCell>
                                         <TableCell>
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                {periodStartDate} - {periodEndDate}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                {payDate}
-                                            </span>
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <Progress value={calculation.progress_percentage} className="w-24" />
+                                                    <span className="text-xs text-gray-500">
+                                                        {calculation.progress_percentage}%
+                                                    </span>
+                                                </div>
+                                                <span className="text-xs text-gray-500">
+                                                    {calculation.processed_employees}/{calculation.total_employees} processed
+                                                </span>
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1">
                                                 <Users className="h-4 w-4 text-gray-400" />
-                                                <span className="text-sm">{period.total_employees}</span>
+                                                <span className="text-sm">{calculation.total_employees}</span>
+                                                {calculation.failed_employees > 0 && (
+                                                    <span className="text-xs text-red-600">
+                                                        ({calculation.failed_employees} failed)
+                                                    </span>
+                                                )}
                                             </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1">
                                                 <DollarSign className="h-4 w-4 text-gray-400" />
                                                 <span className="text-sm font-medium">
-                                                    {formatCurrency(period.total_net_pay)}
+                                                    {formatCurrency(calculation.total_net_pay)}
                                                 </span>
                                             </div>
                                         </TableCell>
@@ -267,6 +256,11 @@ export function PeriodsTable({
                                                 {statusConfig.icon}
                                                 {statusConfig.label}
                                             </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                {calculationDate}
+                                            </span>
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
@@ -281,60 +275,53 @@ export function PeriodsTable({
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48">
                                                     {availableActions.includes('view') && (
-                                                        <>
-                                                            <DropdownMenuItem
-                                                                onClick={() => onView?.(period)}
-                                                                disabled={isLoading}
-                                                            >
-                                                                <Eye className="h-4 w-4 mr-2" />
-                                                                View Details
-                                                            </DropdownMenuItem>
-                                                        </>
+                                                        <DropdownMenuItem
+                                                            onClick={() => onViewDetails?.(calculation)}
+                                                            disabled={isLoading}
+                                                        >
+                                                            <Eye className="h-4 w-4 mr-2" />
+                                                            View Details
+                                                        </DropdownMenuItem>
                                                     )}
 
-                                    {availableActions.includes('edit') && (
-                                        <DropdownMenuItem
-                                            onClick={() => onEdit?.(period)}
-                                            disabled={isLoading}
-                                        >
-                                            <Edit2 className="h-4 w-4 mr-2" />
-                                            Edit Period
-                                        </DropdownMenuItem>
-                                    )}                                                    {availableActions.includes('calculate') && (
+                                                    {availableActions.includes('recalculate') && (
                                                         <>
                                                             <DropdownMenuSeparator />
                                                             <DropdownMenuItem
-                                                                onClick={() => onCalculate?.(period)}
+                                                                onClick={() => onRecalculate?.(calculation)}
                                                                 disabled={isLoading}
                                                                 className="text-blue-600 dark:text-blue-400"
                                                             >
-                                                                <Zap className="h-4 w-4 mr-2" />
-                                                                Calculate Payroll
+                                                                <RefreshCw className="h-4 w-4 mr-2" />
+                                                                Recalculate
                                                             </DropdownMenuItem>
                                                         </>
                                                     )}
 
                                                     {availableActions.includes('approve') && (
-                                                        <DropdownMenuItem
-                                                            onClick={() => onApprove?.(period)}
-                                                            disabled={isLoading}
-                                                            className="text-green-600 dark:text-green-400"
-                                                        >
-                                                            <CheckCircle className="h-4 w-4 mr-2" />
-                                                            Approve Period
-                                                        </DropdownMenuItem>
-                                                    )}
-
-                                                    {availableActions.includes('delete') && (
                                                         <>
                                                             <DropdownMenuSeparator />
                                                             <DropdownMenuItem
-                                                                onClick={() => onDelete?.(period)}
+                                                                onClick={() => onApprove?.(calculation)}
+                                                                disabled={isLoading}
+                                                                className="text-green-600 dark:text-green-400"
+                                                            >
+                                                                <CheckCircle className="h-4 w-4 mr-2" />
+                                                                Approve
+                                                            </DropdownMenuItem>
+                                                        </>
+                                                    )}
+
+                                                    {availableActions.includes('cancel') && (
+                                                        <>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                onClick={() => onCancel?.(calculation)}
                                                                 disabled={isLoading}
                                                                 className="text-red-600 dark:text-red-400"
                                                             >
-                                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                                Delete Period
+                                                                <XCircle className="h-4 w-4 mr-2" />
+                                                                Cancel
                                                             </DropdownMenuItem>
                                                         </>
                                                     )}

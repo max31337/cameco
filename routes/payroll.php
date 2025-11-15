@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\EnsurePayrollOfficer;
 use App\Http\Controllers\Payroll\DashboardController as PayrollDashboardController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollPeriodController;
+use App\Http\Controllers\Payroll\PayrollProcessing\PayrollCalculationController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -23,5 +24,13 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::delete('/periods/{id}', [PayrollPeriodController::class, 'destroy'])->name('periods.destroy');
         Route::post('/periods/{id}/calculate', [PayrollPeriodController::class, 'calculate'])->name('periods.calculate');
         Route::post('/periods/{id}/approve', [PayrollPeriodController::class, 'approve'])->name('periods.approve');
+
+        // Payroll Calculations - Phase 1.3
+        Route::get('/calculations', [PayrollCalculationController::class, 'index'])->name('calculations.index');
+        Route::post('/calculations', [PayrollCalculationController::class, 'store'])->name('calculations.store');
+        Route::get('/calculations/{id}', [PayrollCalculationController::class, 'show'])->name('calculations.show');
+        Route::post('/calculations/{id}/recalculate', [PayrollCalculationController::class, 'recalculate'])->name('calculations.recalculate');
+        Route::post('/calculations/{id}/approve', [PayrollCalculationController::class, 'approve'])->name('calculations.approve');
+        Route::delete('/calculations/{id}', [PayrollCalculationController::class, 'destroy'])->name('calculations.destroy');
     });
 });
