@@ -2,13 +2,16 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Calendar, List } from 'lucide-react';
 import { useState } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { PayrollPeriodsPageProps, PayrollPeriodFormData, PayrollPeriod } from '@/types/payroll-pages';
 import { PeriodsTable } from '@/components/payroll/periods-table';
 import { PeriodsFilter, type PeriodFilters } from '@/components/payroll/periods-filter';
 import { PeriodFormModal } from '@/components/payroll/period-form-modal';
+import { PeriodsCalendar } from '@/components/payroll/periods-calendar';
+import { PeriodDetailsModal } from '@/components/payroll/period-details-modal';
 import type { BreadcrumbItem } from '@/types';
 
 // ============================================================================
@@ -40,11 +43,13 @@ export default function PayrollPeriods({
     periods: initialPeriods, 
     filters: initialFilters 
 }: PeriodIndexProps) {
+    const [activeTab, setActiveTab] = useState<'list' | 'calendar'>('list');
     const [filters, setFilters] = useState<PeriodFilters>(initialFilters);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPeriod, setSelectedPeriod] = useState<PayrollPeriod | null>(null);
     const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
     const [isLoading, setIsLoading] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
     // Debounced filter change to avoid excessive requests
     const debouncedFilterChange = useDebouncedCallback(
@@ -80,8 +85,16 @@ export default function PayrollPeriods({
         setIsModalOpen(true);
     };
 
+    const handleDetailsModalEditClick = (period: PayrollPeriod) => {
+        setIsDetailsModalOpen(false);
+        setSelectedPeriod(period);
+        setModalMode('edit');
+        setIsModalOpen(true);
+    };
+
     const handleViewClick = (period: PayrollPeriod) => {
-        router.get(`/payroll/periods/${period.id}`);
+        setSelectedPeriod(period);
+        setIsDetailsModalOpen(true);
     };
 
     const handleModalSubmit = async (data: PayrollPeriodFormData) => {
@@ -221,20 +234,35 @@ export default function PayrollPeriods({
                     isLoading={isLoading}
                 />
 
-                {/* Periods Table */}
-                <Card>
-                    <CardContent>
-                        <PeriodsTable
-                            periods={initialPeriods}
-                            onView={handleViewClick}
-                            onEdit={handleEditClick}
-                            onDelete={handleDeleteClick}
-                            onCalculate={handleCalculateClick}
-                            onApprove={handleApproveClick}
-                            isLoading={isLoading}
-                        />
+                {/* Tabs */}
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'list' | 'calendar')}>
+                    <TabsList>
+                        <TabsTrigger value="list" className="flex gap-2">
+                            <List className="h-4 w-4" />
+                            List View
+                        </TabsTrigger>
+                        <TabsTrigger value="calendar" className="flex gap-2">
+                            <Calendar className="h-4 w-4" />
+                            Calendar View
+                        </TabsTrigger>
+                    </TabsList>
 
-                        {/* Empty State Help */}
+                    {/* List View Tab */}
+                    <TabsContent value="list" className="space-y-4">
+                        {/* Periods Table */}
+                        <Card>
+                            <CardContent>
+                                <PeriodsTable
+                                    periods={initialPeriods}
+                                    onView={handleViewClick}
+                                    onEdit={handleEditClick}
+                                    onDelete={handleDeleteClick}
+                                    onCalculate={handleCalculateClick}
+                                    onApprove={handleApproveClick}
+                                    isLoading={isLoading}
+                                />
+
+                                {/* Empty State Help */}
                         {initialPeriods.length === 0 && !filters.search && !filters.status && !filters.period_type && (
                             <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950">
                                 <p className="text-sm text-blue-900 dark:text-blue-100">
@@ -244,8 +272,15 @@ export default function PayrollPeriods({
                                 </p>
                             </div>
                         )}
-                    </CardContent>
-                </Card>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Calendar View Tab */}
+                    <TabsContent value="calendar">
+                        <PeriodsCalendar periods={initialPeriods} />
+                    </TabsContent>
+                </Tabs>
             </div>
 
             {/* Period Form Modal */}
@@ -255,6 +290,13 @@ export default function PayrollPeriods({
                 onSubmit={handleModalSubmit}
                 period={selectedPeriod}
                 mode={modalMode}
+            />
+
+            {/* Period Details Modal */}
+            <PeriodDetailsModal
+                period={isDetailsModalOpen ? selectedPeriod : null}
+                onClose={() => setIsDetailsModalOpen(false)}
+                onEdit={handleDetailsModalEditClick}
             />
         </AppLayout>
     );

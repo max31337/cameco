@@ -222,9 +222,8 @@ class PayrollPeriodController extends Controller
                 ->with('error', 'Payroll period not found.');
         }
 
-        return Inertia::render('Payroll/PeriodDetail', [
-            'period' => $period,
-        ]);
+        // For now, redirect back to periods index since detail page doesn't exist
+        return redirect()->route('payroll.periods.index');
     }
 
     /**
@@ -258,9 +257,8 @@ class PayrollPeriodController extends Controller
                 ->with('error', 'Only draft periods can be edited.');
         }
 
-        return Inertia::render('Payroll/EditPeriod', [
-            'period' => $period,
-        ]);
+        // For now, redirect back to periods index since edit page doesn't exist
+        return redirect()->route('payroll.periods.index');
     }
 
     /**
@@ -329,3 +327,4 @@ class PayrollPeriodController extends Controller
             ->with('success', 'Payroll period approved successfully.');
     }
 }
+
