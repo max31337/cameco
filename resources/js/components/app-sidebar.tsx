@@ -17,6 +17,7 @@ import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavSystemAdmin } from '@/components/nav-system-admin';
 import { NavHR } from '@/components/nav-hr';
+import { NavPayroll } from '@/components/nav-payroll';
 
 const mainNavItems: NavItem[] = [
     {
@@ -46,6 +47,7 @@ export function AppSidebar() {
     // Check user roles
     const isSuperadmin = userRoles.includes('Superadmin');
     const isHRManager = userRoles.includes('HR Manager');
+    const isPayrollOfficer = userRoles.includes('Payroll Officer');
     
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -66,6 +68,9 @@ export function AppSidebar() {
                 
                 {/* HR Manager Navigation - Show only for HR Manager (not Superadmin unless they also have HR Manager role) */}
                 {isHRManager && <NavHR />}
+                
+                {/* Payroll Officer Navigation - Show only for Payroll Officer */}
+                {isPayrollOfficer && <NavPayroll />}
                 
                 {/* System Admin Navigation - Show only for Superadmin */}
                 {isSuperadmin && <NavSystemAdmin />}
