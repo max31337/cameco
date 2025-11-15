@@ -19,6 +19,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'workforce.schedules.create', 'workforce.assignments.update',
             'timekeeping.attendance.create', 'timekeeping.reports.view',
             'system.settings.update',
+            'system.dashboard.view',
         ];
 
         // Phase 8: HR permissions

@@ -70,6 +70,21 @@ class DatabaseSeeder extends Seeder
             $this->call(\Database\Seeders\TimekeepingPermissionsSeeder::class);
         }
 
+        // Seed Workforce Management permissions
+        if (class_exists(\Database\Seeders\WorkforceManagementPermissionsSeeder::class)) {
+            $this->call(\Database\Seeders\WorkforceManagementPermissionsSeeder::class);
+        }
+
+        // Seed Payroll permissions
+        if (class_exists(\Database\Seeders\PayrollPermissionsSeeder::class)) {
+            $this->call(\Database\Seeders\PayrollPermissionsSeeder::class);
+        }
+
+        // Seed Payroll Officer account
+        if (class_exists(\Database\Seeders\PayrollOfficerAccountSeeder::class)) {
+            $this->call(\Database\Seeders\PayrollOfficerAccountSeeder::class);
+        }
+
         if (class_exists(\Database\Seeders\SLASeeder::class)) {
             $this->call(\Database\Seeders\SLASeeder::class);
         }
