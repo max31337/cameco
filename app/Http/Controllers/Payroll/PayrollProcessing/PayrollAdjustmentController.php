@@ -331,4 +331,244 @@ class PayrollAdjustmentController extends Controller
 
         return redirect()->back()->with('success', 'Payroll adjustment rejected');
     }
+
+    /**
+     * Display adjustment history for a specific employee
+     */
+    public function history(Request $request, int $employeeId): Response
+    {
+        // Mock data for available periods
+        $availablePeriods = [
+            [
+                'id' => 1,
+                'name' => 'November 1-15, 2025 (Semi-Monthly)',
+            ],
+            [
+                'id' => 2,
+                'name' => 'November 16-30, 2025 (Semi-Monthly)',
+            ],
+        ];
+
+        // Mock employee data
+        $employees = [
+            [
+                'id' => 1,
+                'name' => 'Juan Dela Cruz',
+                'employee_number' => 'EMP-2024-001',
+                'department' => 'Mining Operations',
+                'position' => 'Senior Miner',
+            ],
+            [
+                'id' => 2,
+                'name' => 'Maria Santos',
+                'employee_number' => 'EMP-2024-002',
+                'department' => 'Engineering',
+                'position' => 'Lead Engineer',
+            ],
+            [
+                'id' => 3,
+                'name' => 'Pedro Rodriguez',
+                'employee_number' => 'EMP-2024-003',
+                'department' => 'Maintenance',
+                'position' => 'Maintenance Technician',
+            ],
+            [
+                'id' => 4,
+                'name' => 'Ana Reyes',
+                'employee_number' => 'EMP-2024-004',
+                'department' => 'Human Resources',
+                'position' => 'HR Specialist',
+            ],
+            [
+                'id' => 5,
+                'name' => 'Carlos Garcia',
+                'employee_number' => 'EMP-2024-005',
+                'department' => 'Finance',
+                'position' => 'Financial Analyst',
+            ],
+        ];
+
+        // Get selected employee
+        $employee = collect($employees)->firstWhere('id', $employeeId);
+        if (!$employee) {
+            abort(404, 'Employee not found');
+        }
+
+        // Mock adjustment history for this employee
+        $allAdjustments = [
+            [
+                'id' => 101,
+                'payroll_period_id' => 1,
+                'payroll_period' => $availablePeriods[0],
+                'employee_id' => 1,
+                'employee_name' => 'Juan Dela Cruz',
+                'employee_number' => 'EMP-2024-001',
+                'department' => 'Mining Operations',
+                'position' => 'Senior Miner',
+                'adjustment_type' => 'correction',
+                'adjustment_category' => 'Overtime Correction',
+                'amount' => 5000.00,
+                'reason' => 'Additional 10 hours of overtime not captured in original timesheet.',
+                'reference_number' => 'ADJ-2025-001',
+                'status' => 'pending',
+                'requested_by' => 'HR Admin',
+                'requested_at' => '2025-11-10 09:30:00',
+                'reviewed_by' => null,
+                'reviewed_at' => null,
+                'review_notes' => null,
+                'applied_at' => null,
+            ],
+            [
+                'id' => 102,
+                'payroll_period_id' => 2,
+                'payroll_period' => $availablePeriods[1],
+                'employee_id' => 1,
+                'employee_name' => 'Juan Dela Cruz',
+                'employee_number' => 'EMP-2024-001',
+                'department' => 'Mining Operations',
+                'position' => 'Senior Miner',
+                'adjustment_type' => 'earning',
+                'adjustment_category' => 'Safety Bonus',
+                'amount' => 2000.00,
+                'reason' => 'Monthly safety excellence award - zero incidents in October 2025.',
+                'reference_number' => 'ADJ-2025-015',
+                'status' => 'approved',
+                'requested_by' => 'Operations Manager',
+                'requested_at' => '2025-11-02 14:00:00',
+                'reviewed_by' => 'Payroll Manager',
+                'reviewed_at' => '2025-11-03 10:30:00',
+                'review_notes' => 'Approved - verified with operations team.',
+                'applied_at' => null,
+            ],
+            [
+                'id' => 103,
+                'payroll_period_id' => 1,
+                'payroll_period' => $availablePeriods[0],
+                'employee_id' => 2,
+                'employee_name' => 'Maria Santos',
+                'employee_number' => 'EMP-2024-002',
+                'department' => 'Engineering',
+                'position' => 'Lead Engineer',
+                'adjustment_type' => 'refund',
+                'adjustment_category' => 'Tax Refund',
+                'amount' => 2500.00,
+                'reason' => 'Excess withholding tax refund for Q3 2025.',
+                'reference_number' => 'TAX-REF-2025-045',
+                'status' => 'applied',
+                'requested_by' => 'Finance Team',
+                'requested_at' => '2025-11-08 14:20:00',
+                'reviewed_by' => 'Finance Manager',
+                'reviewed_at' => '2025-11-09 10:15:00',
+                'review_notes' => 'Verified against BIR Form 1604C. Approved for processing.',
+                'applied_at' => '2025-11-10 16:30:00',
+            ],
+            [
+                'id' => 104,
+                'payroll_period_id' => 2,
+                'payroll_period' => $availablePeriods[1],
+                'employee_id' => 2,
+                'employee_name' => 'Maria Santos',
+                'employee_number' => 'EMP-2024-002',
+                'department' => 'Engineering',
+                'position' => 'Lead Engineer',
+                'adjustment_type' => 'deduction',
+                'adjustment_category' => 'Loan Deduction',
+                'amount' => 1500.00,
+                'reason' => 'Housing loan installment deduction - Account HO-2024-0045.',
+                'reference_number' => 'LOAN-0045',
+                'status' => 'approved',
+                'requested_by' => 'Finance Team',
+                'requested_at' => '2025-11-05 09:00:00',
+                'reviewed_by' => 'Payroll Manager',
+                'reviewed_at' => '2025-11-05 14:30:00',
+                'review_notes' => 'Verified loan schedule and employee consent on file.',
+                'applied_at' => null,
+            ],
+            [
+                'id' => 105,
+                'payroll_period_id' => 1,
+                'payroll_period' => $availablePeriods[0],
+                'employee_id' => 3,
+                'employee_name' => 'Pedro Rodriguez',
+                'employee_number' => 'EMP-2024-003',
+                'department' => 'Maintenance',
+                'position' => 'Maintenance Technician',
+                'adjustment_type' => 'backpay',
+                'adjustment_category' => 'Salary Increase Retroactive',
+                'amount' => 15000.00,
+                'reason' => 'Retroactive salary increase effective October 1, 2025. Covering October differential.',
+                'reference_number' => 'SAL-ADJ-2025-012',
+                'status' => 'rejected',
+                'requested_by' => 'HR Manager',
+                'requested_at' => '2025-11-09 10:00:00',
+                'reviewed_by' => 'Finance Manager',
+                'reviewed_at' => '2025-11-10 09:00:00',
+                'review_notes' => 'Requires CFO approval for retroactive adjustments over ₱10,000. Please resubmit with approval.',
+                'applied_at' => null,
+            ],
+        ];
+
+        // Filter adjustments for the selected employee
+        $adjustments = collect($allAdjustments)
+            ->filter(function ($adj) use ($employeeId) {
+                return $adj['employee_id'] == $employeeId;
+            });
+
+        // Apply additional filters
+        $periodId = $request->input('period_id');
+        $status = $request->input('status');
+        $type = $request->input('type');
+
+        if ($periodId) {
+            $adjustments = $adjustments->filter(function ($adj) use ($periodId) {
+                return $adj['payroll_period_id'] == $periodId;
+            });
+        }
+
+        if ($status) {
+            $adjustments = $adjustments->filter(function ($adj) use ($status) {
+                return $adj['status'] === $status;
+            });
+        }
+
+        if ($type) {
+            $adjustments = $adjustments->filter(function ($adj) use ($type) {
+                return $adj['adjustment_type'] === $type;
+            });
+        }
+
+        // Calculate summary
+        $allEmployeeAdjustments = collect($allAdjustments)
+            ->filter(function ($adj) use ($employeeId) {
+                return $adj['employee_id'] == $employeeId;
+            });
+
+        $summary = [
+            'total_adjustments' => $allEmployeeAdjustments->count(),
+            'pending_adjustments' => $allEmployeeAdjustments->where('status', 'pending')->count(),
+            'approved_adjustments' => $allEmployeeAdjustments->where('status', 'approved')->count(),
+            'rejected_adjustments' => $allEmployeeAdjustments->where('status', 'rejected')->count(),
+            'total_pending_amount' => $allEmployeeAdjustments
+                ->where('status', 'pending')
+                ->sum('amount'),
+        ];
+
+        return Inertia::render('Payroll/PayrollProcessing/Adjustments/History', [
+            'employee_id' => $employee['id'],
+            'employee_name' => $employee['name'],
+            'employee_number' => $employee['employee_number'],
+            'department' => $employee['department'],
+            'position' => $employee['position'],
+            'adjustments' => $adjustments->values()->all(),
+            'summary' => $summary,
+            'available_periods' => $availablePeriods,
+            'available_statuses' => [
+                ['value' => 'pending', 'label' => 'Pending'],
+                ['value' => 'approved', 'label' => 'Approved'],
+                ['value' => 'rejected', 'label' => 'Rejected'],
+                ['value' => 'applied', 'label' => 'Applied'],
+                ['value' => 'cancelled', 'label' => 'Cancelled'],
+            ],
+        ]);
+    }
 }

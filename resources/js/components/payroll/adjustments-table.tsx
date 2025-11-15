@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { router } from '@inertiajs/react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -220,7 +221,12 @@ export function AdjustmentsTable({
                                     <TableRow key={adjustment.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
                                         <TableCell>
                                             <div>
-                                                <div className="font-medium">{adjustment.employee_name}</div>
+                                                <div 
+                                                    className="font-medium text-blue-600 hover:underline cursor-pointer"
+                                                    onClick={() => router.visit(`/payroll/adjustments/history/${adjustment.employee_id}`)}
+                                                >
+                                                    {adjustment.employee_name}
+                                                </div>
                                                 <div className="text-xs text-gray-500">
                                                     {adjustment.employee_number} • {adjustment.department}
                                                 </div>

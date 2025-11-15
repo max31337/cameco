@@ -42,5 +42,6 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::delete('/adjustments/{id}', [PayrollAdjustmentController::class, 'destroy'])->name('adjustments.destroy');
         Route::post('/adjustments/{id}/approve', [PayrollAdjustmentController::class, 'approve'])->name('adjustments.approve');
         Route::post('/adjustments/{id}/reject', [PayrollAdjustmentController::class, 'reject'])->name('adjustments.reject');
+        Route::get('/adjustments/history/{employeeId}', [PayrollAdjustmentController::class, 'history'])->name('adjustments.history');
     });
 });
