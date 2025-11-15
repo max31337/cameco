@@ -419,7 +419,7 @@ When enabled by client, the system will support:
 **Note:** Currently, HR Staff handles all workforce management data entry. In the future, this module can be extended to allow Production Supervisors and Department Supervisors to manage their own team schedules, rotations, and daily assignments through a dedicated Supervisor Portal.
 
 ## Timekeeping
-- **[ ] Attendance Overview**
+- **[-] Attendance Overview**
   - Daily attendance summary
   - Attendance patterns
   - Attendance issues
