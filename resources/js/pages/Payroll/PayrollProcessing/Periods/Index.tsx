@@ -197,60 +197,55 @@ export default function PayrollPeriods({
             <Head title="Payroll Periods" />
 
             <div className="space-y-6 p-6">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    {/* Header Section */}
-                    <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                                Payroll Periods
-                            </h1>
-                            <p className="mt-2 text-gray-600 dark:text-gray-400">
-                                Create and manage payroll periods for salary calculations
-                            </p>
-                        </div>
-                        <Button
-                            onClick={handleCreateClick}
-                            disabled={isLoading}
-                            className="flex items-center gap-2 w-full sm:w-auto"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Create Period
-                        </Button>
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Payroll Periods</h1>
+                        <p className="text-muted-foreground mt-1">
+                            Create and manage payroll periods for salary calculations
+                        </p>
                     </div>
+                    <Button
+                        onClick={handleCreateClick}
+                        disabled={isLoading}
+                    >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Period
+                    </Button>
+                </div>
 
-                    {/* Filters */}
-                    <div className="mb-6">
-                        <PeriodsFilter
-                            onFilterChange={handleFilterChange}
-                            initialFilters={filters}
+                {/* Filters */}
+                <PeriodsFilter
+                    onFilterChange={handleFilterChange}
+                    initialFilters={filters}
+                    isLoading={isLoading}
+                />
+
+                {/* Periods Table */}
+                <Card>
+                    <CardContent>
+                        <PeriodsTable
+                            periods={initialPeriods}
+                            onView={handleViewClick}
+                            onEdit={handleEditClick}
+                            onDelete={handleDeleteClick}
+                            onCalculate={handleCalculateClick}
+                            onApprove={handleApproveClick}
                             isLoading={isLoading}
                         />
-                    </div>
 
-                    {/* Periods Table */}
-                    <PeriodsTable
-                        periods={initialPeriods}
-                        onView={handleViewClick}
-                        onEdit={handleEditClick}
-                        onDelete={handleDeleteClick}
-                        onCalculate={handleCalculateClick}
-                        onApprove={handleApproveClick}
-                        isLoading={isLoading}
-                    />
-
-                    {/* Empty State Help */}
-                    {initialPeriods.length === 0 && !filters.search && !filters.status && !filters.period_type && (
-                        <Card className="mt-6 border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
-                            <CardContent className="pt-6">
+                        {/* Empty State Help */}
+                        {initialPeriods.length === 0 && !filters.search && !filters.status && !filters.period_type && (
+                            <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950">
                                 <p className="text-sm text-blue-900 dark:text-blue-100">
                                     <strong>Getting Started:</strong> Create your first payroll period by clicking the 
                                     "Create Period" button above. You'll need to specify the payroll dates, cutoff date, 
                                     and pay date for your organization's payroll cycle.
                                 </p>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Period Form Modal */}

@@ -12,7 +12,7 @@ import { Clock } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Payroll Dashboard',
+        title: 'Dashboard',
         href: '/payroll/dashboard',
     },
 ];
