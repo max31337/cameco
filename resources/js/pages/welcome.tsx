@@ -204,7 +204,7 @@ export default function Welcome() {
                     </div>
                     
                 
-                    {/* Employee Portal Section 
+                    {/* Employee Portal Section  --to be implemented
                     <div className="mt-16 rounded-xl border border-slate-200 bg-gradient-to-br from-blue-50 to-slate-50 p-8 dark:border-slate-800 dark:from-blue-950/20 dark:to-slate-900/50">
                         <div className="text-center">
                             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600">

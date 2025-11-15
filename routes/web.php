@@ -14,14 +14,13 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-use App\Http\Middleware\EnsureProfileComplete;
-
 // Keep dashboard accessible so users can complete onboarding; do not apply the
 // EnsureProfileComplete middleware to the dashboard route itself (it redirects
 // to the dashboard when users are not complete which would cause a loop).
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-});
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
 
 // this wpuld be migrated too once we set up the correct system onboarding workflow
 use App\Http\Controllers\System\Onboarding\SystemOnboardingController;

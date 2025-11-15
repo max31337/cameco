@@ -142,11 +142,13 @@ export function NavPayroll() {
                 <Collapsible defaultOpen={isPayrollPeriodsActive} className="group/collapsible">
                     <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                            <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                                <Calculator className="h-4 w-4" />
-                                <span>Payroll Processing</span>
-                                <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                            </SidebarMenuButton>
+                            <a href="/payroll/periods">
+                                <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                                    <Calculator className="h-4 w-4" />
+                                    <span>Payroll Processing</span>
+                                    <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                </SidebarMenuButton>
+                            </a>
                         </CollapsibleTrigger>
                         <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2">
                             <SidebarMenuSub>
