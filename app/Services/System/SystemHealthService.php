@@ -4,27 +4,89 @@
 * this shit is ugly, only made it to see how it would look like in the frontend,
 * i am gonna be using SigNoz for metrics gathering, this shit is brittle af
 */
+
+
 /**
- * NOTE – OBSERVABILITY PLATFORM INTEGRATION / FUTURE REFACTOR
+ * REFACTORING & SIGNOZ INTEGRATION PLAN
  *
- * This service currently computes and caches a variety of system health metrics
- * (server CPU/memory, database latency, queue/pending jobs, storage usage, backups,
- * security events, cron metrics) within the application layer for on-prem deployment.
+ * This service currently handles multiple concerns:
+ *   - Collecting OS-level system metrics (CPU, memory, load average, uptime)
+ *   - Measuring application-layer metrics (DB latency, queue status, cache health)
+ *   - Gathering domain-level metrics through repositories (backups, patches, security events, cron jobs)
+ *   - Computing overall system health
+ *   - Formatting and caching responses for dashboard consumption
  *
- * Once an observability solution such as SigNoz (or Grafana/Prometheus + Loki) is fully
- * deployed, the preferred design will be:
- *   • Host and infrastructure metrics forwarded by exporters/agents (OpenTelemetry, Prometheus)
- *   • Application and domain-specific metrics emitted directly (e.g., backup success rate, failed logins, attendance events)
- *   • Logs/traces shipped to the observability backend and dashboards built there
+ * This violates the Single Responsibility Principle. A refactor will split these responsibilities
+ * into separate, purpose-specific services and reduce the scope of this class to an orchestration layer.
  *
- * At that stage:
- *   – Replace manual OS-level metric gathering (getCpuUsage, getMemoryUsage, getLoadAverage, getUptime) with telemetry agent data
- *   – Remove hard-coded thresholds and status logic embedded here in favour of alerting and dashboards in the observability tool
- *   – Possibly deprecate or shrink this service to only provide business-domain health metrics, not full infrastructure monitoring
- *   – Only keep cached summary method (getDashboardMetrics) as a lightweight wrap for business metrics if needed
+ * Planned breakdown:
  *
- * This file is transitional. Plan to refactor once the monitoring stack is operational.
+ *   1. InfrastructureMetricsService
+ *      - CPU, memory, load average, uptime
+ *      - Storage usage
+ *
+ *   2. ApplicationMetricsService
+ *      - Database latency
+ *      - Cache connectivity
+ *      - Queue job counts
+ *      - Cron job metrics
+ *
+ *   3. SecurityMetricsService
+ *      - Failed logins
+ *      - Critical events
+ *      - Recent events
+ *
+ *   4. BackupMetricsService
+ *      - Latest backup
+ *      - Backup success rate
+ *
+ *   5. PatchMetricsService
+ *      - Pending patches
+ *      - Security-critical patches
+ *
+ *   6. SystemHealthAggregator (this class after refactor)
+ *      - Fetch metrics from the above services
+ *      - Compute overall health status
+ *      - Provide a unified dashboard response
+ *
+ *
+ * SIGNOZ INTEGRATION PLAN
+ * ------------------------
+ * After SigNoz is deployed, most infrastructure and runtime metrics will no longer be gathered manually
+ * from within PHP. The following transition steps will be applied:
+ *
+ *   A. Replace OS-level metrics:
+ *      - Remove getCpuUsage, getMemoryUsage, getLoadAverage, getUptime.
+ *      - Use OpenTelemetry collectors or Prometheus exporters feeding SigNoz for host metrics.
+ *      - SystemHealthAggregator will consume metrics via SigNoz APIs or a lightweight internal adapter.
+ *
+ *   B. Replace application-layer metrics:
+ *      - Database latency moved to SigNoz tracing (DB spans) or Prometheus exporters.
+ *      - Queue metrics exposed via queue monitoring exporters.
+ *      - Cache health via Redis/Memcached exporters.
+ *
+ *   C. Logging & security events:
+ *      - Shift recent security events, failed login attempts, and critical logs to SigNoz log ingestion.
+ *      - Replace internal queries with SigNoz log-based queries or dashboards.
+ *
+ *   D. Backups, patches, domain-specific metrics:
+ *      - These remain application-owned and are still gathered through repositories.
+ *      - Emit structured logs and custom metrics to SigNoz to unify observability.
+ *
+ *   E. SystemHealthAggregator after SigNoz:
+ *      - Reduce responsibility to:
+ *           • Fetch business-domain metrics (patches, backups, domain events)
+ *           • Pull infrastructure/application metrics from SigNoz instead of local methods
+ *           • Produce a lightweight, business-facing health summary
+ *
+ * Final goal:
+ *   - This class becomes a high-level orchestrator.
+ *   - All raw metric gathering (CPU, memory, disk, DB latency, queue state) moves out of PHP.
+ *   - SigNoz becomes the single source of truth for observability.
  */
+
+
+
 
 namespace App\Services\System;
 
