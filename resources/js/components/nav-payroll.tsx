@@ -51,17 +51,20 @@ export function NavPayroll() {
         {
             title: 'Employee Payroll Info',
             icon: Users,
-            href: '/payroll/employees',
+            href: '/payroll/employee-payroll-info',
+            enabled: true,
         },
         {
             title: 'Salary Components',
             icon: DollarSign,
             href: '/payroll/components',
+            enabled: false, // Phase 2.2 - Coming soon
         },
         {
             title: 'Allowances & Deductions',
             icon: ClipboardList,
             href: '/payroll/allowances-deductions',
+            enabled: false, // Phase 2.3 - Coming soon
         },
     ];
 
@@ -70,26 +73,31 @@ export function NavPayroll() {
             title: 'BIR Reports',
             icon: FileText,
             href: '/payroll/government/bir',
+            enabled: false,
         },
         {
             title: 'SSS Contributions',
             icon: Building2,
             href: '/payroll/government/sss',
+            enabled: false,
         },
         {
             title: 'PhilHealth',
             icon: Building2,
             href: '/payroll/government/philhealth',
+            enabled: false,
         },
         {
             title: 'Pag-IBIG',
             icon: Building2,
             href: '/payroll/government/pagibig',
+            enabled: false,
         },
         {
             title: 'Remittances',
             icon: CreditCard,
             href: '/payroll/government/remittances',
+            enabled: false,
         },
     ];
 
@@ -98,16 +106,19 @@ export function NavPayroll() {
             title: 'Bank Files',
             icon: CreditCard,
             href: '/payroll/bank-files',
+            enabled: false,
         },
         {
             title: 'Payslips',
             icon: FileText,
             href: '/payroll/payslips',
+            enabled: false,
         },
         {
             title: 'Payment Tracking',
             icon: TrendingUp,
             href: '/payroll/payments',
+            enabled: false,
         },
     ];
 
@@ -116,21 +127,24 @@ export function NavPayroll() {
             title: 'Payroll Register',
             icon: ClipboardList,
             href: '/payroll/reports/register',
+            enabled: false,
         },
         {
             title: 'Government Reports',
             icon: Building2,
             href: '/payroll/reports/government',
+            enabled: false,
         },
         {
             title: 'Analytics',
             icon: BarChart3,
             href: '/payroll/reports/analytics',
+            enabled: false,
         },
     ];
 
     const isPayrollPeriodsActive = page.url.startsWith('/payroll/periods') || page.url.startsWith('/payroll/calculations') || page.url.startsWith('/payroll/adjustments');
-    const isEmployeePayrollActive = page.url.startsWith('/payroll/employees') || page.url.startsWith('/payroll/components') || page.url.startsWith('/payroll/allowances');
+    const isEmployeePayrollActive = page.url.startsWith('/payroll/employee-payroll-info') || page.url.startsWith('/payroll/components') || page.url.startsWith('/payroll/allowances');
     const isGovernmentComplianceActive = page.url.startsWith('/payroll/government');
     const isPaymentsActive = page.url.startsWith('/payroll/bank-files') || page.url.startsWith('/payroll/payslips') || page.url.startsWith('/payroll/payments');
     const isReportsActive = page.url.startsWith('/payroll/reports');
