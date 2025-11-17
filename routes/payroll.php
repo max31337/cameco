@@ -8,6 +8,7 @@ use App\Http\Controllers\Payroll\DashboardController as PayrollDashboardControll
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollPeriodController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollCalculationController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollAdjustmentController;
+use App\Http\Controllers\Payroll\EmployeePayroll\EmployeePayrollInfoController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -43,5 +44,14 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::post('/adjustments/{id}/approve', [PayrollAdjustmentController::class, 'approve'])->name('adjustments.approve');
         Route::post('/adjustments/{id}/reject', [PayrollAdjustmentController::class, 'reject'])->name('adjustments.reject');
         Route::get('/adjustments/history/{employeeId}', [PayrollAdjustmentController::class, 'history'])->name('adjustments.history');
+
+        // Employee Payroll Info - Phase 2.1
+        Route::get('/employee-payroll-info', [EmployeePayrollInfoController::class, 'index'])->name('employee-payroll-info.index');
+        Route::post('/employee-payroll-info', [EmployeePayrollInfoController::class, 'store'])->name('employee-payroll-info.store');
+        Route::get('/employee-payroll-info/create', [EmployeePayrollInfoController::class, 'create'])->name('employee-payroll-info.create');
+        Route::get('/employee-payroll-info/{id}', [EmployeePayrollInfoController::class, 'show'])->name('employee-payroll-info.show');
+        Route::get('/employee-payroll-info/{id}/edit', [EmployeePayrollInfoController::class, 'edit'])->name('employee-payroll-info.edit');
+        Route::put('/employee-payroll-info/{id}', [EmployeePayrollInfoController::class, 'update'])->name('employee-payroll-info.update');
+        Route::delete('/employee-payroll-info/{id}', [EmployeePayrollInfoController::class, 'destroy'])->name('employee-payroll-info.destroy');
     });
 });

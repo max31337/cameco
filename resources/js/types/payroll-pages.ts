@@ -406,3 +406,132 @@ export interface PayrollAdjustmentsPageProps {
         adjustment_type?: string;
     };
 }
+
+// ============================================================================
+// Phase 2: EMPLOYEE PAYROLL MANAGEMENT
+// ============================================================================
+
+/**
+ * Employee Payroll Info Entity
+ * Stores salary information, tax details, government numbers, and bank info
+ */
+export interface EmployeePayrollInfo {
+    id: number;
+    employee_id: number;
+    employee_name: string;
+    employee_number: string;
+    department: string;
+    position: string;
+    
+    // Salary Information
+    salary_type: 'monthly' | 'daily' | 'hourly' | 'contractual' | 'project_based';
+    salary_type_label: string;
+    basic_salary: number;
+    daily_rate?: number;
+    hourly_rate?: number;
+    payment_method: 'bank_transfer' | 'cash' | 'check';
+    payment_method_label: string;
+    
+    // Tax Information
+    tax_status: string;                    // Z, S, ME, S1, ME1, etc.
+    tax_status_label: string;              // "Single", "Married Employee", etc.
+    rdo_code?: string;                     // BIR Revenue District Office code
+    withholding_tax_exemption: number;     // Exemption amount
+    is_tax_exempt: boolean;
+    is_substituted_filing: boolean;
+    
+    // Government Numbers
+    sss_number?: string;
+    philhealth_number?: string;
+    pagibig_number?: string;
+    tin_number?: string;
+    
+    // Government Contribution Settings
+    sss_bracket?: string;
+    is_sss_voluntary: boolean;
+    philhealth_is_indigent: boolean;
+    pagibig_employee_rate: number;         // 1 or 2 percent
+    
+    // Bank Information
+    bank_name?: string;
+    bank_code?: string;
+    bank_account_number?: string;
+    bank_account_name?: string;
+    
+    // De Minimis Benefits Entitlements
+    is_entitled_to_rice: boolean;
+    is_entitled_to_uniform: boolean;
+    is_entitled_to_laundry: boolean;
+    is_entitled_to_medical: boolean;
+    
+    // Status
+    is_active: boolean;
+    status_label: string;                  // "Active", "Inactive"
+    
+    // Effective Dates
+    effective_date: string;                // ISO date
+    end_date?: string;
+    
+    // Timestamps
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Employee Payroll Info Form Data
+ */
+export interface EmployeePayrollInfoFormData {
+    employee_id: number;
+    salary_type: 'monthly' | 'daily' | 'hourly' | 'contractual' | 'project_based';
+    basic_salary: number;
+    daily_rate?: number;
+    hourly_rate?: number;
+    payment_method: 'bank_transfer' | 'cash' | 'check';
+    tax_status: string;
+    rdo_code?: string;
+    withholding_tax_exemption?: number;
+    is_tax_exempt: boolean;
+    is_substituted_filing: boolean;
+    sss_number?: string;
+    philhealth_number?: string;
+    pagibig_number?: string;
+    tin_number?: string;
+    sss_bracket?: string;
+    is_sss_voluntary: boolean;
+    philhealth_is_indigent: boolean;
+    pagibig_employee_rate: number;
+    bank_name?: string;
+    bank_code?: string;
+    bank_account_number?: string;
+    bank_account_name?: string;
+    is_entitled_to_rice: boolean;
+    is_entitled_to_uniform: boolean;
+    is_entitled_to_laundry: boolean;
+    is_entitled_to_medical: boolean;
+    effective_date: string;
+    end_date?: string;
+    is_active: boolean;
+}
+
+/**
+ * Payroll Info Filter Criteria
+ */
+export interface EmployeePayrollInfoFilters {
+    search?: string;                       // Search by name or employee number
+    salary_type?: string;
+    payment_method?: string;
+    tax_status?: string;
+    status?: 'active' | 'inactive' | 'all';
+}
+
+/**
+ * Employee Payroll Info Page Props
+ */
+export interface EmployeePayrollInfoPageProps {
+    employees: EmployeePayrollInfo[];
+    filters: EmployeePayrollInfoFilters;
+    available_salary_types: Array<{ value: string; label: string }>;
+    available_payment_methods: Array<{ value: string; label: string }>;
+    available_tax_statuses: Array<{ value: string; label: string }>;
+    available_departments: Array<{ id: number; name: string }>;
+}
