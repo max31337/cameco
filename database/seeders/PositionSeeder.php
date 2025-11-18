@@ -319,7 +319,10 @@ class PositionSeeder extends Seeder
 
         foreach ($positions as $position) {
             if ($position['department_id']) {
-                Position::create($position);
+                Position::firstOrCreate(
+                    ['title' => $position['title']], // Check if exists by title
+                    $position // Create with all fields if not exists
+                );
             }
         }
 
