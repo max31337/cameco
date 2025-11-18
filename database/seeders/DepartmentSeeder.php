@@ -76,7 +76,10 @@ class DepartmentSeeder extends Seeder
         ];
 
         foreach ($departments as $department) {
-            Department::create($department);
+            Department::firstOrCreate(
+                ['code' => $department['code']], // Check if exists by code
+                $department // Create with all fields if not exists
+            );
         }
 
         $this->command->info('Departments seeded successfully!');
