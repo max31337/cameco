@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HR\DashboardController as HRDashboardController;
 use App\Http\Controllers\HR\Reports\AnalyticsController;
 use App\Http\Controllers\HR\Employee\EmployeeController;
+use App\Http\Controllers\HR\Employee\EmployeeExportImportController;
 use App\Http\Controllers\HR\Employee\DepartmentController;
 use App\Http\Controllers\HR\Employee\PositionController;
 use App\Http\Controllers\HR\Leave\LeaveBalanceController;
@@ -33,6 +34,12 @@ Route::middleware(['auth', 'verified' , EnsureHRManager::class])
 
         // HR Reports & Analytics
         Route::get('/reports/analytics', [AnalyticsController::class, 'index'])->name('reports.analytics');
+
+        // Employee Import/Export (must be before resource routes)
+        Route::get('/employees/export/csv', [EmployeeExportImportController::class, 'export'])->name('employees.export');
+        Route::get('/employees/import', [EmployeeExportImportController::class, 'showImport'])->name('employees.import.show');
+        Route::post('/employees/import', [EmployeeExportImportController::class, 'import'])->name('employees.import');
+        Route::get('/employees/import/template', [EmployeeExportImportController::class, 'downloadTemplate'])->name('employees.import.template');
 
         // Employee Management
         Route::resource('employees', EmployeeController::class);

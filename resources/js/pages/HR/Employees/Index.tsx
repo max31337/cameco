@@ -112,11 +112,19 @@ export default function EmployeeIndex({
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => router.visit('/hr/employees/import')}
+                        >
                             <Upload className="h-4 w-4 mr-2" />
                             Import
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.location.href = '/hr/employees/export/csv'}
+                        >
                             <Download className="h-4 w-4 mr-2" />
                             Export
                         </Button>

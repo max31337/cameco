@@ -62,9 +62,10 @@ export function EmploymentInfoSection({
 }: EmploymentInfoSectionProps) {
     // Filter positions based on selected department
     const filteredPositions = useMemo(() => {
-        if (data.department_id && data.department_id !== 'all') {
+        if (data.department_id && data.department_id !== 'all' && data.department_id !== '') {
+            const deptId = parseInt(data.department_id, 10);
             return positions.filter(
-                p => p.department_id === parseInt(data.department_id)
+                p => parseInt(String(p.department_id), 10) === deptId
             );
         }
         return positions;
@@ -144,17 +145,23 @@ export function EmploymentInfoSection({
                         <Select 
                             value={data.position_id} 
                             onValueChange={(value) => onChange('position_id', value)}
-                            disabled={!data.department_id || data.department_id === 'all'}
+                            disabled={!data.department_id || data.department_id === 'all' || data.department_id === ''}
                         >
                             <SelectTrigger id="position_id">
                                 <SelectValue placeholder="Select position" />
                             </SelectTrigger>
                             <SelectContent>
-                                {filteredPositions.map((pos) => (
-                                    <SelectItem key={pos.id} value={pos.id.toString()}>
-                                        {pos.name}
-                                    </SelectItem>
-                                ))}
+                                {filteredPositions && filteredPositions.length > 0 ? (
+                                    filteredPositions.map((pos) => (
+                                        <SelectItem key={pos.id} value={pos.id.toString()}>
+                                            {pos.name}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    <div className="p-2 text-sm text-muted-foreground">
+                                        {!data.department_id ? 'Select a department first' : 'No positions available'}
+                                    </div>
+                                )}
                             </SelectContent>
                         </Select>
                         {errors.position_id && (
