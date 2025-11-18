@@ -21,7 +21,7 @@ return new class extends Migration
             
             // Update employment_type enum values to match form
             $table->dropColumn('employment_type');
-            $table->enum('employment_type', ['Regular', 'Probationary', 'Contractual', 'Project-Based', 'Part-Time'])->nullable()->after('position_id');
+            $table->enum('employment_type', ['regular', 'probationary', 'contractual', 'project-based', 'part-time'])->nullable()->after('position_id');
             
             // Rename date fields to match form expectations
             $table->renameColumn('date_employed', 'date_hired');
