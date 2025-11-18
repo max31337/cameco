@@ -9,6 +9,7 @@ use App\Http\Controllers\Payroll\PayrollProcessing\PayrollPeriodController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollCalculationController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollAdjustmentController;
 use App\Http\Controllers\Payroll\EmployeePayroll\EmployeePayrollInfoController;
+use App\Http\Controllers\Payroll\EmployeePayroll\SalaryComponentController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -53,5 +54,14 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::get('/employee-payroll-info/{id}/edit', [EmployeePayrollInfoController::class, 'edit'])->name('employee-payroll-info.edit');
         Route::put('/employee-payroll-info/{id}', [EmployeePayrollInfoController::class, 'update'])->name('employee-payroll-info.update');
         Route::delete('/employee-payroll-info/{id}', [EmployeePayrollInfoController::class, 'destroy'])->name('employee-payroll-info.destroy');
+
+        // Salary Components - Phase 2.2
+        Route::get('/salary-components', [SalaryComponentController::class, 'index'])->name('salary-components.index');
+        Route::post('/salary-components', [SalaryComponentController::class, 'store'])->name('salary-components.store');
+        Route::get('/salary-components/create', [SalaryComponentController::class, 'create'])->name('salary-components.create');
+        Route::get('/salary-components/{id}', [SalaryComponentController::class, 'show'])->name('salary-components.show');
+        Route::get('/salary-components/{id}/edit', [SalaryComponentController::class, 'edit'])->name('salary-components.edit');
+        Route::put('/salary-components/{id}', [SalaryComponentController::class, 'update'])->name('salary-components.update');
+        Route::delete('/salary-components/{id}', [SalaryComponentController::class, 'destroy'])->name('salary-components.destroy');
     });
 });

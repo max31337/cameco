@@ -535,3 +535,109 @@ export interface EmployeePayrollInfoPageProps {
     available_tax_statuses: Array<{ value: string; label: string }>;
     available_departments: Array<{ id: number; name: string }>;
 }
+
+// ============================================================================
+// PHASE 2.2: SALARY COMPONENTS
+// ============================================================================
+
+/**
+ * Salary Component Entity
+ * Represents a reusable salary component for payroll calculations
+ * Examples: Basic Salary, Overtime, Rice Allowance, SSS, Withholding Tax, etc.
+ */
+export interface SalaryComponent {
+    id: number;
+    name: string;                          // "Basic Salary", "Overtime Regular", "Rice Allowance"
+    code: string;                          // "BASIC", "OT_REG", "RICE" (unique)
+    component_type: 'earning' | 'deduction' | 'benefit' | 'tax' | 'contribution' | 'loan' | 'allowance';
+    category: 'regular' | 'overtime' | 'holiday' | 'leave' | 'allowance' | 'deduction' | 'tax' | 'contribution' | 'loan' | 'adjustment';
+    
+    // Calculation Settings
+    calculation_method: 'fixed_amount' | 'percentage_of_basic' | 'percentage_of_gross' | 'per_hour' | 'per_day' | 'per_unit' | 'percentage_of_component';
+    default_amount?: number;               // For fixed amount calculations
+    default_percentage?: number;           // For percentage calculations
+    reference_component_id?: number;       // For percentage of component calculations
+    
+    // Overtime and Premium Settings
+    ot_multiplier?: number;                // 1.25, 1.30, 1.50, 2.00, 2.60
+    is_premium_pay: boolean;
+    
+    // Tax Treatment
+    is_taxable: boolean;
+    is_deminimis: boolean;
+    deminimis_limit_monthly?: number;
+    deminimis_limit_annual?: number;
+    is_13th_month: boolean;
+    is_other_benefits: boolean;
+    
+    // Government Contribution Settings
+    affects_sss: boolean;
+    affects_philhealth: boolean;
+    affects_pagibig: boolean;
+    affects_gross_compensation: boolean;
+    
+    // Display Settings
+    display_order: number;
+    is_displayed_on_payslip: boolean;
+    is_active: boolean;
+    is_system_component: boolean;          // Cannot be deleted
+    
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Create/Edit Salary Component Form Data
+ */
+export interface SalaryComponentFormData {
+    name: string;
+    code: string;
+    component_type: 'earning' | 'deduction' | 'benefit' | 'tax' | 'contribution' | 'loan' | 'allowance';
+    category: 'regular' | 'overtime' | 'holiday' | 'leave' | 'allowance' | 'deduction' | 'tax' | 'contribution' | 'loan' | 'adjustment';
+    
+    calculation_method: 'fixed_amount' | 'percentage_of_basic' | 'percentage_of_gross' | 'per_hour' | 'per_day' | 'per_unit' | 'percentage_of_component';
+    default_amount?: number;
+    default_percentage?: number;
+    reference_component_id?: number;
+    
+    ot_multiplier?: number;
+    is_premium_pay: boolean;
+    
+    is_taxable: boolean;
+    is_deminimis: boolean;
+    deminimis_limit_monthly?: number;
+    deminimis_limit_annual?: number;
+    is_13th_month: boolean;
+    is_other_benefits: boolean;
+    
+    affects_sss: boolean;
+    affects_philhealth: boolean;
+    affects_pagibig: boolean;
+    affects_gross_compensation: boolean;
+    
+    display_order: number;
+    is_displayed_on_payslip: boolean;
+    is_active: boolean;
+}
+
+/**
+ * Salary Component Filter Criteria
+ */
+export interface SalaryComponentFilters {
+    search?: string;                       // Search by name or code
+    component_type?: string;
+    category?: string;
+    is_active?: boolean | 'all';
+    is_system?: boolean | 'all';
+}
+
+/**
+ * Salary Components Listing Page Props
+ */
+export interface SalaryComponentsPageProps {
+    components: SalaryComponent[];
+    filters: SalaryComponentFilters;
+    available_component_types: Array<{ value: string; label: string }>;
+    available_categories: Array<{ value: string; label: string }>;
+    reference_components: Array<{ id: number; name: string; code: string }>;
+}

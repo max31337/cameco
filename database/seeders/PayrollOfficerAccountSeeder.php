@@ -133,7 +133,7 @@ class PayrollOfficerAccountSeeder extends Seeder
                 'email' => 'payroll@cathay.com',
                 'department_id' => $financeDepartmentId,
                 'position_id' => $payrollPositionId,
-                'employment_type' => 'Regular',  // Capitalized as per migration
+                'employment_type' => 'regular',  // lowercase as per migration
                 'date_hired' => '2020-03-01',
                 'regularization_date' => '2020-09-01',
                 'status' => 'active',

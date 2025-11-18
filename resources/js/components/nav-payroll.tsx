@@ -57,7 +57,7 @@ export function NavPayroll() {
         {
             title: 'Salary Components',
             icon: DollarSign,
-            href: '/payroll/components',
+            href: '/payroll/salary-components',
             enabled: false, // Phase 2.2 - Coming soon
         },
         {
