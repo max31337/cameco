@@ -23,15 +23,23 @@ return new class extends Migration
             });
         } elseif ($driver === 'pgsql') {
             // PostgreSQL
-            DB::statement("ALTER TYPE gender RENAME TO gender_old");
-            DB::statement("CREATE TYPE gender AS ENUM ('male', 'female', 'other')");
-            DB::statement("ALTER TABLE profiles ALTER COLUMN gender TYPE gender USING gender::text::gender");
-            DB::statement("DROP TYPE gender_old");
+            // Check if gender type exists before attempting to rename
+            $genderExists = DB::selectOne("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gender')");
+            if ($genderExists && $genderExists->exists) {
+                DB::statement("ALTER TYPE gender RENAME TO gender_old");
+                DB::statement("CREATE TYPE gender AS ENUM ('male', 'female', 'other')");
+                DB::statement("ALTER TABLE profiles ALTER COLUMN gender TYPE gender USING gender::text::gender");
+                DB::statement("DROP TYPE gender_old");
+            }
             
-            DB::statement("ALTER TYPE civil_status RENAME TO civil_status_old");
-            DB::statement("CREATE TYPE civil_status AS ENUM ('single', 'married', 'divorced', 'widowed', 'separated')");
-            DB::statement("ALTER TABLE profiles ALTER COLUMN civil_status TYPE civil_status USING civil_status::text::civil_status");
-            DB::statement("DROP TYPE civil_status_old");
+            // Check if civil_status type exists before attempting to rename
+            $civilStatusExists = DB::selectOne("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'civil_status')");
+            if ($civilStatusExists && $civilStatusExists->exists) {
+                DB::statement("ALTER TYPE civil_status RENAME TO civil_status_old");
+                DB::statement("CREATE TYPE civil_status AS ENUM ('single', 'married', 'divorced', 'widowed', 'separated')");
+                DB::statement("ALTER TABLE profiles ALTER COLUMN civil_status TYPE civil_status USING civil_status::text::civil_status");
+                DB::statement("DROP TYPE civil_status_old");
+            }
         } else {
             // SQLite - need to recreate the table
             // This is a simple update for SQLite since it doesn't enforce enum constraints
@@ -53,15 +61,24 @@ return new class extends Migration
                 $table->enum('civil_status', ['Single', 'Married', 'Divorced', 'Widowed'])->nullable()->change();
             });
         } elseif ($driver === 'pgsql') {
-            DB::statement("ALTER TYPE gender RENAME TO gender_old");
-            DB::statement("CREATE TYPE gender AS ENUM ('Male', 'Female', 'Other')");
-            DB::statement("ALTER TABLE profiles ALTER COLUMN gender TYPE gender USING gender::text::gender");
-            DB::statement("DROP TYPE gender_old");
+            // PostgreSQL
+            // Check if gender type exists before attempting to rename
+            $genderExists = DB::selectOne("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gender')");
+            if ($genderExists && $genderExists->exists) {
+                DB::statement("ALTER TYPE gender RENAME TO gender_old");
+                DB::statement("CREATE TYPE gender AS ENUM ('Male', 'Female', 'Other')");
+                DB::statement("ALTER TABLE profiles ALTER COLUMN gender TYPE gender USING gender::text::gender");
+                DB::statement("DROP TYPE gender_old");
+            }
             
-            DB::statement("ALTER TYPE civil_status RENAME TO civil_status_old");
-            DB::statement("CREATE TYPE civil_status AS ENUM ('Single', 'Married', 'Divorced', 'Widowed')");
-            DB::statement("ALTER TABLE profiles ALTER COLUMN civil_status TYPE civil_status USING civil_status::text::civil_status");
-            DB::statement("DROP TYPE civil_status_old");
+            // Check if civil_status type exists before attempting to rename
+            $civilStatusExists = DB::selectOne("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'civil_status')");
+            if ($civilStatusExists && $civilStatusExists->exists) {
+                DB::statement("ALTER TYPE civil_status RENAME TO civil_status_old");
+                DB::statement("CREATE TYPE civil_status AS ENUM ('Single', 'Married', 'Divorced', 'Widowed')");
+                DB::statement("ALTER TABLE profiles ALTER COLUMN civil_status TYPE civil_status USING civil_status::text::civil_status");
+                DB::statement("DROP TYPE civil_status_old");
+            }
         } else {
             // SQLite
             DB::statement("UPDATE profiles SET gender = UPPER(SUBSTR(gender, 1, 1)) || LOWER(SUBSTR(gender, 2)) WHERE gender IS NOT NULL");

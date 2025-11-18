@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('suffix', 10)->nullable()->after('last_name');
             
             // Add gender and civil status
-            $table->enum('gender', ['Male', 'Female', 'Other'])->nullable()->after('middle_name');
-            $table->enum('civil_status', ['Single', 'Married', 'Divorced', 'Widowed'])->nullable()->after('gender');
+            $table->enum('gender', ['male', 'female', 'other'])->nullable()->after('middle_name');
+            $table->enum('civil_status', ['single', 'married', 'divorced', 'widowed', 'separated'])->nullable()->after('gender');
             
             // Update contact fields
             $table->string('phone', 30)->nullable()->after('civil_status');
