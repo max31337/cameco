@@ -286,11 +286,11 @@ export default function AllowancesDeductionsIndex({
             <div>
               <label className="text-sm font-medium text-gray-700">Department</label>
               <Select
-                value={filters.department_id?.toString() || ''}
+                value={filters.department_id?.toString() || 'all'}
                 onValueChange={(value) =>
                   setFilters((prev) => ({
                     ...prev,
-                    department_id: value ? parseInt(value) : null,
+                    department_id: value !== 'all' ? parseInt(value) : null,
                   }))
                 }
               >
@@ -298,7 +298,7 @@ export default function AllowancesDeductionsIndex({
                   <SelectValue placeholder="All departments" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All departments</SelectItem>
+                  <SelectItem value="all">All departments</SelectItem>
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id.toString()}>
                       {dept.name}
