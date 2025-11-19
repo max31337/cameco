@@ -10,6 +10,7 @@ use App\Http\Controllers\Payroll\PayrollProcessing\PayrollCalculationController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollAdjustmentController;
 use App\Http\Controllers\Payroll\EmployeePayroll\EmployeePayrollInfoController;
 use App\Http\Controllers\Payroll\EmployeePayroll\SalaryComponentController;
+use App\Http\Controllers\Payroll\EmployeePayroll\AllowancesDeductionsController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -63,5 +64,14 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::get('/salary-components/{id}/edit', [SalaryComponentController::class, 'edit'])->name('salary-components.edit');
         Route::put('/salary-components/{id}', [SalaryComponentController::class, 'update'])->name('salary-components.update');
         Route::delete('/salary-components/{id}', [SalaryComponentController::class, 'destroy'])->name('salary-components.destroy');
+
+        // Allowances & Deductions - Phase 2.3
+        Route::get('/allowances-deductions', [AllowancesDeductionsController::class, 'index'])->name('allowances-deductions.index');
+        Route::post('/allowances-deductions', [AllowancesDeductionsController::class, 'store'])->name('allowances-deductions.store');
+        Route::post('/allowances-deductions/bulk-assign', [AllowancesDeductionsController::class, 'bulkAssign'])->name('allowances-deductions.bulk-assign');
+        Route::get('/allowances-deductions/{id}', [AllowancesDeductionsController::class, 'show'])->name('allowances-deductions.show');
+        Route::put('/allowances-deductions/{id}', [AllowancesDeductionsController::class, 'update'])->name('allowances-deductions.update');
+        Route::delete('/allowances-deductions/{id}', [AllowancesDeductionsController::class, 'destroy'])->name('allowances-deductions.destroy');
+        Route::get('/allowances-deductions/{employeeId}/history', [AllowancesDeductionsController::class, 'history'])->name('allowances-deductions.history');
     });
 });
