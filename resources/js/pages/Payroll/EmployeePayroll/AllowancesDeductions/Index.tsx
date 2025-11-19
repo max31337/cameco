@@ -97,6 +97,11 @@ export default function AllowancesDeductionsIndex({
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
+  const breadcrumb = [
+    { title: 'Payroll', href: '/payroll' },
+    { title: 'Allowances & Deductions', href: '/payroll/allowances-deductions' },
+  ];
+
   // Filter employees based on current filters
   const filteredEmployees = employeeComponents.filter((emp) => {
     let match = true;
@@ -216,10 +221,10 @@ export default function AllowancesDeductionsIndex({
   }));
 
   return (
-    <AppLayout>
+    <AppLayout breadcrumbs={breadcrumb}>
       <Head title="Allowances & Deductions" />
 
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -311,16 +316,16 @@ export default function AllowancesDeductionsIndex({
             <div>
               <label className="text-sm font-medium text-gray-700">Component Type</label>
               <Select
-                value={filters.component_type || ''}
+                value={filters.component_type || 'all'}
                 onValueChange={(value) =>
-                  setFilters((prev) => ({ ...prev, component_type: value || null }))
+                  setFilters((prev) => ({ ...prev, component_type: value !== 'all' ? value : null }))
                 }
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="all">All types</SelectItem>
                   {componentTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
