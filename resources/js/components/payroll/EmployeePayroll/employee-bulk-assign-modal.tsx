@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Search } from 'lucide-react';
 
 interface SalaryComponent {
   id: number;
@@ -94,8 +95,28 @@ export const EmployeeBulkAssignModal: React.FC<EmployeeBulkAssignModalProps> = (
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [selectAll, setSelectAll] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
 
   const selectedComponent = components.find((c) => c.id === formData.salary_component_id);
+
+  // Get unique departments from employees
+  const departments = Array.from(new Set(employees.map((e) => e.department))).sort();
+
+  // Filter employees based on search and department
+  const filteredEmployees = useMemo(() => {
+    return employees.filter((emp) => {
+      const matchesSearch =
+        !searchText ||
+        emp.first_name.toLowerCase().includes(searchText.toLowerCase()) ||
+        emp.last_name.toLowerCase().includes(searchText.toLowerCase()) ||
+        emp.employee_number.toLowerCase().includes(searchText.toLowerCase());
+
+      const matchesDepartment = !selectedDepartment || emp.department === selectedDepartment;
+
+      return matchesSearch && matchesDepartment;
+    });
+  }, [employees, searchText, selectedDepartment]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -167,7 +188,7 @@ export const EmployeeBulkAssignModal: React.FC<EmployeeBulkAssignModalProps> = (
     if (checked) {
       setFormData((prev) => ({
         ...prev,
-        employee_ids: employees.map((e) => e.id),
+        employee_ids: filteredEmployees.map((e) => e.id),
       }));
     } else {
       setFormData((prev) => ({
@@ -188,273 +209,339 @@ export const EmployeeBulkAssignModal: React.FC<EmployeeBulkAssignModalProps> = (
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-96 overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Bulk Assign Component to Employees</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-w-[95vw] max-h-[90vh] flex flex-col p-6">
+        <DialogHeader className="mb-2">
+          <DialogTitle className="text-lg">Bulk Assign Component to Employees</DialogTitle>
+          <DialogDescription className="text-sm">
             Select employees and assign the same component to all of them at once
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 flex-1 overflow-hidden">
           {submitError && (
-            <Alert variant="destructive">
-              <AlertDescription>{submitError}</AlertDescription>
+            <Alert variant="destructive" className="mb-3">
+              <AlertDescription className="text-sm">{submitError}</AlertDescription>
             </Alert>
           )}
 
-          {/* Employee Selection */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <Label className="font-semibold">Select Employees *</Label>
-              <label className="flex items-center gap-2 cursor-pointer text-sm">
-                <Checkbox
-                  checked={selectAll}
-                  onCheckedChange={handleSelectAllChange}
-                  disabled={isLoading}
-                />
-                Select All
-              </label>
-            </div>
+          <div className="grid grid-cols-12 gap-8 flex-1 overflow-hidden">
+            {/* Left Column: Employee Selection */}
+            <div className="col-span-4 flex flex-col gap-5 overflow-hidden">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="font-semibold text-base">Select Employees *</Label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                    <Checkbox
+                      checked={selectAll}
+                      onCheckedChange={handleSelectAllChange}
+                      disabled={isLoading}
+                    />
+                    All
+                  </label>
+                </div>
 
-            {errors.employee_ids && (
-              <p className="text-sm text-red-600 mb-2">{errors.employee_ids}</p>
-            )}
+                {errors.employee_ids && (
+                  <p className="text-xs text-red-600 mt-1">{errors.employee_ids}</p>
+                )}
 
-            <div className="border rounded-lg max-h-48 overflow-y-auto p-3 space-y-2 bg-gray-50">
-              {employees.map((employee) => (
-                <label
-                  key={employee.id}
-                  className="flex items-center gap-3 p-2 hover:bg-white rounded cursor-pointer"
-                >
-                  <Checkbox
-                    checked={formData.employee_ids.includes(employee.id)}
-                    onCheckedChange={(checked) => handleEmployeeToggle(employee.id, !!checked)}
+                {/* Search */}
+                <div className="relative">
+                  <Search size={18} className="absolute left-3 top-3 text-gray-400" />
+                  <Input
+                    placeholder="Search employees..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    className="pl-10 text-sm py-2.5 h-auto font-medium"
                     disabled={isLoading}
                   />
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">
-                      {employee.first_name} {employee.last_name}
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      {employee.employee_number} • {employee.department} • {employee.position}
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
+                </div>
 
-            {formData.employee_ids.length > 0 && (
-              <p className="text-xs text-gray-600 mt-2">
-                {formData.employee_ids.length} employee{formData.employee_ids.length !== 1 ? 's' : ''} selected
-              </p>
-            )}
-          </div>
-
-          {/* Component Selection */}
-          <div>
-            <Label htmlFor="component">Component *</Label>
-            <Select
-              value={formData.salary_component_id?.toString() || ''}
-              onValueChange={(value) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  salary_component_id: parseInt(value),
-                }));
-                setErrors((prev) => {
-                  const newErrors = { ...prev };
-                  delete newErrors.salary_component_id;
-                  return newErrors;
-                });
-              }}
-              disabled={isLoading}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select a component" />
-              </SelectTrigger>
-              <SelectContent>
-                {components.map((component) => (
-                  <SelectItem key={component.id} value={component.id.toString()}>
-                    {component.code} - {component.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.salary_component_id && (
-              <p className="text-sm text-red-600 mt-1">{errors.salary_component_id}</p>
-            )}
-            {selectedComponent && (
-              <div className="text-xs text-gray-600 mt-2">
-                Type: {selectedComponent.component_type} • Taxable: {selectedComponent.is_taxable ? 'Yes' : 'No'}
+                {/* Department Filter */}
+                <div>
+                  <Label className="text-sm block mb-2 font-medium">Department</Label>
+                  <Select
+                    value={selectedDepartment || 'all'}
+                    onValueChange={(value) => setSelectedDepartment(value === 'all' ? null : value)}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className="text-sm py-2.5 h-auto">
+                      <SelectValue placeholder="All Departments" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="text-sm">All Departments</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept} value={dept} className="text-sm">
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Amount Section */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="0.00"
-                step="0.01"
-                value={formData.amount}
-                onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, amount: e.target.value }));
-                  setErrors((prev) => {
-                    const newErrors = { ...prev };
-                    delete newErrors.amount;
-                    return newErrors;
-                  });
-                }}
-                disabled={isLoading}
-              />
-              {errors.amount && <p className="text-sm text-red-600 mt-1">{errors.amount}</p>}
-            </div>
+              {/* Employee List */}
+              <div className="border-2 border-gray-200 rounded-lg bg-gray-50 flex-1 overflow-y-auto flex flex-col">
+                <div className="space-y-2 p-4 flex-1 overflow-y-auto">
+                  {filteredEmployees.length === 0 ? (
+                    <p className="text-sm text-gray-500 p-4 text-center font-medium">No employees found</p>
+                  ) : (
+                    filteredEmployees.map((employee) => (
+                      <label
+                        key={employee.id}
+                        className="flex items-start gap-3 p-3 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-blue-200"
+                      >
+                        <Checkbox
+                          checked={formData.employee_ids.includes(employee.id)}
+                          onCheckedChange={(checked) => handleEmployeeToggle(employee.id, !!checked)}
+                          disabled={isLoading}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-base text-gray-900">
+                            {employee.first_name} {employee.last_name}
+                          </div>
+                          <div className="text-sm text-gray-600 space-y-1 mt-1">
+                            <div className="truncate font-medium">{employee.employee_number}</div>
+                            <div className="truncate text-gray-500">{employee.department}</div>
+                          </div>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
 
-            <div>
-              <Label htmlFor="percentage">Percentage (%)</Label>
-              <Input
-                id="percentage"
-                type="number"
-                placeholder="0"
-                step="0.01"
-                min="0"
-                max="100"
-                value={formData.percentage}
-                onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, percentage: e.target.value }));
-                  setErrors((prev) => {
-                    const newErrors = { ...prev };
-                    delete newErrors.percentage;
-                    return newErrors;
-                  });
-                }}
-                disabled={isLoading}
-              />
-              {errors.percentage && <p className="text-sm text-red-600 mt-1">{errors.percentage}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="units">Units</Label>
-              <Input
-                id="units"
-                type="number"
-                placeholder="0"
-                step="0.01"
-                value={formData.units}
-                onChange={(e) => setFormData((prev) => ({ ...prev, units: e.target.value }))}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Frequency and Dates */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="frequency">Frequency *</Label>
-              <Select
-                value={formData.frequency}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    frequency: value as 'per_payroll' | 'monthly' | 'quarterly' | 'semi_annual' | 'annually' | 'one_time',
-                  }))
-                }
-                disabled={isLoading}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FREQUENCY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="effective_date">Effective Date *</Label>
-              <Input
-                id="effective_date"
-                type="date"
-                value={formData.effective_date}
-                onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, effective_date: e.target.value }));
-                  setErrors((prev) => {
-                    const newErrors = { ...prev };
-                    delete newErrors.effective_date;
-                    return newErrors;
-                  });
-                }}
-                disabled={isLoading}
-              />
-              {errors.effective_date && (
-                <p className="text-sm text-red-600 mt-1">{errors.effective_date}</p>
+              {formData.employee_ids.length > 0 && (
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 text-center">
+                  <p className="text-sm text-blue-800 font-semibold">
+                    ✓ {formData.employee_ids.length} of {filteredEmployees.length} employees selected
+                  </p>
+                </div>
               )}
             </div>
 
-            <div>
-              <Label htmlFor="end_date">End Date (Optional)</Label>
-              <Input
-                id="end_date"
-                type="date"
-                value={formData.end_date}
-                onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, end_date: e.target.value }));
-                  setErrors((prev) => {
-                    const newErrors = { ...prev };
-                    delete newErrors.end_date;
-                    return newErrors;
-                  });
-                }}
-                disabled={isLoading}
-              />
-              {errors.end_date && <p className="text-sm text-red-600 mt-1">{errors.end_date}</p>}
-            </div>
-          </div>
+            {/* Right Columns: Assignment Details */}
+            <div className="col-span-8 space-y-6 overflow-y-auto pr-4">
+              {/* Component Selection */}
+              <div>
+                <Label htmlFor="component" className="text-sm font-medium block mb-1">Component *</Label>
+                <Select
+                  value={formData.salary_component_id?.toString() || ''}
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      salary_component_id: parseInt(value),
+                    }));
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.salary_component_id;
+                      return newErrors;
+                    });
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="text-xs py-1.5 h-auto">
+                    <SelectValue placeholder="Select a component" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {components.map((component) => (
+                      <SelectItem key={component.id} value={component.id.toString()} className="text-xs">
+                        {component.code} - {component.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.salary_component_id && (
+                  <p className="text-xs text-red-600 mt-0.5">{errors.salary_component_id}</p>
+                )}
+                {selectedComponent && (
+                  <div className="text-xs text-gray-600 mt-1.5 p-1.5 bg-gray-100 rounded border space-y-0.5">
+                    <div>Type: <span className="font-semibold text-xs">{selectedComponent.component_type}</span></div>
+                    <div>Taxable: <span className="font-semibold text-xs">{selectedComponent.is_taxable ? 'Yes' : 'No'}</span></div>
+                    <div>De minimis: <span className="font-semibold text-xs">{selectedComponent.is_deminimis ? 'Yes' : 'No'}</span></div>
+                  </div>
+                )}
+              </div>
 
-          {/* Options */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="is_prorated"
-                checked={formData.is_prorated}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, is_prorated: !!checked }))
-                }
-                disabled={isLoading}
-              />
-              <Label htmlFor="is_prorated" className="font-normal cursor-pointer">
-                Prorated (adjust for partial months)
-              </Label>
-            </div>
+              {/* Amount Section */}
+              <div>
+                <Label className="font-semibold text-sm block mb-2">Amount / % / Units</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label htmlFor="amount" className="text-xs block mb-1">Amount</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="0.00"
+                      step="0.01"
+                      value={formData.amount}
+                      onChange={(e) => {
+                        setFormData((prev) => ({ ...prev, amount: e.target.value }));
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.amount;
+                          return newErrors;
+                        });
+                      }}
+                      disabled={isLoading}
+                      className="text-xs py-2 h-auto"
+                    />
+                    {errors.amount && <p className="text-xs text-red-600 mt-0.5">{errors.amount}</p>}
+                  </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="requires_attendance"
-                checked={formData.requires_attendance}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, requires_attendance: !!checked }))
-                }
-                disabled={isLoading}
-              />
-              <Label htmlFor="requires_attendance" className="font-normal cursor-pointer">
-                Requires full attendance
-              </Label>
+                  <div>
+                    <Label htmlFor="percentage" className="text-xs block mb-1">Percentage</Label>
+                    <Input
+                      id="percentage"
+                      type="number"
+                      placeholder="0"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={formData.percentage}
+                      onChange={(e) => {
+                        setFormData((prev) => ({ ...prev, percentage: e.target.value }));
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.percentage;
+                          return newErrors;
+                        });
+                      }}
+                      disabled={isLoading}
+                      className="text-xs py-2 h-auto"
+                    />
+                    {errors.percentage && <p className="text-xs text-red-600 mt-0.5">{errors.percentage}</p>}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="units" className="text-xs block mb-1">Units</Label>
+                    <Input
+                      id="units"
+                      type="number"
+                      placeholder="0"
+                      step="0.01"
+                      value={formData.units}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, units: e.target.value }))}
+                      disabled={isLoading}
+                      className="text-xs py-2 h-auto"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Frequency and Dates */}
+              <div>
+                <Label className="font-semibold text-sm block mb-2">Schedule</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label htmlFor="frequency" className="text-xs block mb-1">Frequency *</Label>
+                    <Select
+                      value={formData.frequency}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          frequency: value as 'per_payroll' | 'monthly' | 'quarterly' | 'semi_annual' | 'annually' | 'one_time',
+                        }))
+                      }
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="text-xs py-2 h-auto">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FREQUENCY_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value} className="text-xs">
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="effective_date" className="text-xs block mb-1">Effective Date *</Label>
+                    <Input
+                      id="effective_date"
+                      type="date"
+                      value={formData.effective_date}
+                      onChange={(e) => {
+                        setFormData((prev) => ({ ...prev, effective_date: e.target.value }));
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.effective_date;
+                          return newErrors;
+                        });
+                      }}
+                      disabled={isLoading}
+                      className="text-xs py-2 h-auto"
+                    />
+                    {errors.effective_date && (
+                      <p className="text-xs text-red-600 mt-0.5">{errors.effective_date}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="end_date" className="text-xs block mb-1">End Date</Label>
+                    <Input
+                      id="end_date"
+                      type="date"
+                      value={formData.end_date}
+                      onChange={(e) => {
+                        setFormData((prev) => ({ ...prev, end_date: e.target.value }));
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.end_date;
+                          return newErrors;
+                        });
+                      }}
+                      disabled={isLoading}
+                      className="text-xs py-2 h-auto"
+                    />
+                    {errors.end_date && <p className="text-xs text-red-600 mt-0.5">{errors.end_date}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Options */}
+              <div className="space-y-1.5 pt-1.5 border-t">
+                <Label className="font-semibold text-sm">Options</Label>
+                <div className="flex items-center gap-2 text-xs">
+                  <Checkbox
+                    id="is_prorated"
+                    checked={formData.is_prorated}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, is_prorated: !!checked }))
+                    }
+                    disabled={isLoading}
+                  />
+                  <Label htmlFor="is_prorated" className="font-normal cursor-pointer text-xs">
+                    Prorated
+                  </Label>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs">
+                  <Checkbox
+                    id="requires_attendance"
+                    checked={formData.requires_attendance}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, requires_attendance: !!checked }))
+                    }
+                    disabled={isLoading}
+                  />
+                  <Label htmlFor="requires_attendance" className="font-normal cursor-pointer text-xs">
+                    Requires attendance
+                  </Label>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 justify-end pt-4">
-            <Button variant="outline" onClick={onClose} disabled={isLoading}>
+          <div className="flex gap-2 justify-end pt-3 border-t">
+            <Button variant="outline" onClick={onClose} disabled={isLoading} className="text-xs px-3 py-1 h-auto">
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || formData.employee_ids.length === 0} className="text-xs px-3 py-1 h-auto">
               {isLoading ? 'Assigning...' : `Assign to ${formData.employee_ids.length} Employee${formData.employee_ids.length !== 1 ? 's' : ''}`}
             </Button>
           </div>

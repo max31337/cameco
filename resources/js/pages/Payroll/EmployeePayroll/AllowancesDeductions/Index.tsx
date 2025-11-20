@@ -21,6 +21,7 @@ import {
   EmployeeBulkAssignModal,
   BulkAssignFormData,
 } from '@/components/payroll/EmployeePayroll/employee-bulk-assign-modal';
+import { DeleteConfirmationModal } from '@/components/payroll/EmployeePayroll/delete-confirmation-modal';
 
 interface SalaryComponent {
   id: number;
@@ -101,6 +102,7 @@ export default function AllowancesDeductionsIndex({
   const [editingAssignment, setEditingAssignment] = useState<EmployeeComponentAssignmentFormData | undefined>();
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; assignmentId?: number; employeeId?: number }>({ isOpen: false });
 
   const breadcrumb = [
     { title: 'Payroll', href: '/payroll' },
@@ -168,19 +170,50 @@ export default function AllowancesDeductionsIndex({
     setIsModalOpen(true);
   };
 
-  const handleDeleteAssignment = async (employeeId: number) => {
-    if (confirm('Are you sure you want to remove this component assignment?')) {
-      setIsLoading(true);
-      try {
-        // In a real app, this would call the backend API with employeeId
-        console.log('Deleting assignment for employee:', employeeId);
-        await new Promise((resolve) => setTimeout(resolve, 500));
+  const handleDeleteAssignment = (assignmentId: number, employeeId: number) => {
+    setDeleteConfirmation({ isOpen: true, assignmentId, employeeId });
+  };
 
-        alert('Component assignment deleted successfully');
-        window.location.reload();
-      } finally {
-        setIsLoading(false);
+  const confirmDelete = async () => {
+    if (!deleteConfirmation.assignmentId || !deleteConfirmation.employeeId) return;
+
+    setIsLoading(true);
+    try {
+      // Call the backend API
+      const response = await fetch(`/payroll/allowances-deductions/${deleteConfirmation.assignmentId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+          'Accept': 'application/json',
+        },
+      });
+
+      // Check if response is HTML (error page)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        throw new Error('Server error: Invalid response received. Please check your permissions.');
       }
+
+      if (!response.ok) {
+        try {
+          const error = await response.json();
+          throw new Error(error.message || `Server error: ${response.status}`);
+        } catch {
+          throw new Error(`Failed to delete assignment (${response.status})`);
+        }
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Component assignment deleted successfully');
+        setDeleteConfirmation({ isOpen: false });
+        window.location.reload();
+      } else {
+        throw new Error(data.message || 'Failed to delete assignment');
+      }
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to delete'}`);
+      setIsLoading(false);
     }
   };
 
@@ -480,6 +513,18 @@ export default function AllowancesDeductionsIndex({
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={deleteConfirmation.isOpen}
+          onClose={() => setDeleteConfirmation({ isOpen: false })}
+          onConfirm={confirmDelete}
+          title="Delete Component Assignment"
+          description="Are you sure you want to remove this component assignment? This action cannot be undone."
+          isLoading={isLoading}
+          confirmText="Delete"
+          cancelText="Cancel"
+        />
       </div>
     </AppLayout>
   );
