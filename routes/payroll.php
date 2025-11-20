@@ -8,6 +8,7 @@ use App\Http\Controllers\Payroll\DashboardController as PayrollDashboardControll
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollPeriodController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollCalculationController;
 use App\Http\Controllers\Payroll\PayrollProcessing\PayrollAdjustmentController;
+use App\Http\Controllers\Payroll\PayrollProcessing\PayrollReviewController;
 use App\Http\Controllers\Payroll\EmployeePayroll\EmployeePayrollInfoController;
 use App\Http\Controllers\Payroll\EmployeePayroll\SalaryComponentController;
 use App\Http\Controllers\Payroll\EmployeePayroll\AllowancesDeductionsController;
@@ -74,5 +75,13 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::put('/allowances-deductions/{id}', [AllowancesDeductionsController::class, 'update'])->name('allowances-deductions.update');
         Route::delete('/allowances-deductions/{id}', [AllowancesDeductionsController::class, 'destroy'])->name('allowances-deductions.destroy');
         Route::get('/allowances-deductions/{employeeId}/history', [AllowancesDeductionsController::class, 'history'])->name('allowances-deductions.history');
+
+        // Payroll Review & Approval - Phase 2.4
+        Route::get('/review', [PayrollReviewController::class, 'index'])->name('review.index');
+        Route::get('/review/{periodId}', [PayrollReviewController::class, 'index'])->name('review.show');
+        Route::post('/review/{periodId}/approve', [PayrollReviewController::class, 'approve'])->name('review.approve');
+        Route::post('/review/{periodId}/reject', [PayrollReviewController::class, 'reject'])->name('review.reject');
+        Route::post('/review/{periodId}/lock', [PayrollReviewController::class, 'lock'])->name('review.lock');
+        Route::post('/review/{periodId}/download-payslips', [PayrollReviewController::class, 'downloadPayslips'])->name('review.download-payslips');
     });
 });

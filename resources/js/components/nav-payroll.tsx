@@ -45,6 +45,11 @@ export function NavPayroll() {
             icon: FileText,
             href: '/payroll/adjustments',
         },
+        {
+            title: 'Review & Approval',
+            icon: ClipboardList,
+            href: '/payroll/review',
+        },
     ];
 
     const employeePayrollItems = [
@@ -58,13 +63,13 @@ export function NavPayroll() {
             title: 'Salary Components',
             icon: DollarSign,
             href: '/payroll/salary-components',
-            enabled: false, // Phase 2.2 - Coming soon
+            enabled: true, 
         },
         {
             title: 'Allowances & Deductions',
             icon: ClipboardList,
             href: '/payroll/allowances-deductions',
-            enabled: false, // Phase 2.3 - Coming soon
+            enabled: true,
         },
     ];
 
@@ -143,7 +148,7 @@ export function NavPayroll() {
         },
     ];
 
-    const isPayrollPeriodsActive = page.url.startsWith('/payroll/periods') || page.url.startsWith('/payroll/calculations') || page.url.startsWith('/payroll/adjustments');
+    const isPayrollPeriodsActive = page.url.startsWith('/payroll/periods') || page.url.startsWith('/payroll/calculations') || page.url.startsWith('/payroll/adjustments') || page.url.startsWith('/payroll/review');
     const isEmployeePayrollActive = page.url.startsWith('/payroll/employee-payroll-info') || page.url.startsWith('/payroll/components') || page.url.startsWith('/payroll/allowances');
     const isGovernmentComplianceActive = page.url.startsWith('/payroll/government');
     const isPaymentsActive = page.url.startsWith('/payroll/bank-files') || page.url.startsWith('/payroll/payslips') || page.url.startsWith('/payroll/payments');
