@@ -117,21 +117,21 @@ class BIRController extends Controller
             $taxYear = date('Y');
             $fileName = "BIR_1601C_Period_{$periodId}_{$taxYear}.pdf";
 
-            // In production, this would generate actual PDF
+            // Generate mock PDF content
             $fileContent = $this->generateMock1601CPDF($periodId);
 
-            return response()->streamDownload(function () use ($fileContent) {
-                echo $fileContent;
-            }, $fileName, [
-                'Content-Type' => 'application/pdf',
-            ]);
+            return response($fileContent, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+                ->header('Content-Length', strlen($fileContent));
         } catch (\Exception $e) {
             Log::error('Form 1601C download error', [
                 'period_id' => $periodId,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            return back()->withErrors('Failed to download Form 1601C');
+            return back()->withErrors('Failed to download Form 1601C: ' . $e->getMessage());
         }
     }
 
@@ -144,21 +144,21 @@ class BIRController extends Controller
             $taxYear = date('Y');
             $fileName = "BIR_2316_Certificates_{$taxYear}.zip";
 
-            // In production, this would generate actual ZIP with all PDFs
+            // Generate mock ZIP content
             $fileContent = $this->generateMock2316ZIP($periodId);
 
-            return response()->streamDownload(function () use ($fileContent) {
-                echo $fileContent;
-            }, $fileName, [
-                'Content-Type' => 'application/zip',
-            ]);
+            return response($fileContent, 200)
+                ->header('Content-Type', 'application/zip')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+                ->header('Content-Length', strlen($fileContent));
         } catch (\Exception $e) {
             Log::error('Form 2316 download error', [
                 'period_id' => $periodId,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            return back()->withErrors('Failed to download Form 2316 certificates');
+            return back()->withErrors('Failed to download Form 2316 certificates: ' . $e->getMessage());
         }
     }
 
@@ -173,18 +173,18 @@ class BIRController extends Controller
 
             $fileContent = $this->generateMockAlphalistDAT($periodId);
 
-            return response()->streamDownload(function () use ($fileContent) {
-                echo $fileContent;
-            }, $fileName, [
-                'Content-Type' => 'text/plain',
-            ]);
+            return response($fileContent, 200)
+                ->header('Content-Type', 'text/plain')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+                ->header('Content-Length', strlen($fileContent));
         } catch (\Exception $e) {
             Log::error('Alphalist download error', [
                 'period_id' => $periodId,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            return back()->withErrors('Failed to download Alphalist');
+            return back()->withErrors('Failed to download Alphalist: ' . $e->getMessage());
         }
     }
 
@@ -256,18 +256,18 @@ class BIRController extends Controller
                 'downloaded_by' => auth()->user()->id,
             ]);
 
-            return response()->streamDownload(function () use ($fileContent) {
-                echo $fileContent;
-            }, $fileName, [
-                'Content-Type' => $contentType,
-            ]);
+            return response($fileContent, 200)
+                ->header('Content-Type', $contentType)
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+                ->header('Content-Length', strlen($fileContent));
         } catch (\Exception $e) {
             Log::error('Report download error', [
                 'report_id' => $reportId,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            return back()->withErrors('Failed to download report');
+            return back()->withErrors('Failed to download report: ' . $e->getMessage());
         }
     }
 
@@ -568,32 +568,61 @@ PDF;
 
     private function generateMock2316ZIP($reportId): string
     {
-        // Create a simple ZIP-like structure with multiple files
+        // Create a structured text file for BIR 2316 certificates
+        $taxYear = date('Y');
         $employees = [
-            ['name' => 'Juan Dela Cruz', 'tin' => '123456789012', 'gross' => 540000, 'taxable' => 495000, 'withheld' => 64350],
-            ['name' => 'Maria Santos', 'tin' => '123456789013', 'gross' => 660000, 'taxable' => 605000, 'withheld' => 79650],
-            ['name' => 'Pedro Reyes', 'tin' => '123456789014', 'gross' => 456000, 'taxable' => 418000, 'withheld' => 50340],
-            ['name' => 'Rosa Garcia', 'tin' => '123456789015', 'gross' => 504000, 'taxable' => 462000, 'withheld' => 60480],
-            ['name' => 'Carlos Morales', 'tin' => '123456789016', 'gross' => 624000, 'taxable' => 572000, 'withheld' => 74360],
+            ['name' => 'Juan Dela Cruz', 'tin' => '123456789012', 'gross' => 540000, 'non_taxable' => 45000, 'taxable' => 495000, 'withheld' => 64350],
+            ['name' => 'Maria Santos', 'tin' => '123456789013', 'gross' => 660000, 'non_taxable' => 55000, 'taxable' => 605000, 'withheld' => 79650],
+            ['name' => 'Pedro Reyes', 'tin' => '123456789014', 'gross' => 456000, 'non_taxable' => 38000, 'taxable' => 418000, 'withheld' => 50340],
+            ['name' => 'Rosa Garcia', 'tin' => '123456789015', 'gross' => 504000, 'non_taxable' => 42000, 'taxable' => 462000, 'withheld' => 60480],
+            ['name' => 'Carlos Morales', 'tin' => '123456789016', 'gross' => 624000, 'non_taxable' => 52000, 'taxable' => 572000, 'withheld' => 74360],
         ];
 
-        $zipContent = "ZIP_ARCHIVE_PLACEHOLDER\n";
-        $zipContent .= "Company: Cathay Metal Corporation\n";
-        $zipContent .= "Tax Year: " . date('Y') . "\n";
-        $zipContent .= "Total Certificates: " . count($employees) . "\n";
-        $zipContent .= "Generated: " . now()->format('Y-m-d H:i:s') . "\n\n";
+        $zipContent = "================================================================================\n";
+        $zipContent .= "BIR FORM 2316 - CERTIFICATE OF COMPENSATION INCOME WITHHELD ON WAGES\n";
+        $zipContent .= "================================================================================\n\n";
         
-        $zipContent .= "=== BIR FORM 2316 CERTIFICATES ===\n\n";
+        $zipContent .= "Company Name:        Cathay Metal Corporation\n";
+        $zipContent .= "Company TIN:         123456789010\n";
+        $zipContent .= "Tax Year:            {$taxYear}\n";
+        $zipContent .= "Total Certificates:  " . count($employees) . "\n";
+        $zipContent .= "Generated:           " . now()->format('F d, Y H:i:s A') . "\n";
+        $zipContent .= "\n";
+        
+        $totalGross = 0;
+        $totalTaxable = 0;
+        $totalWithheld = 0;
         
         foreach ($employees as $index => $emp) {
-            $zipContent .= "CERTIFICATE " . ($index + 1) . "\n";
-            $zipContent .= "Employee: {$emp['name']}\n";
-            $zipContent .= "TIN: {$emp['tin']}\n";
-            $zipContent .= "Annual Gross Compensation: ₱" . number_format($emp['gross']) . "\n";
-            $zipContent .= "Annual Taxable Compensation: ₱" . number_format($emp['taxable']) . "\n";
-            $zipContent .= "Total Tax Withheld: ₱" . number_format($emp['withheld']) . "\n";
-            $zipContent .= str_repeat("-", 50) . "\n\n";
+            $totalGross += $emp['gross'];
+            $totalTaxable += $emp['taxable'];
+            $totalWithheld += $emp['withheld'];
+            
+            $certNum = $index + 1;
+            $zipContent .= "================================================================================\n";
+            $zipContent .= "CERTIFICATE #{$certNum}\n";
+            $zipContent .= "================================================================================\n";
+            $zipContent .= "Employee Name:                    " . str_pad($emp['name'], 40) . "\n";
+            $zipContent .= "Tax Identification Number (TIN):  " . $emp['tin'] . "\n";
+            $zipContent .= "Annual Gross Compensation:        ₱" . number_format($emp['gross'], 2) . "\n";
+            $zipContent .= "Non-Taxable Compensation:         ₱" . number_format($emp['non_taxable'], 2) . "\n";
+            $zipContent .= "Taxable Compensation:             ₱" . number_format($emp['taxable'], 2) . "\n";
+            $zipContent .= "Total Tax Withheld:               ₱" . number_format($emp['withheld'], 2) . "\n";
+            $zipContent .= "Tax Rate:                         " . number_format(($emp['withheld'] / $emp['gross'] * 100), 2) . "%\n";
+            $zipContent .= "\n";
         }
+        
+        $zipContent .= "================================================================================\n";
+        $zipContent .= "SUMMARY\n";
+        $zipContent .= "================================================================================\n";
+        $zipContent .= "Total Certificates:              " . count($employees) . "\n";
+        $zipContent .= "Total Gross Compensation:        ₱" . number_format($totalGross, 2) . "\n";
+        $zipContent .= "Total Taxable Compensation:      ₱" . number_format($totalTaxable, 2) . "\n";
+        $zipContent .= "Total Tax Withheld:              ₱" . number_format($totalWithheld, 2) . "\n";
+        $zipContent .= "Average Tax Rate:                " . number_format(($totalWithheld / $totalGross * 100), 2) . "%\n";
+        $zipContent .= "\n";
+        $zipContent .= "This is an official BIR Form 2316 summary document.\n";
+        $zipContent .= "For production use, actual PDF certificates should be generated for each employee.\n";
 
         return $zipContent;
     }
@@ -602,12 +631,29 @@ PDF;
     {
         $alphalist = $this->generateMockAlphalistData($periodId);
         
-        // DAT file format with pipe delimiters
-        $datContent = "SEQUENCE|TIN|EMPLOYEE_NAME|ADDRESS|BIRTH_DATE|GENDER|CIVIL_STATUS|ANNUAL_GROSS|ANNUAL_NON_TAXABLE|ANNUAL_TAXABLE|ANNUAL_TAX_WITHHELD|STATUS\n";
+        // Header section with metadata
+        $datContent = "BIR ALPHALIST OF EMPLOYEES RECEIVING COMPENSATION\n";
+        $datContent .= "Tax Year: " . date('Y') . "\n";
+        $datContent .= "Company TIN: 123456789010\n";
+        $datContent .= "Company Name: Cathay Metal Corporation\n";
+        $datContent .= "Generated: " . now()->format('F d, Y H:i:s A') . "\n";
+        $datContent .= str_repeat("=", 180) . "\n\n";
         
+        // DAT file format with pipe delimiters and enhanced formatting
+        $datContent .= "SEQUENCE|TIN|EMPLOYEE_NAME|ADDRESS|BIRTH_DATE|GENDER|CIVIL_STATUS|ANNUAL_GROSS|ANNUAL_NON_TAXABLE|ANNUAL_TAXABLE|ANNUAL_TAX_WITHHELD|TAX_RATE|STATUS\n";
+        $datContent .= str_repeat("-", 180) . "\n";
+        
+        $totalGross = 0;
+        $totalTaxable = 0;
+        $totalTax = 0;
+
         foreach ($alphalist['employees'] as $emp) {
+            $taxRate = ($emp['annual_gross_compensation'] > 0) 
+                ? number_format(($emp['annual_tax_withheld'] / $emp['annual_gross_compensation'] * 100), 2) 
+                : '0.00';
+            
             $datContent .= sprintf(
-                "%d|%s|%s|%s|%s|%s|%s|%.2f|%.2f|%.2f|%.2f|%s\n",
+                "%d|%s|%s|%s|%s|%s|%s|%.2f|%.2f|%.2f|%.2f|%s%%|%s\n",
                 $emp['sequence_number'],
                 $emp['tin'],
                 $emp['employee_name'],
@@ -619,9 +665,23 @@ PDF;
                 $emp['annual_non_taxable_compensation'],
                 $emp['annual_taxable_compensation'],
                 $emp['annual_tax_withheld'],
+                $taxRate,
                 $emp['status_flag']
             );
+            
+            $totalGross += $emp['annual_gross_compensation'];
+            $totalTaxable += $emp['annual_taxable_compensation'];
+            $totalTax += $emp['annual_tax_withheld'];
         }
+        
+        // Add summary section
+        $datContent .= str_repeat("-", 180) . "\n";
+        $datContent .= "SUMMARY:\n";
+        $datContent .= "Total Employees: " . count($alphalist['employees']) . "\n";
+        $datContent .= "Total Gross Compensation: ₱" . number_format($totalGross, 2) . "\n";
+        $datContent .= "Total Taxable Compensation: ₱" . number_format($totalTaxable, 2) . "\n";
+        $datContent .= "Total Tax Withheld: ₱" . number_format($totalTax, 2) . "\n";
+        $datContent .= "Average Tax Rate: " . number_format(($totalTax / $totalGross * 100), 2) . "%\n";
 
         return $datContent;
     }
