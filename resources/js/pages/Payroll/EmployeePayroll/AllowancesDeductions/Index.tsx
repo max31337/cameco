@@ -17,6 +17,10 @@ import {
   EmployeeComponentAssignModal,
   EmployeeComponentAssignmentFormData,
 } from '@/components/payroll/EmployeePayroll/employee-component-assign-modal';
+import {
+  EmployeeBulkAssignModal,
+  BulkAssignFormData,
+} from '@/components/payroll/EmployeePayroll/employee-bulk-assign-modal';
 
 interface SalaryComponent {
   id: number;
@@ -92,6 +96,7 @@ export default function AllowancesDeductionsIndex({
 }: AllowancesDeductionsPageProps) {
   const [filters, setFilters] = useState(initialFilters);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<EmployeeComponentAssignmentFormData | undefined>();
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
@@ -206,9 +211,43 @@ export default function AllowancesDeductionsIndex({
     }
   };
 
-  const handleBulkAssign = () => {
-    // TODO: Implement bulk assignment logic
-    alert('Bulk assignment feature coming soon');
+  const handleBulkAssign = async (data: BulkAssignFormData) => {
+    setIsLoading(true);
+    try {
+      // Call the backend API
+      const response = await fetch('/payroll/allowances-deductions/bulk-assign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          employee_ids: data.employee_ids,
+          salary_component_id: data.salary_component_id,
+          amount: data.amount ? parseFloat(data.amount) : null,
+          percentage: data.percentage ? parseFloat(data.percentage) : null,
+          units: data.units ? parseFloat(data.units) : null,
+          frequency: data.frequency,
+          effective_date: data.effective_date,
+          end_date: data.end_date || null,
+          is_prorated: data.is_prorated,
+          requires_attendance: data.requires_attendance,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to bulk assign components');
+      }
+
+      alert(`Successfully assigned component to ${data.employee_ids.length} employee${data.employee_ids.length !== 1 ? 's' : ''}`);
+      setIsBulkModalOpen(false);
+      window.location.reload();
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to bulk assign'}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const employees = employeeComponents.map((emp) => ({
@@ -232,7 +271,7 @@ export default function AllowancesDeductionsIndex({
             <p className="text-gray-600 mt-1">Manage employee salary components and assignments</p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={handleBulkAssign}>
+            <Button variant="outline" onClick={() => setIsBulkModalOpen(true)}>
               <Upload size={16} className="mr-2" />
               Bulk Assign
             </Button>
@@ -376,6 +415,16 @@ export default function AllowancesDeductionsIndex({
           initialData={editingAssignment}
           isLoading={isLoading}
           mode={editingAssignment ? 'edit' : 'create'}
+        />
+
+        {/* Bulk Assign Modal */}
+        <EmployeeBulkAssignModal
+          isOpen={isBulkModalOpen}
+          onClose={() => setIsBulkModalOpen(false)}
+          onSubmit={handleBulkAssign}
+          employees={employees}
+          components={components}
+          isLoading={isLoading}
         />
 
         {/* History Dialog */}
