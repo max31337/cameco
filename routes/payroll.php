@@ -12,6 +12,7 @@ use App\Http\Controllers\Payroll\PayrollProcessing\PayrollReviewController;
 use App\Http\Controllers\Payroll\EmployeePayroll\EmployeePayrollInfoController;
 use App\Http\Controllers\Payroll\EmployeePayroll\SalaryComponentController;
 use App\Http\Controllers\Payroll\EmployeePayroll\AllowancesDeductionsController;
+use App\Http\Controllers\Payroll\Government\BIRController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -83,5 +84,17 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::post('/review/{periodId}/reject', [PayrollReviewController::class, 'reject'])->name('review.reject');
         Route::post('/review/{periodId}/lock', [PayrollReviewController::class, 'lock'])->name('review.lock');
         Route::post('/review/{periodId}/download-payslips', [PayrollReviewController::class, 'downloadPayslips'])->name('review.download-payslips');
+
+        // BIR Reports - Phase 3.1
+        Route::get('/government/bir', [BIRController::class, 'index'])->name('bir.index');
+        Route::post('/government/bir/generate-1601c/{periodId}', [BIRController::class, 'generate1601C'])->name('bir.generate-1601c');
+        Route::post('/government/bir/generate-2316/{periodId}', [BIRController::class, 'generate2316'])->name('bir.generate-2316');
+        Route::post('/government/bir/generate-alphalist/{periodId}', [BIRController::class, 'generateAlphalist'])->name('bir.generate-alphalist');
+        Route::get('/government/bir/download-1601c/{periodId}', [BIRController::class, 'download1601C'])->name('bir.download-1601c');
+        Route::get('/government/bir/download-2316/{periodId}', [BIRController::class, 'download2316'])->name('bir.download-2316');
+        Route::get('/government/bir/download-alphalist/{periodId}', [BIRController::class, 'downloadAlphalist'])->name('bir.download-alphalist');
+        Route::post('/government/bir/submit-1601c/{periodId}', [BIRController::class, 'submit1601C'])->name('bir.submit-1601c');
+        Route::get('/government/bir/download/{reportId}', [BIRController::class, 'download'])->name('bir.download');
+        Route::post('/government/bir/submit/{reportId}', [BIRController::class, 'submit'])->name('bir.submit');
     });
 });

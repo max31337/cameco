@@ -1,0 +1,690 @@
+<?php
+
+namespace App\Http\Controllers\Payroll\Government;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Log;
+
+class BIRController extends Controller
+{
+    /**
+     * Display BIR Reports page
+     */
+    public function index(Request $request)
+    {
+        $reports = $this->getMockBIRReports();
+        $periods = $this->getMockPayrollPeriods();
+        $summary = $this->getMockBIRSummary();
+        $generatedReports = $this->getMockGeneratedReports();
+
+        return Inertia::render('Payroll/Government/BIR/Index', [
+            'reports' => $reports,
+            'periods' => $periods,
+            'summary' => $summary,
+            'generated_reports' => $generatedReports,
+        ]);
+    }
+
+    /**
+     * Generate BIR Form 1601C (Monthly Remittance)
+     */
+    public function generate1601C(Request $request, int $periodId)
+    {
+        try {
+            $validated = $request->validate([
+                'rdo_code' => 'required|string',
+            ]);
+
+            // Mock data generation
+            $form1601C = $this->generateMock1601CData($periodId, $validated['rdo_code']);
+
+            Log::info('BIR Form 1601C generated', [
+                'period_id' => $periodId,
+                'rdo_code' => $validated['rdo_code'],
+                'generated_by' => auth()->user()->id,
+            ]);
+
+            return back()->with('success', 'Form 1601C generated successfully');
+        } catch (\Exception $e) {
+            Log::error('Form 1601C generation error', [
+                'period_id' => $periodId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Failed to generate Form 1601C: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate BIR Form 2316 (Annual Certificate)
+     */
+    public function generate2316(Request $request, int $periodId)
+    {
+        try {
+            $form2316Data = $this->generateMock2316Data($periodId);
+
+            Log::info('BIR Form 2316 certificates generated', [
+                'period_id' => $periodId,
+                'employee_count' => count($form2316Data['certificates']),
+                'generated_by' => auth()->user()->id,
+            ]);
+
+            return back()->with('success', 'Form 2316 certificates generated successfully for all employees');
+        } catch (\Exception $e) {
+            Log::error('Form 2316 generation error', [
+                'period_id' => $periodId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Failed to generate Form 2316: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate BIR Alphalist (DAT Format)
+     */
+    public function generateAlphalist(Request $request, int $periodId)
+    {
+        try {
+            $alphalistData = $this->generateMockAlphalistData($periodId);
+
+            Log::info('BIR Alphalist generated', [
+                'period_id' => $periodId,
+                'employee_count' => count($alphalistData['employees']),
+                'generated_by' => auth()->user()->id,
+            ]);
+
+            return back()->with('success', 'Alphalist generated successfully in DAT format');
+        } catch (\Exception $e) {
+            Log::error('Alphalist generation error', [
+                'period_id' => $periodId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Failed to generate Alphalist: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download Form 1601C file
+     */
+    public function download1601C(Request $request, $periodId)
+    {
+        try {
+            $taxYear = date('Y');
+            $fileName = "BIR_1601C_Period_{$periodId}_{$taxYear}.pdf";
+
+            // In production, this would generate actual PDF
+            $fileContent = $this->generateMock1601CPDF($periodId);
+
+            return response()->streamDownload(function () use ($fileContent) {
+                echo $fileContent;
+            }, $fileName, [
+                'Content-Type' => 'application/pdf',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Form 1601C download error', [
+                'period_id' => $periodId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Failed to download Form 1601C');
+        }
+    }
+
+    /**
+     * Download Form 2316 certificates
+     */
+    public function download2316(Request $request, $periodId)
+    {
+        try {
+            $taxYear = date('Y');
+            $fileName = "BIR_2316_Certificates_{$taxYear}.zip";
+
+            // In production, this would generate actual ZIP with all PDFs
+            $fileContent = $this->generateMock2316ZIP($periodId);
+
+            return response()->streamDownload(function () use ($fileContent) {
+                echo $fileContent;
+            }, $fileName, [
+                'Content-Type' => 'application/zip',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Form 2316 download error', [
+                'period_id' => $periodId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Failed to download Form 2316 certificates');
+        }
+    }
+
+    /**
+     * Download Alphalist DAT file
+     */
+    public function downloadAlphalist(Request $request, $periodId)
+    {
+        try {
+            $taxYear = date('Y');
+            $fileName = "BIR_ALPHALIST_{$taxYear}.dat";
+
+            $fileContent = $this->generateMockAlphalistDAT($periodId);
+
+            return response()->streamDownload(function () use ($fileContent) {
+                echo $fileContent;
+            }, $fileName, [
+                'Content-Type' => 'text/plain',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Alphalist download error', [
+                'period_id' => $periodId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Failed to download Alphalist');
+        }
+    }
+
+    /**
+     * Submit Form 1601C to BIR
+     */
+    public function submit1601C(Request $request, int $periodId)
+    {
+        try {
+            // Mock submission to BIR eFPS
+            $submissionData = [
+                'period_id' => $periodId,
+                'report_type' => '1601C',
+                'submitted_by' => auth()->user()->id,
+                'submitted_at' => now(),
+                'submission_status' => 'submitted',
+                'reference_number' => 'BIR' . date('YmdHis') . rand(1000, 9999),
+            ];
+
+            Log::info('BIR Form 1601C submitted', $submissionData);
+
+            return back()->with('success', 'Form 1601C submitted to BIR successfully');
+        } catch (\Exception $e) {
+            Log::error('Form 1601C submission error', [
+                'period_id' => $periodId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Failed to submit Form 1601C: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download report file
+     */
+    public function download(Request $request, $reportId)
+    {
+        try {
+            // Get the mock generated reports to determine type
+            $generatedReports = $this->getMockGeneratedReports();
+            $report = collect($generatedReports)->firstWhere('id', $reportId);
+
+            if (!$report) {
+                return back()->withErrors('Report not found');
+            }
+
+            // Determine content type and file extension based on report type
+            $reportType = $report['report_type'];
+            $fileName = $report['file_name'];
+            
+            if ($reportType === '1601C') {
+                $fileContent = $this->generateMock1601CPDF($reportId);
+                $contentType = 'application/pdf';
+            } elseif ($reportType === '2316') {
+                $fileContent = $this->generateMock2316ZIP($reportId);
+                $contentType = 'application/zip';
+            } elseif ($reportType === 'Alphalist') {
+                $fileContent = $this->generateMockAlphalistDAT($reportId);
+                $contentType = 'text/plain';
+            } else {
+                $fileContent = $this->generateMockPDF($reportId);
+                $contentType = 'application/pdf';
+            }
+
+            Log::info('Report downloaded', [
+                'report_id' => $reportId,
+                'report_type' => $reportType,
+                'file_name' => $fileName,
+                'downloaded_by' => auth()->user()->id,
+            ]);
+
+            return response()->streamDownload(function () use ($fileContent) {
+                echo $fileContent;
+            }, $fileName, [
+                'Content-Type' => $contentType,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Report download error', [
+                'report_id' => $reportId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Failed to download report');
+        }
+    }
+
+    /**
+     * Submit report to BIR
+     */
+    public function submit(Request $request, $reportId)
+    {
+        try {
+            Log::info('BIR report submitted', [
+                'report_id' => $reportId,
+                'submitted_by' => auth()->user()->id,
+            ]);
+
+            return back()->with('success', 'Report submitted to BIR successfully');
+        } catch (\Exception $e) {
+            Log::error('Report submission error', [
+                'report_id' => $reportId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Failed to submit report: ' . $e->getMessage());
+        }
+    }
+
+    // ============================================================================
+    // MOCK DATA GENERATORS
+    // ============================================================================
+
+    private function getMockBIRReports(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'type' => '1601C',
+                'period_id' => 1,
+                'period_name' => 'October 2025 - 1st Half',
+                'status' => 'generated',
+                'generated_at' => '2025-10-20 14:30:00',
+                'submitted_at' => '2025-10-22 09:15:00',
+                'file_name' => 'BIR_1601C_Period_1_2025.pdf',
+                'file_size' => 250000,
+                'employee_count' => 185,
+                'total_amount' => 2850000,
+                'created_at' => '2025-10-20 14:30:00',
+                'updated_at' => '2025-10-22 09:15:00',
+            ],
+            [
+                'id' => 2,
+                'type' => '2316',
+                'period_id' => 1,
+                'period_name' => 'October 2025 - 1st Half',
+                'status' => 'draft',
+                'generated_at' => null,
+                'submitted_at' => null,
+                'file_name' => null,
+                'file_size' => null,
+                'employee_count' => 185,
+                'total_amount' => 3200000,
+                'created_at' => '2025-10-20 14:30:00',
+                'updated_at' => '2025-10-20 14:30:00',
+            ],
+            [
+                'id' => 3,
+                'type' => 'Alphalist',
+                'period_id' => 1,
+                'period_name' => 'October 2025 - 1st Half',
+                'status' => 'ready',
+                'generated_at' => '2025-10-19 10:45:00',
+                'submitted_at' => null,
+                'file_name' => 'BIR_ALPHALIST_2025.dat',
+                'file_size' => 125000,
+                'employee_count' => 185,
+                'total_amount' => 3200000,
+                'created_at' => '2025-10-19 10:45:00',
+                'updated_at' => '2025-10-19 10:45:00',
+            ],
+        ];
+    }
+
+    private function getMockPayrollPeriods(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'October 2025 - 1st Half',
+                'start_date' => '2025-10-01',
+                'end_date' => '2025-10-15',
+                'status' => 'approved',
+            ],
+            [
+                'id' => 2,
+                'name' => 'October 2025 - 2nd Half',
+                'start_date' => '2025-10-16',
+                'end_date' => '2025-10-31',
+                'status' => 'calculated',
+            ],
+            [
+                'id' => 3,
+                'name' => 'November 2025',
+                'start_date' => '2025-11-01',
+                'end_date' => '2025-11-30',
+                'status' => 'draft',
+            ],
+        ];
+    }
+
+    private function getMockBIRSummary(): array
+    {
+        return [
+            'total_employees' => 185,
+            'total_gross_compensation' => 8500000,
+            'total_withholding_tax' => 1105000,
+            'reports_generated_count' => 3,
+            'reports_submitted_count' => 1,
+            'last_submission_date' => '2025-10-22',
+            'next_deadline' => '2025-11-10',
+        ];
+    }
+
+    private function getMockGeneratedReports(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'report_type' => '1601C',
+                'period' => 'October 2025 - 1st Half',
+                'file_name' => 'BIR_1601C_Period_1_2025.pdf',
+                'file_path' => 'reports/bir/1601c/BIR_1601C_Period_1_2025.pdf',
+                'file_size' => 250000,
+                'generated_at' => '2025-10-20T14:30:00',
+                'submitted' => true,
+                'submission_status' => 'submitted',
+                'rejection_reason' => null,
+            ],
+            [
+                'id' => 2,
+                'report_type' => 'Alphalist',
+                'period' => 'October 2025 - 1st Half',
+                'file_name' => 'BIR_ALPHALIST_2025.dat',
+                'file_path' => 'reports/bir/alphalist/BIR_ALPHALIST_2025.dat',
+                'file_size' => 125000,
+                'generated_at' => '2025-10-19T10:45:00',
+                'submitted' => false,
+                'submission_status' => 'pending',
+                'rejection_reason' => null,
+            ],
+        ];
+    }
+
+    private function generateMock1601CData($periodId, $rdoCode): array
+    {
+        return [
+            'period_id' => $periodId,
+            'rdo_code' => $rdoCode,
+            'company_tin' => '123456789010',
+            'company_name' => 'Cathay Metal Corporation',
+            'reporting_month' => 'October 2025',
+            'total_employees' => 185,
+            'total_compensation' => 2850000,
+            'total_withholding_tax' => 370500,
+            'generated_at' => now(),
+        ];
+    }
+
+    private function generateMock2316Data($periodId): array
+    {
+        $employees = [
+            ['employee_id' => 'EMP001', 'name' => 'Juan Dela Cruz', 'tin' => '123456789012', 'gross' => 540000, 'tax_withheld' => 64350],
+            ['employee_id' => 'EMP002', 'name' => 'Maria Santos', 'tin' => '123456789013', 'gross' => 660000, 'tax_withheld' => 79650],
+            ['employee_id' => 'EMP003', 'name' => 'Pedro Reyes', 'tin' => '123456789014', 'gross' => 456000, 'tax_withheld' => 50340],
+            ['employee_id' => 'EMP004', 'name' => 'Rosa Garcia', 'tin' => '123456789015', 'gross' => 504000, 'tax_withheld' => 60480],
+            ['employee_id' => 'EMP005', 'name' => 'Carlos Morales', 'tin' => '123456789016', 'gross' => 624000, 'tax_withheld' => 74360],
+        ];
+
+        $certificates = array_map(fn ($emp) => [
+            'employee_id' => $emp['employee_id'],
+            'tin' => $emp['tin'],
+            'employee_name' => $emp['name'],
+            'gross_compensation' => $emp['gross'],
+            'non_taxable_compensation' => floor($emp['gross'] * 0.08),
+            'taxable_compensation' => floor($emp['gross'] * 0.92),
+            'tax_withheld' => $emp['tax_withheld'],
+        ], $employees);
+
+        return [
+            'period_id' => $periodId,
+            'tax_year' => date('Y'),
+            'total_certificates' => count($certificates),
+            'total_gross_compensation' => array_sum(array_column($certificates, 'gross_compensation')),
+            'total_tax_withheld' => array_sum(array_column($certificates, 'tax_withheld')),
+            'certificates' => $certificates,
+            'generated_at' => now(),
+        ];
+    }
+
+    private function generateMockAlphalistData($periodId): array
+    {
+        $employees = [
+            ['employee_id' => 'EMP001', 'name' => 'Juan Dela Cruz', 'tin' => '123456789012', 'annual_gross' => 540000],
+            ['employee_id' => 'EMP002', 'name' => 'Maria Santos', 'tin' => '123456789013', 'annual_gross' => 660000],
+            ['employee_id' => 'EMP003', 'name' => 'Pedro Reyes', 'tin' => '123456789014', 'annual_gross' => 456000],
+            ['employee_id' => 'EMP004', 'name' => 'Rosa Garcia', 'tin' => '123456789015', 'annual_gross' => 504000],
+            ['employee_id' => 'EMP005', 'name' => 'Carlos Morales', 'tin' => '123456789016', 'annual_gross' => 624000],
+        ];
+
+        $alphalist = array_map(fn ($emp, $idx) => [
+            'sequence_number' => $idx + 1,
+            'tin' => $emp['tin'],
+            'employee_name' => $emp['name'],
+            'address' => 'Manila, Philippines',
+            'birth_date' => '1990-01-15',
+            'gender' => $idx % 2 === 0 ? 'M' : 'F',
+            'civil_status' => 'Married',
+            'annual_gross_compensation' => $emp['annual_gross'],
+            'annual_non_taxable_compensation' => floor($emp['annual_gross'] * 0.08),
+            'annual_taxable_compensation' => floor($emp['annual_gross'] * 0.92),
+            'annual_tax_withheld' => floor($emp['annual_gross'] * 0.13),
+            'status_flag' => 'Active',
+        ], $employees, array_keys($employees));
+
+        return [
+            'period_id' => $periodId,
+            'tax_year' => date('Y'),
+            'total_employees' => count($alphalist),
+            'total_gross_compensation' => array_sum(array_column($alphalist, 'annual_gross_compensation')),
+            'total_tax_withheld' => array_sum(array_column($alphalist, 'annual_tax_withheld')),
+            'employees' => $alphalist,
+            'generated_at' => now(),
+        ];
+    }
+
+    private function generateMock1601CPDF($reportId): string
+    {
+        $taxYear = date('Y');
+        $month = 'October';
+        $companyTin = '123456789010';
+        $companyName = 'Cathay Metal Corporation';
+        
+        // Create a more realistic PDF-like content
+        $content = <<<PDF
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>
+endobj
+4 0 obj
+<< >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+(BIR FORM 1601-C) Tj
+0 -20 Td
+(MONTHLY REMITTANCE RETURN OF INCOME TAX WITHHELD) Tj
+0 -40 Td
+(Month: $month $taxYear) Tj
+0 -20 Td
+(Company TIN: $companyTin) Tj
+0 -20 Td
+(Company Name: $companyName) Tj
+0 -40 Td
+(Total Employees Withheld From: 185) Tj
+0 -20 Td
+(Total Compensation: 2,850,000.00) Tj
+0 -20 Td
+(Total Tax Withheld: 371,000.00) Tj
+0 -20 Td
+(Average Tax Rate: 13.02%) Tj
+0 -40 Td
+(This is a placeholder PDF generated from mock data.) Tj
+0 -20 Td
+(In production, actual PDF library will be used.) Tj
+ET
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000229 00000 n 
+trailer
+<< /Size 5 /Root 1 0 R >>
+startxref
+500
+%%EOF
+PDF;
+
+        return $content;
+    }
+
+    private function generateMock2316ZIP($reportId): string
+    {
+        // Create a simple ZIP-like structure with multiple files
+        $employees = [
+            ['name' => 'Juan Dela Cruz', 'tin' => '123456789012', 'gross' => 540000, 'taxable' => 495000, 'withheld' => 64350],
+            ['name' => 'Maria Santos', 'tin' => '123456789013', 'gross' => 660000, 'taxable' => 605000, 'withheld' => 79650],
+            ['name' => 'Pedro Reyes', 'tin' => '123456789014', 'gross' => 456000, 'taxable' => 418000, 'withheld' => 50340],
+            ['name' => 'Rosa Garcia', 'tin' => '123456789015', 'gross' => 504000, 'taxable' => 462000, 'withheld' => 60480],
+            ['name' => 'Carlos Morales', 'tin' => '123456789016', 'gross' => 624000, 'taxable' => 572000, 'withheld' => 74360],
+        ];
+
+        $zipContent = "ZIP_ARCHIVE_PLACEHOLDER\n";
+        $zipContent .= "Company: Cathay Metal Corporation\n";
+        $zipContent .= "Tax Year: " . date('Y') . "\n";
+        $zipContent .= "Total Certificates: " . count($employees) . "\n";
+        $zipContent .= "Generated: " . now()->format('Y-m-d H:i:s') . "\n\n";
+        
+        $zipContent .= "=== BIR FORM 2316 CERTIFICATES ===\n\n";
+        
+        foreach ($employees as $index => $emp) {
+            $zipContent .= "CERTIFICATE " . ($index + 1) . "\n";
+            $zipContent .= "Employee: {$emp['name']}\n";
+            $zipContent .= "TIN: {$emp['tin']}\n";
+            $zipContent .= "Annual Gross Compensation: ₱" . number_format($emp['gross']) . "\n";
+            $zipContent .= "Annual Taxable Compensation: ₱" . number_format($emp['taxable']) . "\n";
+            $zipContent .= "Total Tax Withheld: ₱" . number_format($emp['withheld']) . "\n";
+            $zipContent .= str_repeat("-", 50) . "\n\n";
+        }
+
+        return $zipContent;
+    }
+
+    private function generateMockAlphalistDAT($periodId): string
+    {
+        $alphalist = $this->generateMockAlphalistData($periodId);
+        
+        // DAT file format with pipe delimiters
+        $datContent = "SEQUENCE|TIN|EMPLOYEE_NAME|ADDRESS|BIRTH_DATE|GENDER|CIVIL_STATUS|ANNUAL_GROSS|ANNUAL_NON_TAXABLE|ANNUAL_TAXABLE|ANNUAL_TAX_WITHHELD|STATUS\n";
+        
+        foreach ($alphalist['employees'] as $emp) {
+            $datContent .= sprintf(
+                "%d|%s|%s|%s|%s|%s|%s|%.2f|%.2f|%.2f|%.2f|%s\n",
+                $emp['sequence_number'],
+                $emp['tin'],
+                $emp['employee_name'],
+                $emp['address'],
+                $emp['birth_date'],
+                $emp['gender'],
+                $emp['civil_status'],
+                $emp['annual_gross_compensation'],
+                $emp['annual_non_taxable_compensation'],
+                $emp['annual_taxable_compensation'],
+                $emp['annual_tax_withheld'],
+                $emp['status_flag']
+            );
+        }
+
+        return $datContent;
+    }
+
+    private function generateMockPDF($reportId): string
+    {
+        $taxYear = date('Y');
+        
+        // Create a simple PDF-like content for generic reports
+        $content = <<<PDF
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>
+endobj
+4 0 obj
+<< >>
+stream
+BT
+/F1 14 Tf
+50 750 Td
+(BIR REPORT) Tj
+0 -20 Td
+(Cathay Metal Corporation) Tj
+/F1 12 Tf
+0 -40 Td
+(Report ID: $reportId) Tj
+0 -20 Td
+(Tax Year: $taxYear) Tj
+0 -20 Td
+(Generated: ) Tj
+0 -40 Td
+(This report contains compiled payroll information for Bureau) Tj
+0 -20 Td
+(of Internal Revenue (BIR) compliance and filing requirements.) Tj
+0 -40 Td
+(Total Employees: 185) Tj
+0 -20 Td
+(Total Gross Compensation: 8,500,000.00) Tj
+0 -20 Td
+(Total Income Tax Withheld: 1,105,000.00) Tj
+ET
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000229 00000 n 
+trailer
+<< /Size 5 /Root 1 0 R >>
+startxref
+600
+%%EOF
+PDF;
+
+        return $content;
+    }
+}

@@ -78,7 +78,7 @@ export function NavPayroll() {
             title: 'BIR Reports',
             icon: FileText,
             href: '/payroll/government/bir',
-            enabled: false,
+            enabled: true,
         },
         {
             title: 'SSS Contributions',
