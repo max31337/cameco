@@ -68,6 +68,7 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         // Allowances & Deductions - Phase 2.3
         Route::get('/allowances-deductions', [AllowancesDeductionsController::class, 'index'])->name('allowances-deductions.index');
         Route::post('/allowances-deductions', [AllowancesDeductionsController::class, 'store'])->name('allowances-deductions.store');
+        Route::get('/allowances-deductions/bulk-assign', [AllowancesDeductionsController::class, 'bulkAssignPage'])->name('allowances-deductions.bulk-assign-page');
         Route::post('/allowances-deductions/bulk-assign', [AllowancesDeductionsController::class, 'bulkAssign'])->name('allowances-deductions.bulk-assign');
         Route::get('/allowances-deductions/{id}', [AllowancesDeductionsController::class, 'show'])->name('allowances-deductions.show');
         Route::put('/allowances-deductions/{id}', [AllowancesDeductionsController::class, 'update'])->name('allowances-deductions.update');

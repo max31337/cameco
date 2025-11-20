@@ -55,6 +55,38 @@ class AllowancesDeductionsController extends Controller
     }
 
     /**
+     * Display the bulk assign page.
+     */
+    public function bulkAssignPage()
+    {
+        // TODO: Uncomment when actual database integration is ready
+        // $this->authorize('create', Employee::class);
+
+        // Get all employees for the bulk assign form
+        $employees = $this->getMockEmployeeComponentAssignments();
+
+        // Extract employee data for the form
+        $employeeData = array_map(function ($emp) {
+            return [
+                'id' => $emp['employee_id'],
+                'employee_number' => $emp['employee_number'],
+                'first_name' => $emp['first_name'],
+                'last_name' => $emp['last_name'],
+                'department' => $emp['department'],
+                'position' => $emp['position'],
+            ];
+        }, $employees);
+
+        // Get all salary components for dropdown
+        $components = $this->getMockSalaryComponents();
+
+        return Inertia::render('Payroll/EmployeePayroll/AllowancesDeductions/BulkAssign', [
+            'employees' => $employeeData,
+            'components' => $components,
+        ]);
+    }
+
+    /**
      * Store a newly assigned component to an employee.
      */
     public function store(Request $request)
