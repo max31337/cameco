@@ -1,10 +1,28 @@
+import { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Edit2, Shield } from 'lucide-react';
-import { LeavePoliciesPageProps } from '@/types/hr-pages';
+import { Calendar, Edit2, Shield, Plus } from 'lucide-react';
+import { LeavePolicyFormModal } from '@/components/hr/leave-policy-form-modal';
+import { LeavePolicyDetailsModal } from '@/components/hr/leave-policy-details-modal';
+
+interface LeavePolicy {
+    id: number;
+    code: string;
+    name: string;
+    description: string;
+    annual_entitlement: number;
+    max_carryover: number;
+    can_carry_forward: boolean;
+    is_paid: boolean;
+}
+
+interface LeavePoliciesProps {
+    policies: LeavePolicy[];
+    canEdit?: boolean;
+}
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -17,10 +35,10 @@ const leaveTypeDescriptions: Record<string, string> = {
     'Vacation Leave': 'Annual leave for vacation and personal time',
     'Sick Leave': 'Leave for illness and medical appointments',
     'Emergency Leave': 'Leave for unexpected emergencies',
-    'Maternity Leave': 'Leave for mothers before and after childbirth',
-    'Paternity Leave': 'Leave for fathers after childbirth',
-    'Privilege Leave': 'Special leave for personal matters',
-    'Bereavement Leave': 'Leave for dealing with family deaths',
+    'Maternity/Paternity Leave': 'Leave for new parents',
+    'Privilege Leave': 'General personal leave',
+    'Bereavement Leave': 'Leave for death of a family member',
+    'Special Leave': 'Leave for special circumstances',
 };
 
 function getLeaveTypeIcon(type: string) {
@@ -28,16 +46,44 @@ function getLeaveTypeIcon(type: string) {
         'Vacation Leave': <Calendar className="h-5 w-5 text-blue-600" />,
         'Sick Leave': <Shield className="h-5 w-5 text-red-600" />,
         'Emergency Leave': <Shield className="h-5 w-5 text-yellow-600" />,
-        'Maternity Leave': <Calendar className="h-5 w-5 text-pink-600" />,
-        'Paternity Leave': <Calendar className="h-5 w-5 text-pink-600" />,
+        'Maternity/Paternity Leave': <Calendar className="h-5 w-5 text-pink-600" />,
         'Privilege Leave': <Calendar className="h-5 w-5 text-green-600" />,
         'Bereavement Leave': <Calendar className="h-5 w-5 text-purple-600" />,
+        'Special Leave': <Calendar className="h-5 w-5 text-gray-600" />,
     };
     return icons[type] || <Calendar className="h-5 w-5 text-gray-600" />;
 }
 
-export default function LeavePolicies({ policies }: LeavePoliciesPageProps) {
-    const policiesData = (Array.isArray(policies) ? policies : (policies as Record<string, unknown>)?.data || []) as Record<string, unknown>[];
+export default function LeavePolicies({ policies }: LeavePoliciesProps) {
+    const policiesData = Array.isArray(policies) ? policies : [];
+    
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
+    const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+
+    const handleCreatePolicy = () => {
+        setSelectedPolicy(null);
+        setModalMode('create');
+        setIsFormModalOpen(true);
+    };
+
+    const handleEditPolicy = (policy: any) => {
+        setSelectedPolicy(policy);
+        setModalMode('edit');
+        setIsFormModalOpen(true);
+    };
+
+    const handleViewDetails = (policy: any) => {
+        setSelectedPolicy(policy);
+        setIsDetailsModalOpen(true);
+    };
+
+    const handleEditFromDetails = () => {
+        setIsDetailsModalOpen(false);
+        setModalMode('edit');
+        setIsFormModalOpen(true);
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -47,9 +93,9 @@ export default function LeavePolicies({ policies }: LeavePoliciesPageProps) {
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <h1 className="text-3xl font-bold tracking-tight">Leave Policies</h1>
-                        <Button variant="outline">
-                            <Edit2 className="h-4 w-4 mr-2" />
-                            Edit Policies
+                        <Button onClick={handleCreatePolicy}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Policy
                         </Button>
                     </div>
                     <p className="text-muted-foreground">
@@ -61,15 +107,15 @@ export default function LeavePolicies({ policies }: LeavePoliciesPageProps) {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {policiesData && policiesData.length > 0 ? (
                         policiesData.map((policy) => (
-                            <Card key={policy.id as React.Key} className="hover:shadow-md transition-shadow">
+                            <Card key={policy.id} className="hover:shadow-md transition-shadow">
                                 <CardHeader>
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3 flex-1">
-                                            {getLeaveTypeIcon(String(policy.type || ''))}
+                                            {getLeaveTypeIcon(policy.name)}
                                             <div>
-                                                <CardTitle className="text-lg">{String(policy.type)}</CardTitle>
+                                                <CardTitle className="text-lg">{policy.name}</CardTitle>
                                                 <CardDescription className="text-xs mt-1">
-                                                    {leaveTypeDescriptions[String(policy.type)] || 'Leave policy'}
+                                                    {policy.description || leaveTypeDescriptions[policy.name] || 'Leave policy'}
                                                 </CardDescription>
                                             </div>
                                         </div>
@@ -80,40 +126,48 @@ export default function LeavePolicies({ policies }: LeavePoliciesPageProps) {
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm text-muted-foreground">Annual Entitlement</span>
-                                            <Badge variant="outline">{Number(policy.annual_entitlement) || 0} days</Badge>
+                                            <Badge variant="outline">{policy.annual_entitlement || 0} days</Badge>
                                         </div>
 
-                                        {policy.max_carry_forward !== null && policy.max_carry_forward !== undefined && (
+                                        {policy.max_carryover !== null && policy.max_carryover !== undefined && policy.max_carryover > 0 && (
                                             <div className="flex justify-between items-center">
                                                 <span className="text-sm text-muted-foreground">Max Carryover</span>
-                                                <Badge variant="outline">{Number(policy.max_carry_forward)} days</Badge>
+                                                <Badge variant="outline">{policy.max_carryover} days</Badge>
                                             </div>
                                         )}
 
-                                        {policy.max_consecutive_days !== null && policy.max_consecutive_days !== undefined && (
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-sm text-muted-foreground">Max Consecutive</span>
-                                                <Badge variant="outline">{Number(policy.max_consecutive_days)} days</Badge>
-                                            </div>
-                                        )}
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm text-muted-foreground">Can Carry Forward</span>
+                                            <Badge variant={policy.can_carry_forward ? 'default' : 'secondary'}>
+                                                {policy.can_carry_forward ? 'Yes' : 'No'}
+                                            </Badge>
+                                        </div>
 
-                                        {policy.requires_approval !== undefined && (
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-sm text-muted-foreground">Requires Approval</span>
-                                                <Badge variant={policy.requires_approval ? 'default' : 'secondary'}>
-                                                    {policy.requires_approval ? 'Yes' : 'No'}
-                                                </Badge>
-                                            </div>
-                                        )}
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm text-muted-foreground">Paid Leave</span>
+                                            <Badge variant={policy.is_paid ? 'default' : 'secondary'}>
+                                                {policy.is_paid ? 'Yes' : 'No'}
+                                            </Badge>
+                                        </div>
                                     </div>
 
                                     {/* Actions */}
                                     <div className="flex gap-2 pt-2">
-                                        <Button size="sm" variant="outline" className="flex-1">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1"
+                                            onClick={() => handleEditPolicy(policy)}
+                                        >
                                             <Edit2 className="h-4 w-4 mr-1" />
                                             Edit
                                         </Button>
-                                        <Button size="sm" variant="ghost" className="flex-1">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="flex-1"
+                                            onClick={() => handleViewDetails(policy)}
+                                        >
                                             View Details
                                         </Button>
                                     </div>
@@ -129,7 +183,7 @@ export default function LeavePolicies({ policies }: LeavePoliciesPageProps) {
                                     <p className="text-xs text-muted-foreground mt-1">
                                         Create leave policies to manage organization-wide leave rules
                                     </p>
-                                    <Button className="mt-4">
+                                    <Button className="mt-4" onClick={handleCreatePolicy}>
                                         Create Policy
                                     </Button>
                                 </CardContent>
@@ -137,6 +191,25 @@ export default function LeavePolicies({ policies }: LeavePoliciesPageProps) {
                         </div>
                     )}
                 </div>
+
+                {/* Modals */}
+                {isFormModalOpen && (
+                    <LeavePolicyFormModal
+                        isOpen={isFormModalOpen}
+                        onClose={() => setIsFormModalOpen(false)}
+                        policy={selectedPolicy}
+                        mode={modalMode}
+                    />
+                )}
+
+                {isDetailsModalOpen && selectedPolicy && (
+                    <LeavePolicyDetailsModal
+                        isOpen={isDetailsModalOpen}
+                        onClose={() => setIsDetailsModalOpen(false)}
+                        policy={selectedPolicy}
+                        onEdit={handleEditFromDetails}
+                    />
+                )}
 
                 {/* Standard Leave Types Reference */}
                 <Card>

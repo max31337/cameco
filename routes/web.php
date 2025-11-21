@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+// use App\Http\Middleware\EnsureProfileComplete; for future useronboarding workflow
 
 //Controllers
 use \App\Http\Controllers\System\User\UserOnboardingController;

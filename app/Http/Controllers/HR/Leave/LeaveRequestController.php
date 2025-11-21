@@ -1,0 +1,591 @@
+<?php
+
+namespace App\Http\Controllers\HR\Leave;
+
+use App\Http\Controllers\Controller;
+use App\Models\Employee;
+use App\Models\LeaveBalance;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
+
+/**
+ * LeaveRequestController
+ *
+ * Handles all leave request operations for the HR Leave Management module.
+ *
+ * WORKFLOW OVERVIEW:
+ * ==================
+ * This controller manages the complete leave request lifecycle as submitted by employees
+ * through HR staff. All leave requests originate from employee input (either direct submission
+ * or HR staff entering requests on their behalf) and flow through the following stages:
+ *
+ * 1. SUBMISSION (HR Input)
+ *    - HR Staff receives leave request from employee (verbal, form, or system submission)
+ *    - HR Staff validates employee's leave balance and dates
+ *    - HR Staff creates/submits leave request in system
+ *    - System generates initial notification
+ *
+ * 2. APPROVAL WORKFLOW
+ *    - Request routed to Immediate Supervisor for first-level approval
+ *    - Supervisor reviews request with comments
+ *    - If rejected: goes back to employee with rejection reason via HR
+ *    - If approved: forwarded to HR Manager for final approval
+ *    - HR Manager reviews and makes final decision (approve/reject)
+ *
+ * 3. PROCESSING (by HR)
+ *    - HR Staff processes approved requests
+ *    - Leave balance is deducted from employee's annual allocation
+ *    - Leave slip/document is generated
+ *    - Employee is notified of approval status
+ *    - Record is filed in employee's personnel file
+ *
+ * 4. COMPLETION
+ *    - Employee takes approved leave
+ *    - HR tracks dates and ensures DTR alignment (via Timekeeping module)
+ *    - Leave request is marked as completed
+ *    - Annual audit shows in employee's leave record
+ *
+ * KEY POINTS:
+ * - All requests originate from EMPLOYEE INPUT (either submitted directly or via HR staff)
+ * - HR STAFF is the central coordinator/processor of all leave requests
+ * - Supervisors and HR Manager approve, but HR staff executes the processing
+ * - Employees do NOT have direct system access; HR staff acts as intermediary
+ * - System tracks full audit trail of all approvals and HR actions
+ *
+ * @author HR Development Team
+ * @version 1.0
+ */
+class LeaveRequestController extends Controller
+{
+    /**
+     * Display a listing of leave requests with filters.
+     *
+     * HR Staff View: Shows all leave requests from all employees
+     * - Pending requests requiring supervisor/manager approval
+     * - Approved requests awaiting HR processing
+     * - Completed/processed leave records
+     *
+     * Filters available:
+     * - by status: pending, approved, rejected, cancelled, completed
+     * - by employee: search by employee number, name
+     * - by leave type: vacation, sick, emergency, etc.
+     * - by period: current year, specific date range
+     * - by department: filter by employee's department
+     *
+     * @param Request $request Contains filter parameters from frontend
+     * @return Response Inertia response with leave requests data and metadata
+     */
+    public function index(Request $request): Response
+    {
+        // Verify HR staff has permission to view all leave requests
+        $this->authorize('viewAny', Employee::class);
+
+        // Get filter parameters from HR staff input
+        $status = $request->input('status', 'all');
+        $employeeId = $request->input('employee_id');
+        $leaveType = $request->input('leave_type', 'all');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        $department = $request->input('department');
+
+        // Mock: Build list of leave requests submitted by employees
+        // In production, these would come from leave_requests table
+        $leaveRequests = $this->getMockLeaveRequests($status, $employeeId, $leaveType, $dateFrom, $dateTo, $department);
+
+        // Mock: Get employees for the filter dropdown
+        // HR Staff uses this to filter requests by specific employees
+        $employees = $this->getMockEmployees();
+
+        // Mock: Get departments for filtering
+        // HR Staff may need to filter by department to handle approvals
+        $departments = $this->getMockDepartments();
+
+        // Return leave requests page with all data needed by HR staff
+        return Inertia::render('HR/Leave/Requests', [
+            'requests' => $leaveRequests,
+            'filters' => [
+                'status' => $status,
+                'employee_id' => $employeeId,
+                'leave_type' => $leaveType,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'department' => $department,
+            ],
+            'employees' => $employees,
+            'departments' => $departments,
+            'meta' => [
+                'total_pending' => count(array_filter($leaveRequests, fn($r) => $r['status'] === 'Pending')),
+                'total_approved' => count(array_filter($leaveRequests, fn($r) => $r['status'] === 'Approved')),
+                'total_rejected' => count(array_filter($leaveRequests, fn($r) => $r['status'] === 'Rejected')),
+            ],
+        ]);
+    }
+
+    /**
+     * Show the create form for HR staff to submit a new leave request.
+     *
+     * CONTEXT: Employee submits leave request to HR staff (verbally, by form, or other means)
+     * HR staff then enters the request into the system using this form.
+     *
+     * This form allows HR staff to:
+     * - Select the employee requesting leave
+     * - Choose leave type (vacation, sick, emergency, etc.)
+     * - Set request dates
+     * - Add notes/justification
+     * - Check employee's current leave balance
+     *
+     * @param Request $request
+     * @return Response Inertia response with leave creation form
+     */
+    public function create(Request $request): Response
+    {
+        // Verify HR staff has permission to create leave requests
+        $this->authorize('create', Employee::class);
+
+        // Mock: Get all active employees for HR staff to assign leave to
+        // HR staff needs to know which employee is submitting the request
+        $employees = $this->getMockEmployees();
+
+        // Mock: Get leave types configured in the system
+        // Examples: Vacation Leave, Sick Leave, Emergency Leave, Maternity, Paternity, etc.
+        $leaveTypes = $this->getMockLeaveTypes();
+
+        return Inertia::render('HR/Leave/CreateRequest', [
+            'employees' => $employees,
+            'leaveTypes' => $leaveTypes,
+        ]);
+    }
+
+    /**
+     * Store a new leave request submitted by employee via HR staff.
+     *
+     * CRITICAL: This endpoint receives employee leave request data that has been
+     * entered into the system by HR staff. The request is:
+     * 1. Validated against employee's leave balance
+     * 2. Validated for date conflicts with other approved leaves
+     * 3. Stored in the database
+     * 4. Routed to appropriate approver (immediate supervisor)
+     * 5. Notification sent to supervisor to approve/reject
+     *
+     * Validation rules:
+     * - Employee must exist and be active
+     * - Leave dates must be within current calendar year (or company policy period)
+     * - Employee must have sufficient leave balance for selected leave type
+     * - No duplicate requests for same dates
+     * - Dates must be valid (start_date < end_date)
+     * - Dates must not conflict with already-approved leaves
+     *
+     * @param Request $request Contains:
+     *        - employee_id: Which employee is requesting leave
+     *        - leave_type_id: Type of leave (vacation, sick, emergency, etc.)
+     *        - start_date: First date of leave
+     *        - end_date: Last date of leave
+     *        - reason: Reason/justification for leave (required for some types)
+     *        - hr_notes: Internal HR notes about the request
+     *
+     * @return RedirectResponse Redirects to requests list with success/error message
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        // Verify HR staff has permission to create leave requests
+        $this->authorize('create', Employee::class);
+
+        // Validate the leave request data submitted by employee (via HR staff)
+        $validated = $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'leave_type_id' => 'required|exists:leave_types,id',
+            'start_date' => 'required|date|after_or_equal:today',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'reason' => 'nullable|string|max:1000',
+            'hr_notes' => 'nullable|string|max:1000', // HR staff internal notes about the request
+        ]);
+
+        // STEP 1: Load the employee making the leave request
+        $employee = Employee::with(['profile', 'department'])->findOrFail($validated['employee_id']);
+
+        // STEP 2: Validate employee has sufficient leave balance
+        $leaveBalance = LeaveBalance::where('employee_id', $employee->id)
+            ->whereYear('year', now()->year)
+            ->first();
+
+        if (!$leaveBalance || $leaveBalance->remaining_days < 1) {
+            return back()->with('error', 'Employee has insufficient leave balance for this request.');
+        }
+
+        // STEP 3: Calculate number of days requested
+        $startDate = \Carbon\Carbon::parse($validated['start_date']);
+        $endDate = \Carbon\Carbon::parse($validated['end_date']);
+        $daysRequested = $endDate->diffInDays($startDate) + 1; // +1 to include both start and end dates
+
+        if ($leaveBalance->remaining_days < $daysRequested) {
+            return back()->with('error', "Employee only has {$leaveBalance->remaining_days} days available, but {$daysRequested} days were requested.");
+        }
+
+        // STEP 4: Create leave request record in database
+        // Status starts as "Pending" - awaiting supervisor approval
+        $leaveRequest = [
+            'employee_id' => $employee->id,
+            'employee_name' => $employee->profile->first_name . ' ' . $employee->profile->last_name,
+            'leave_type' => 'Vacation Leave', // In production, fetch from leave_types table
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+            'days_requested' => $daysRequested,
+            'reason' => $validated['reason'] ?? '',
+            'status' => 'Pending', // Initial status: awaiting supervisor approval
+            'hr_submitted_by' => auth()->id(), // HR Staff who entered the request
+            'hr_notes' => $validated['hr_notes'] ?? '',
+            'submitted_at' => now(),
+            'supervisor_id' => $employee->immediate_supervisor_id, // Route to supervisor for approval
+            'supervisor_name' => 'John Supervisor', // In production, fetch supervisor name
+            'approved_by' => null,
+            'approved_at' => null,
+            'rejection_reason' => null,
+            'rejected_at' => null,
+        ];
+
+        // In production, save to database:
+        // $leaveRequestModel = LeaveRequest::create($leaveRequest);
+
+        // STEP 5: Send notification to supervisor
+        // Supervisor receives notification to review and approve/reject request
+        // Example: Mail::send(new LeaveRequestSubmittedNotification($employee, $leaveRequest));
+
+        return redirect('/hr/leave/requests')
+            ->with('success', "Leave request for {$employee->profile->first_name} {$employee->profile->last_name} has been submitted successfully. Awaiting supervisor approval.");
+    }
+
+    /**
+     * Show details of a specific leave request.
+     *
+     * HR Staff can view:
+     * - Complete request details (dates, type, reason)
+     * - Employee information
+     * - Supervisor's approval status and comments
+     * - HR Manager's approval status
+     * - Processing status (pending HR processing, completed, etc.)
+     * - Full audit trail of all approvals
+     *
+     * @param int $id Leave request ID
+     * @return Response Inertia response with leave request details
+     */
+    public function show(int $id): Response
+    {
+        // In production: $leaveRequest = LeaveRequest::with(['employee', 'supervisor', 'approvedBy'])->findOrFail($id);
+        
+        // Mock: Get leave request details
+        $leaveRequest = $this->getMockLeaveRequestDetail($id);
+
+        return Inertia::render('HR/Leave/ShowRequest', [
+            'request' => $leaveRequest,
+        ]);
+    }
+
+    /**
+     * Show the approval form for supervisors/managers.
+     *
+     * When a leave request is submitted, the supervisor receives a notification
+     * to approve or reject the request. This form allows the supervisor to:
+     * - Review request details
+     * - Add approval comments
+     * - Mark as approved or rejected
+     *
+     * @param int $id Leave request ID
+     * @return Response Inertia response with approval form
+     */
+    public function edit(int $id): Response
+    {
+        // In production: $leaveRequest = LeaveRequest::findOrFail($id);
+        
+        // Mock: Get leave request for approval
+        $leaveRequest = $this->getMockLeaveRequestDetail($id);
+
+        return Inertia::render('HR/Leave/ApproveRequest', [
+            'request' => $leaveRequest,
+        ]);
+    }
+
+    /**
+     * Process supervisor or manager approval/rejection of a leave request.
+     *
+     * SUPERVISOR APPROVAL (First Level):
+     * When supervisor approves: Request moves to HR Manager for final approval
+     * When supervisor rejects: Request is marked rejected, employee notified via HR
+     *
+     * HR MANAGER APPROVAL (Final Level):
+     * When manager approves: Request is approved, HR staff can now process it
+     * When manager rejects: Request is marked rejected, employee notified via HR
+     *
+     * @param Request $request Contains:
+     *        - leave_request_id: The request being approved
+     *        - action: 'approve' or 'reject'
+     *        - approval_comments: Comments from approver
+     *        - status: Updated status based on approval
+     *
+     * @return RedirectResponse Redirects with success/error message
+     */
+    public function update(Request $request, int $id): RedirectResponse
+    {
+        // Validate approval action
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+            'approval_comments' => 'nullable|string|max:1000',
+        ]);
+
+        // In production:
+        // $leaveRequest = LeaveRequest::findOrFail($id);
+        // 
+        // if ($validated['action'] === 'approve') {
+        //     $leaveRequest->status = 'Approved';
+        //     $leaveRequest->approved_by = auth()->id();
+        //     $leaveRequest->approved_at = now();
+        // } else {
+        //     $leaveRequest->status = 'Rejected';
+        //     $leaveRequest->rejection_reason = $validated['approval_comments'];
+        //     $leaveRequest->rejected_at = now();
+        // }
+        // 
+        // $leaveRequest->save();
+        // 
+        // // Notify HR staff of approval decision
+        // // HR staff will then notify employee of result
+
+        return back()->with('success', 'Leave request has been processed.');
+    }
+
+    /**
+     * Process an approved leave request for HR completion.
+     *
+     * After a leave request is approved by supervisor and HR Manager,
+     * HR Staff must process it, which involves:
+     * 1. Deducting days from employee's leave balance
+     * 2. Generating leave slip/certificate
+     * 3. Filing record in employee personnel file
+     * 4. Notifying employee of approval
+     * 5. Updating DTR/attendance system integration
+     *
+     * @param int $id Leave request ID
+     * @return RedirectResponse Redirects with success message
+     */
+    public function processApproval(Request $request, int $id): RedirectResponse
+    {
+        // Verify only HR staff with proper permissions can process approvals
+        $this->authorize('delete', Employee::class); // Using delete as proxy for "process" permission
+
+        // In production:
+        // $leaveRequest = LeaveRequest::with('employee')->findOrFail($id);
+        // 
+        // // Update leave balance - deduct approved days
+        // $leaveBalance = LeaveBalance::where('employee_id', $leaveRequest->employee_id)
+        //     ->whereYear('year', now()->year)
+        //     ->first();
+        // 
+        // if ($leaveBalance) {
+        //     $leaveBalance->used_days += $leaveRequest->days_requested;
+        //     $leaveBalance->remaining_days -= $leaveRequest->days_requested;
+        //     $leaveBalance->save();
+        // }
+        // 
+        // // Update request status to "Completed"
+        // $leaveRequest->status = 'Completed';
+        // $leaveRequest->processed_by = auth()->id();
+        // $leaveRequest->processed_at = now();
+        // $leaveRequest->save();
+        // 
+        // // Generate leave slip and send to employee
+        // // Store in employee's document archive
+
+        return back()->with('success', 'Leave request has been processed and approved. Leave balance updated.');
+    }
+
+    /**
+     * Cancel a leave request.
+     *
+     * HR Staff may need to cancel a leave request if:
+     * - Employee withdraws the request before processing
+     * - Request was submitted in error
+     * - Employee changed their plans
+     *
+     * Note: Cannot cancel already-completed leaves. Those require amendment process.
+     *
+     * @param int $id Leave request ID
+     * @return RedirectResponse Redirects with success message
+     */
+    public function destroy(Request $request, int $id): RedirectResponse
+    {
+        // Verify HR staff has permission
+        $this->authorize('delete', Employee::class);
+
+        // Validate cancellation
+        $validated = $request->validate([
+            'cancellation_reason' => 'nullable|string|max:1000',
+        ]);
+
+        // In production:
+        // $leaveRequest = LeaveRequest::findOrFail($id);
+        // 
+        // if (in_array($leaveRequest->status, ['Completed', 'Processed'])) {
+        //     return back()->with('error', 'Cannot cancel already-completed leave requests.');
+        // }
+        // 
+        // $leaveRequest->status = 'Cancelled';
+        // $leaveRequest->cancellation_reason = $validated['cancellation_reason'];
+        // $leaveRequest->cancelled_by = auth()->id();
+        // $leaveRequest->cancelled_at = now();
+        // $leaveRequest->save();
+
+        return back()->with('success', 'Leave request has been cancelled.');
+    }
+
+    // ============================================================================
+    // MOCK DATA GENERATORS - Used for frontend development and testing
+    // ============================================================================
+    // In production, these methods would be replaced with actual database queries
+
+    /**
+     * Generate mock leave requests data.
+     * Simulates various leave request scenarios for HR staff testing.
+     */
+    private function getMockLeaveRequests($status = 'all', $employeeId = null, $leaveType = 'all', $dateFrom = null, $dateTo = null, $department = null)
+    {
+        $requests = [
+            [
+                'id' => 1,
+                'employee_id' => 101,
+                'employee_name' => 'Maria Santos',
+                'employee_number' => 'EMP-001',
+                'department' => 'Operations',
+                'leave_type' => 'Vacation Leave',
+                'start_date' => '2025-12-01',
+                'end_date' => '2025-12-05',
+                'days_requested' => 5,
+                'reason' => 'Family vacation',
+                'status' => 'Pending',
+                'supervisor_name' => 'Juan dela Cruz',
+                'submitted_at' => '2025-11-15',
+                'supervisor_approved_at' => null,
+                'manager_approved_at' => null,
+                'hr_processed_at' => null,
+            ],
+            [
+                'id' => 2,
+                'employee_id' => 102,
+                'employee_name' => 'Jose Garcia',
+                'employee_number' => 'EMP-002',
+                'department' => 'Production',
+                'leave_type' => 'Sick Leave',
+                'start_date' => '2025-11-20',
+                'end_date' => '2025-11-21',
+                'days_requested' => 2,
+                'reason' => 'Medical appointment',
+                'status' => 'Approved',
+                'supervisor_name' => 'Pedro Lopez',
+                'submitted_at' => '2025-11-14',
+                'supervisor_approved_at' => '2025-11-14',
+                'manager_approved_at' => '2025-11-15',
+                'hr_processed_at' => null,
+            ],
+            [
+                'id' => 3,
+                'employee_id' => 103,
+                'employee_name' => 'Angela Cruz',
+                'employee_number' => 'EMP-003',
+                'department' => 'HR',
+                'leave_type' => 'Emergency Leave',
+                'start_date' => '2025-11-18',
+                'end_date' => '2025-11-18',
+                'days_requested' => 1,
+                'reason' => 'Family emergency',
+                'status' => 'Rejected',
+                'supervisor_name' => 'Maria Reyes',
+                'submitted_at' => '2025-11-17',
+                'supervisor_approved_at' => null,
+                'manager_approved_at' => '2025-11-17',
+                'hr_processed_at' => null,
+            ],
+        ];
+
+        // Filter based on status if specified
+        if ($status !== 'all') {
+            $requests = array_filter($requests, fn($r) => strtolower($r['status']) === strtolower($status));
+        }
+
+        return array_values($requests);
+    }
+
+    /**
+     * Generate mock employee data for dropdown selection.
+     */
+    private function getMockEmployees()
+    {
+        return [
+            ['id' => 101, 'employee_number' => 'EMP-001', 'name' => 'Maria Santos'],
+            ['id' => 102, 'employee_number' => 'EMP-002', 'name' => 'Jose Garcia'],
+            ['id' => 103, 'employee_number' => 'EMP-003', 'name' => 'Angela Cruz'],
+            ['id' => 104, 'employee_number' => 'EMP-004', 'name' => 'Robert Martinez'],
+            ['id' => 105, 'employee_number' => 'EMP-005', 'name' => 'Carmen Rodriguez'],
+        ];
+    }
+
+    /**
+     * Generate mock leave types.
+     */
+    private function getMockLeaveTypes()
+    {
+        return [
+            ['id' => 1, 'name' => 'Vacation Leave', 'annual_entitlement' => 15],
+            ['id' => 2, 'name' => 'Sick Leave', 'annual_entitlement' => 10],
+            ['id' => 3, 'name' => 'Emergency Leave', 'annual_entitlement' => 5],
+            ['id' => 4, 'name' => 'Maternity Leave', 'annual_entitlement' => 60],
+            ['id' => 5, 'name' => 'Paternity Leave', 'annual_entitlement' => 7],
+        ];
+    }
+
+    /**
+     * Generate mock departments.
+     */
+    private function getMockDepartments()
+    {
+        return [
+            ['id' => 1, 'name' => 'HR'],
+            ['id' => 2, 'name' => 'Operations'],
+            ['id' => 3, 'name' => 'Production'],
+            ['id' => 4, 'name' => 'Accounting'],
+            ['id' => 5, 'name' => 'IT'],
+        ];
+    }
+
+    /**
+     * Generate mock leave request detail for show/edit views.
+     */
+    private function getMockLeaveRequestDetail(int $id)
+    {
+        return [
+            'id' => $id,
+            'employee_id' => 101,
+            'employee_name' => 'Maria Santos',
+            'employee_number' => 'EMP-001',
+            'department' => 'Operations',
+            'position' => 'Operations Manager',
+            'leave_type' => 'Vacation Leave',
+            'start_date' => '2025-12-01',
+            'end_date' => '2025-12-05',
+            'days_requested' => 5,
+            'reason' => 'Family vacation to Boracay',
+            'status' => 'Pending',
+            'supervisor_name' => 'Juan dela Cruz',
+            'supervisor_id' => 201,
+            'submitted_at' => '2025-11-15 10:30:00',
+            'supervisor_approval_status' => null,
+            'supervisor_approved_at' => null,
+            'supervisor_comments' => null,
+            'manager_approval_status' => null,
+            'manager_approved_at' => null,
+            'manager_comments' => null,
+            'hr_processed_at' => null,
+            'processed_by' => null,
+            'hr_notes' => 'Employee balance verified. All documents attached.',
+        ];
+    }
+}

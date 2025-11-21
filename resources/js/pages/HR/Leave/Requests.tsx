@@ -1,10 +1,42 @@
+import { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckCircle2, XCircle, Clock } from 'lucide-react';
-import { LeaveRequestsPageProps } from '@/types/hr-pages';
+import { LeaveRequestActionModal } from '@/components/hr/leave-request-action-modal';
+
+interface LeaveRequest {
+    id: number;
+    employee_id: number;
+    employee_name: string;
+    employee_number: string;
+    department: string;
+    leave_type: string;
+    start_date: string;
+    end_date: string;
+    days_requested: number;
+    reason: string;
+    status: string;
+    supervisor_name: string;
+    submitted_at: string;
+    supervisor_approved_at: string | null;
+    manager_approved_at: string | null;
+    hr_processed_at: string | null;
+}
+
+interface LeaveRequestsProps {
+    requests: LeaveRequest[];
+    filters?: Record<string, unknown>;
+    employees?: unknown[];
+    departments?: unknown[];
+    meta?: {
+        total_pending: number;
+        total_approved: number;
+        total_rejected: number;
+    };
+}
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -41,12 +73,34 @@ function getStatusIcon(status: string) {
     }
 }
 
-export default function LeaveRequests({ requests }: LeaveRequestsPageProps) {
-    const requestsData = Array.isArray(requests) ? requests : requests?.data || [];
+export default function LeaveRequests({ requests, meta }: LeaveRequestsProps) {
+    const requestsData = Array.isArray(requests) ? requests : [];
     
-    const pendingCount = requestsData.filter((r) => r.status?.toLowerCase() === 'pending').length;
-    const approvedCount = requestsData.filter((r) => r.status?.toLowerCase() === 'approved').length;
-    const rejectedCount = requestsData.filter((r) => r.status?.toLowerCase() === 'rejected').length;
+    const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
+    const [modalAction, setModalAction] = useState<'approve' | 'reject' | 'view'>('view');
+
+    const handleApprove = (request: LeaveRequest) => {
+        setSelectedRequest(request);
+        setModalAction('approve');
+        setIsActionModalOpen(true);
+    };
+
+    const handleReject = (request: LeaveRequest) => {
+        setSelectedRequest(request);
+        setModalAction('reject');
+        setIsActionModalOpen(true);
+    };
+
+    const handleView = (request: LeaveRequest) => {
+        setSelectedRequest(request);
+        setModalAction('view');
+        setIsActionModalOpen(true);
+    };
+    
+    const pendingCount = meta?.total_pending || requestsData.filter((r) => r.status?.toLowerCase() === 'pending').length;
+    const approvedCount = meta?.total_approved || requestsData.filter((r) => r.status?.toLowerCase() === 'approved').length;
+    const rejectedCount = meta?.total_rejected || requestsData.filter((r) => r.status?.toLowerCase() === 'rejected').length;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -138,7 +192,7 @@ export default function LeaveRequests({ requests }: LeaveRequestsPageProps) {
                                                 <td className="py-3 px-4">{request.leave_type || 'N/A'}</td>
                                                 <td className="py-3 px-4">{request.start_date || 'N/A'}</td>
                                                 <td className="py-3 px-4">{request.end_date || 'N/A'}</td>
-                                                <td className="py-3 px-4">{request.days || 0}</td>
+                                                <td className="py-3 px-4">{request.days_requested || 0}</td>
                                                 <td className="py-3 px-4">
                                                     <Badge className={getStatusColor(request.status || 'Pending')}>
                                                         <span className="flex items-center gap-1">
@@ -151,15 +205,30 @@ export default function LeaveRequests({ requests }: LeaveRequestsPageProps) {
                                                     <div className="flex gap-2">
                                                         {request.status?.toLowerCase() === 'pending' && (
                                                             <>
-                                                                <Button size="sm" variant="outline" className="text-xs">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-xs"
+                                                                    onClick={() => handleApprove(request)}
+                                                                >
                                                                     Approve
                                                                 </Button>
-                                                                <Button size="sm" variant="outline" className="text-xs text-red-600">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-xs text-red-600"
+                                                                    onClick={() => handleReject(request)}
+                                                                >
                                                                     Reject
                                                                 </Button>
                                                             </>
                                                         )}
-                                                        <Button size="sm" variant="ghost" className="text-xs">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="text-xs"
+                                                            onClick={() => handleView(request)}
+                                                        >
                                                             View
                                                         </Button>
                                                     </div>
@@ -180,6 +249,16 @@ export default function LeaveRequests({ requests }: LeaveRequestsPageProps) {
                         )}
                     </CardContent>
                 </Card>
+
+                {/* Action Modal */}
+                {isActionModalOpen && selectedRequest && (
+                    <LeaveRequestActionModal
+                        isOpen={isActionModalOpen}
+                        onClose={() => setIsActionModalOpen(false)}
+                        request={selectedRequest}
+                        action={modalAction}
+                    />
+                )}
             </div>
         </AppLayout>
     );

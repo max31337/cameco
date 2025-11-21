@@ -9,6 +9,7 @@ use App\Http\Controllers\HR\Employee\DepartmentController;
 use App\Http\Controllers\HR\Employee\PositionController;
 use App\Http\Controllers\HR\Leave\LeaveBalanceController;
 use App\Http\Controllers\HR\Leave\LeavePolicyController;
+use App\Http\Controllers\HR\Leave\LeaveRequestController;
 use App\Http\Controllers\HR\Reports\ReportController;
 use App\Http\Controllers\HR\ATS\JobPostingController;
 use App\Http\Controllers\HR\ATS\CandidateController;
@@ -53,7 +54,14 @@ Route::middleware(['auth', 'verified' , EnsureHRManager::class])
 
         // Leave Management
         Route::prefix('leave')->name('leave.')->group(function () {
-            Route::get('/requests', [EmployeeController::class, 'leaveRequests'])->name('requests');
+            Route::get('/requests', [LeaveRequestController::class, 'index'])->name('requests');
+            Route::get('/requests/create', [LeaveRequestController::class, 'create'])->name('requests.create');
+            Route::post('/requests', [LeaveRequestController::class, 'store'])->name('requests.store');
+            Route::get('/requests/{id}', [LeaveRequestController::class, 'show'])->name('requests.show');
+            Route::get('/requests/{id}/edit', [LeaveRequestController::class, 'edit'])->name('requests.edit');
+            Route::put('/requests/{id}', [LeaveRequestController::class, 'update'])->name('requests.update');
+            Route::post('/requests/{id}/process', [LeaveRequestController::class, 'processApproval'])->name('requests.process');
+            Route::delete('/requests/{id}', [LeaveRequestController::class, 'destroy'])->name('requests.destroy');
             Route::get('/balances', [LeaveBalanceController::class, 'index'])->name('balances');
             Route::get('/policies', [LeavePolicyController::class, 'index'])->name('policies');
         });
