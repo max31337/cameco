@@ -14,6 +14,7 @@ import {
     AlertCircle,
     CheckCircle,
     FileText,
+    Home,
     RefreshCw,
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -85,7 +86,16 @@ export default function BIRIndex({ reports, periods, summary, generated_reports 
         ]}>
             <Head title="BIR Reports" />
             <div className="space-y-6 p-6">
-
+                {/* Header */}
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <Home className="w-6 h-6 text-blue-600" />
+                        <h1 className="text-3xl font-bold">BIR Reports</h1>
+                    </div>
+                    <p className="text-muted-foreground">
+                        Manage BIR reports including 1601C, 2316, and Alphalist
+                    </p>
+                </div>
                 {/* Status Alert */}
                 {statusMessage && (
                     <Alert variant={statusMessage.type === 'error' ? 'destructive' : 'default'}>
