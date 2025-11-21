@@ -25,7 +25,7 @@ export default function BankFilesIndex({
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<number | null>(null);
 
-  const handleGenerateFile = (data: any) => {
+  const handleGenerateFile = (data: { period_id: number; bank_name: string; file_format: string }) => {
     console.log('Generating bank file:', data);
     setIsGeneratorOpen(false);
   };
