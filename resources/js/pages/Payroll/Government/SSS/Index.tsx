@@ -9,7 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     AlertCircle,
     CheckCircle,
@@ -30,36 +30,82 @@ import type { BreadcrumbItem } from '@/types';
  * Main interface for Social Security System (SSS) contribution management
  * Supports: Contributions tracking, R3 report generation, remittance tracking
  */
+interface Period {
+    id: string | number;
+    name: string;
+    month: string;
+    start_date: string;
+    end_date: string;
+    status: string;
+}
+
+interface Contribution {
+    id: string | number;
+    employee_id: string | number;
+    employee_name: string;
+    employee_number: string;
+    sss_number: string;
+    period_id: string | number;
+    month: string;
+    monthly_compensation: number;
+    sss_bracket: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M';
+    sss_bracket_range: { min: number; max: number };
+    employee_contribution: number;
+    employer_contribution: number;
+    ec_contribution: number;
+    total_contribution: number;
+    is_processed: boolean;
+    is_remitted: boolean;
+    is_exempted: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+interface R3ReportLocal {
+    id: string | number;
+    period_id: string | number;
+    month: string;
+    file_name: string;
+    file_path: string;
+    file_size: number;
+    total_employees: number;
+    total_compensation: number;
+    total_employee_share: number;
+    total_employer_share: number;
+    total_ec_share: number;
+    total_amount: number;
+    status: 'draft' | 'ready' | 'submitted' | 'accepted' | 'rejected';
+    submission_status: string;
+    submission_date: string | null;
+    rejection_reason: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+interface RemittanceLocal {
+    id: string | number;
+    period_id: string | number;
+    month: string;
+    remittance_amount: number;
+    due_date: string;
+    payment_date: string | null;
+    payment_reference: string | null;
+    status: 'pending' | 'paid' | 'partially_paid' | 'overdue';
+    has_penalty: boolean;
+    penalty_amount: number;
+    penalty_reason?: string;
+    contributions: {
+        employee_share: number;
+        employer_share: number;
+        ec_share: number;
+    };
+    created_at: string;
+    updated_at: string;
+}
+
 interface SSSIndexProps {
-    contributions: Array<{
-        id: string | number;
-        employee_id: string | number;
-        employee_name: string;
-        employee_number: string;
-        sss_number: string;
-        period_id: string | number;
-        month: string;
-        monthly_compensation: number;
-        sss_bracket: string;
-        sss_bracket_range: { min: number; max: number };
-        employee_contribution: number;
-        employer_contribution: number;
-        ec_contribution: number;
-        total_contribution: number;
-        is_processed: boolean;
-        is_remitted: boolean;
-        is_exempted: boolean;
-        created_at: string;
-        updated_at: string;
-    }>;
-    periods: Array<{
-        id: string | number;
-        name: string;
-        month: string;
-        start_date: string;
-        end_date: string;
-        status: string;
-    }>;
+    contributions: Contribution[];
+    periods: Period[];
     summary: {
         total_employees: number;
         total_monthly_compensation: number;
@@ -71,8 +117,8 @@ interface SSSIndexProps {
         next_due_date: string;
         pending_remittances: number;
     };
-    remittances: any[];
-    r3_reports: any[];
+    remittances: RemittanceLocal[];
+    r3_reports: R3ReportLocal[];
 }
 
 export default function SSSIndex({
@@ -253,10 +299,10 @@ export default function SSSIndex({
                                 <label className="block text-sm font-medium mb-2">Select Period</label>
                                 <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select a period" />
+                                        <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {periods.map((period: any) => (
+                                        {periods.map((period: Period) => (
                                             <SelectItem key={period.id} value={String(period.id)}>
                                                 {period.name} ({period.month})
                                             </SelectItem>
