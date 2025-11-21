@@ -74,14 +74,6 @@ export function SSSRemittanceTracker({ remittances }: SSSRemittanceTrackerProps)
         return diffDays;
     };
 
-    const getDaysOverdue = (dueDate: string) => {
-        const today = new Date();
-        const due = new Date(dueDate);
-        const diffTime = today.getTime() - due.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays > 0 ? diffDays : 0;
-    };
-
     const formatDate = (dateString: string | null) => {
         if (!dateString) return '—';
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -186,7 +178,6 @@ export function SSSRemittanceTracker({ remittances }: SSSRemittanceTrackerProps)
                                 <TableBody>
                                     {remittances.map((remittance) => {
                                         const daysUntilDue = getDaysUntilDue(remittance.due_date);
-                                        const daysOverdue = getDaysOverdue(remittance.due_date);
                                         const isUpcoming = daysUntilDue <= 5 && daysUntilDue > 0;
 
                                         return (
