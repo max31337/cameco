@@ -84,7 +84,7 @@ export function NavPayroll() {
             title: 'SSS Contributions',
             icon: Building2,
             href: '/payroll/government/sss',
-            enabled: false,
+            enabled: true,
         },
         {
             title: 'PhilHealth',

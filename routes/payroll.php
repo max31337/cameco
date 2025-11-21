@@ -13,6 +13,7 @@ use App\Http\Controllers\Payroll\EmployeePayroll\EmployeePayrollInfoController;
 use App\Http\Controllers\Payroll\EmployeePayroll\SalaryComponentController;
 use App\Http\Controllers\Payroll\EmployeePayroll\AllowancesDeductionsController;
 use App\Http\Controllers\Payroll\Government\BIRController;
+use App\Http\Controllers\Payroll\Government\SSSController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -96,5 +97,13 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::post('/government/bir/submit-1601c/{periodId}', [BIRController::class, 'submit1601C'])->name('bir.submit-1601c');
         Route::get('/government/bir/download/{reportId}', [BIRController::class, 'download'])->name('bir.download');
         Route::post('/government/bir/submit/{reportId}', [BIRController::class, 'submit'])->name('bir.submit');
+
+        // SSS Contributions - Phase 3.2
+        Route::get('/government/sss', [SSSController::class, 'index'])->name('sss.index');
+        Route::post('/government/sss/generate-r3/{periodId}', [SSSController::class, 'generateR3'])->name('sss.generate-r3');
+        Route::get('/government/sss/download-r3/{reportId}', [SSSController::class, 'downloadR3'])->name('sss.download-r3');
+        Route::get('/government/sss/download-contributions/{periodId}', [SSSController::class, 'downloadContributions'])->name('sss.download-contributions');
+        Route::get('/government/sss/download/{reportId}', [SSSController::class, 'download'])->name('sss.download');
+        Route::post('/government/sss/submit/{reportId}', [SSSController::class, 'submit'])->name('sss.submit');
     });
 });

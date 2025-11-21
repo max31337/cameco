@@ -641,3 +641,167 @@ export interface SalaryComponentsPageProps {
     available_categories: Array<{ value: string; label: string }>;
     reference_components: Array<{ id: number; name: string; code: string }>;
 }
+
+// ============================================================================
+// SSS CONTRIBUTIONS PAGE TYPES (Phase 3.2)
+// ============================================================================
+
+/**
+ * Main SSS Contributions Page Props
+ * Passed from SSSController@index() via Inertia
+ */
+export interface SSSPageProps {
+    contributions: SSSContribution[];
+    periods: SSSPeriod[];
+    summary: SSSSummary;
+    remittances: SSSRemittance[];
+    r3_reports: SSSR3Report[];
+}
+
+/**
+ * SSS Period Selection
+ */
+export interface SSSPeriod {
+    id: string | number;
+    name: string;
+    month: string; // YYYY-MM
+    start_date: string; // YYYY-MM-DD
+    end_date: string; // YYYY-MM-DD
+    status: 'draft' | 'processed' | 'submitted' | 'approved';
+}
+
+/**
+ * SSS Summary Metrics
+ */
+export interface SSSSummary {
+    total_employees: number;
+    total_monthly_compensation: number;
+    total_employee_contribution: number;
+    total_employer_contribution: number;
+    total_ec_contribution: number;
+    total_contribution: number;
+    last_remittance_date: string | null;
+    next_due_date: string;
+    pending_remittances: number;
+}
+
+/**
+ * Individual Employee SSS Contribution Record
+ * Represents one employee's SSS contribution for a specific month
+ */
+export interface SSSContribution {
+    id: string | number;
+    employee_id: string | number;
+    employee_name: string;
+    employee_number: string;
+    sss_number: string;
+    period_id: string | number;
+    month: string; // YYYY-MM
+    
+    // Compensation
+    monthly_compensation: number; // Total monthly pay
+    
+    // SSS Bracket and Contributions
+    sss_bracket: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M';
+    sss_bracket_range: {
+        min: number;
+        max: number;
+    };
+    
+    // Employee Share (EE)
+    employee_contribution: number;
+    
+    // Employer Share (ER)
+    employer_contribution: number;
+    
+    // Employees' Compensation Insurance (EC)
+    ec_contribution: number;
+    
+    // Total
+    total_contribution: number;
+    
+    // Status
+    is_processed: boolean;
+    is_remitted: boolean;
+    is_exempted: boolean;
+    exemption_reason?: string;
+    
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * SSS R3 Report (monthly contribution report for SSS portal)
+ * Format: CSV for upload to SSS ERPS (Employer Registration and Payroll System)
+ */
+export interface SSSR3Report {
+    id: string | number;
+    period_id: string | number;
+    month: string; // YYYY-MM
+    file_name: string;
+    file_path: string;
+    file_size: number;
+    
+    // Summary
+    total_employees: number;
+    total_compensation: number;
+    total_employee_share: number;
+    total_employer_share: number;
+    total_ec_share: number;
+    total_amount: number;
+    
+    // Status
+    status: 'draft' | 'ready' | 'submitted' | 'accepted' | 'rejected';
+    submission_status: string;
+    submission_date: string | null;
+    rejection_reason: string | null;
+    
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * SSS Remittance Tracking
+ * Tracks payment to SSS for processed contributions
+ */
+export interface SSSRemittance {
+    id: string | number;
+    period_id: string | number;
+    month: string; // YYYY-MM
+    
+    // Remittance Details
+    remittance_amount: number;
+    due_date: string; // YYYY-MM-DD
+    payment_date: string | null; // YYYY-MM-DD
+    payment_reference: string | null;
+    
+    // Status
+    status: 'pending' | 'paid' | 'partially_paid' | 'overdue';
+    
+    // Penalty (if applicable)
+    has_penalty: boolean;
+    penalty_amount: number;
+    penalty_reason?: string;
+    
+    // Contributions included
+    contributions: {
+        employee_share: number;
+        employer_share: number;
+        ec_share: number;
+    };
+    
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * SSS Contribution Form Data (for creation/update)
+ */
+export interface SSSContributionFormData {
+    employee_id: string | number;
+    period_id: string | number;
+    monthly_compensation: number;
+    sss_number?: string;
+    is_exempted?: boolean;
+    exemption_reason?: string;
+}
