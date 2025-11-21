@@ -24,10 +24,9 @@ import type { SSSR3Report } from '@/types/payroll-pages';
 interface SSSR3GeneratorProps {
     reports: SSSR3Report[];
     periods: Array<{ id: string | number; name: string; month: string }>;
-    onGenerateClick?: (periodId: string | number) => void;
 }
 
-export function SSSR3Generator({ reports, periods, onGenerateClick }: SSSR3GeneratorProps) {
+export function SSSR3Generator({ reports, periods }: SSSR3GeneratorProps) {
     const [selectedPeriod, setSelectedPeriod] = useState<string>(
         periods.length > 0 ? String(periods[0].id) : ''
     );

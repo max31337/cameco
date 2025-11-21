@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, FileText } from 'lucide-react';
+import { Download } from 'lucide-react';
 import type { SSSContribution } from '@/types/payroll-pages';
 
 interface SSSContributionsTableProps {
