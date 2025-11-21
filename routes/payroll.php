@@ -17,6 +17,7 @@ use App\Http\Controllers\Payroll\Government\SSSController;
 use App\Http\Controllers\Payroll\Government\PhilHealthController;
 use App\Http\Controllers\Payroll\Government\PagIbigController;
 use App\Http\Controllers\Payroll\Government\GovernmentRemittancesController;
+use App\Http\Controllers\Payroll\Payments\BankFilesController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -129,5 +130,13 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::get('/government/remittances', [GovernmentRemittancesController::class, 'index'])->name('remittances.index');
         Route::post('/government/remittances/{id}/record-payment', [GovernmentRemittancesController::class, 'recordPayment'])->name('remittances.record-payment');
         Route::post('/government/remittances/{id}/send-reminder', [GovernmentRemittancesController::class, 'sendReminder'])->name('remittances.send-reminder');
+
+        // Bank Files - Phase 4.1
+        Route::get('/bank-files', [BankFilesController::class, 'index'])->name('bank-files.index');
+        Route::post('/bank-files/generate', [BankFilesController::class, 'generateFile'])->name('bank-files.generate');
+        Route::post('/bank-files/{id}/validate', [BankFilesController::class, 'validateFile'])->name('bank-files.validate');
+        Route::post('/bank-files/{id}/upload', [BankFilesController::class, 'uploadFile'])->name('bank-files.upload');
+        Route::get('/bank-files/{id}/download', [BankFilesController::class, 'downloadFile'])->name('bank-files.download');
+        Route::post('/bank-files/{id}/regenerate', [BankFilesController::class, 'regenerateFile'])->name('bank-files.regenerate');
     });
 });

@@ -1245,3 +1245,117 @@ export interface RemittanceCalendarEvent {
     amount: number;
     report_type: string;
 }
+
+// ============================================================================
+// BANK FILES GENERATION PAGE TYPES - PHASE 4.1
+// ============================================================================
+
+/**
+ * Main Bank Files Page Props
+ * Passed from BankFilesController@index() via Inertia
+ */
+export interface BankFilesPageProps {
+    bankFiles: BankPayrollFile[];
+    periods: PayrollPeriod[];
+    bankList: BankOption[];
+    employeesCount: number;
+}
+
+/**
+ * Individual Bank Payroll File Record
+ */
+export interface BankPayrollFile {
+    id: number;
+    payroll_period_id: number;
+    period_name: string; // "November 2025 - 2nd Half"
+    
+    // Bank Details
+    bank_name: string; // "BPI", "BDO", "Metrobank", "PNB", "RCBC", "Unionbank"
+    bank_code: string | null;
+    
+    // File Information
+    file_name: string;
+    file_path: string;
+    file_format: 'csv' | 'txt' | 'excel' | 'fixed_width';
+    file_size: number; // In bytes
+    file_hash: string;
+    
+    // Payroll Summary
+    total_employees: number;
+    total_amount: number;
+    
+    // Status Tracking
+    status: 'generated' | 'uploaded' | 'processed' | 'confirmed' | 'failed';
+    status_label: string;
+    status_color: 'gray' | 'blue' | 'green' | 'orange' | 'red';
+    
+    // Timestamps
+    generated_at: string;
+    uploaded_at: string | null;
+    uploaded_by: string | null;
+    confirmation_number: string | null;
+    
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Bank Option for Selection
+ */
+export interface BankOption {
+    id: string;
+    name: string;
+    code: string;
+    icon?: string;
+    supported_formats: Array<'csv' | 'txt' | 'excel' | 'fixed_width'>;
+}
+
+/**
+ * File Format Option
+ */
+export interface FileFormatOption {
+    id: 'csv' | 'txt' | 'excel' | 'fixed_width';
+    name: string;
+    description: string;
+    extension: string;
+}
+
+/**
+ * Employee for Bank File Preview
+ */
+export interface BankFileEmployee {
+    id: number;
+    employee_number: string;
+    full_name: string;
+    bank_name: string;
+    bank_account_number: string;
+    bank_account_name: string;
+    net_pay: number;
+    status: 'valid' | 'invalid' | 'warning';
+    error_message?: string;
+}
+
+/**
+ * Bank File Generation Request Payload
+ */
+export interface BankFileGenerationRequest {
+    period_id: number;
+    bank_name: string;
+    file_format: 'csv' | 'txt' | 'excel' | 'fixed_width';
+    include_employees?: number[];
+    exclude_employees?: number[];
+}
+
+/**
+ * Bank File Generation Response
+ */
+export interface BankFileGenerationResponse {
+    success: boolean;
+    message: string;
+    file?: BankPayrollFile;
+    download_url?: string;
+    errors?: Array<{
+        employee_id: number;
+        message: string;
+    }>;
+}

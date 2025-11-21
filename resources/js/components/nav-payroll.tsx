@@ -111,7 +111,7 @@ export function NavPayroll() {
             title: 'Bank Files',
             icon: CreditCard,
             href: '/payroll/bank-files',
-            enabled: false,
+            enabled: true,
         },
         {
             title: 'Payslips',
