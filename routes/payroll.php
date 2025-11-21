@@ -16,6 +16,7 @@ use App\Http\Controllers\Payroll\Government\BIRController;
 use App\Http\Controllers\Payroll\Government\SSSController;
 use App\Http\Controllers\Payroll\Government\PhilHealthController;
 use App\Http\Controllers\Payroll\Government\PagIbigController;
+use App\Http\Controllers\Payroll\Government\GovernmentRemittancesController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -123,5 +124,10 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::get('/government/pagibig/download-contributions/{periodId}', [PagIbigController::class, 'downloadContributions'])->name('pagibig.download-contributions');
         Route::get('/government/pagibig/download/{reportId}', [PagIbigController::class, 'download'])->name('pagibig.download');
         Route::post('/government/pagibig/submit/{reportId}', [PagIbigController::class, 'submit'])->name('pagibig.submit');
+
+        // Government Remittances - Phase 3.5
+        Route::get('/government/remittances', [GovernmentRemittancesController::class, 'index'])->name('remittances.index');
+        Route::post('/government/remittances/{id}/record-payment', [GovernmentRemittancesController::class, 'recordPayment'])->name('remittances.record-payment');
+        Route::post('/government/remittances/{id}/send-reminder', [GovernmentRemittancesController::class, 'sendReminder'])->name('remittances.send-reminder');
     });
 });

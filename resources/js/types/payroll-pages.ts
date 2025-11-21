@@ -1135,3 +1135,113 @@ export interface PagIbigContributionFormData {
     pagibig_number?: string;
     employee_rate?: number; // 1 or 2
 }
+
+// ============================================================================
+// Phase 3.5: GOVERNMENT REMITTANCES DASHBOARD
+// ============================================================================
+
+/**
+ * Government Remittances Page Props
+ * Main page data for all government agency remittance tracking
+ */
+export interface GovernmentRemittancesPageProps {
+    remittances: GovernmentRemittance[];
+    periods: RemittancePeriod[];
+    summary: RemittanceSummary;
+    calendarEvents: RemittanceCalendarEvent[];
+}
+
+/**
+ * Remittance Period (monthly period for tracking)
+ */
+export interface RemittancePeriod {
+    id: string | number;
+    name: string; // "November 2025", "October 2025"
+    month: string; // YYYY-MM
+    start_date: string; // YYYY-MM-DD
+    end_date: string; // YYYY-MM-DD
+    status: string; // draft, pending, completed, closed
+}
+
+/**
+ * Government Remittances Summary Metrics
+ * Aggregated across all 4 agencies (BIR, SSS, PhilHealth, Pag-IBIG)
+ */
+export interface RemittanceSummary {
+    // Total amounts
+    total_to_remit: number; // Sum of all remittances
+    pending_amount: number; // Amount waiting to be paid
+    paid_amount: number; // Amount already paid this month
+    overdue_amount: number; // Amount past due date
+
+    // By Agency (4 agencies)
+    bir_amount: number;
+    sss_amount: number;
+    philhealth_amount: number;
+    pagibig_amount: number;
+
+    // Counts
+    total_remittances: number;
+    pending_count: number;
+    paid_count: number;
+    overdue_count: number;
+
+    // Dates
+    next_due_date: string; // YYYY-MM-DD
+    last_paid_date: string | null;
+}
+
+/**
+ * Individual Government Remittance Record
+ * Tracks payment to one government agency for one month
+ */
+export interface GovernmentRemittance {
+    id: string | number;
+    period_id: string | number;
+    month: string; // YYYY-MM
+
+    // Agency Information
+    agency: 'BIR' | 'SSS' | 'PhilHealth' | 'Pag-IBIG';
+    agency_full_name: string;
+
+    // Remittance Details
+    remittance_amount: number;
+    report_type: string; // 1601C, R3, RF1, MCRF
+    employees_covered: number;
+
+    // Schedule
+    due_date: string; // YYYY-MM-DD (10th of following month typically)
+    payment_date: string | null; // YYYY-MM-DD
+    payment_reference: string | null; // PRN, reference number
+
+    // Status Tracking
+    status: 'pending' | 'paid' | 'partially_paid' | 'overdue' | 'late';
+    days_until_due: number; // Negative = overdue
+    is_overdue: boolean;
+
+    // Penalty Information
+    has_penalty: boolean;
+    penalty_amount: number; // For late payments
+    penalty_rate: number; // Percentage (e.g., 5% per month for late payment)
+
+    // Additional Info
+    remittance_method: string; // 'eFPS', 'eR3', 'EPRS', 'eSRS', 'Bank'
+    notes: string | null;
+
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Calendar Event for Remittance Due Dates
+ * Used for calendar visualization
+ */
+export interface RemittanceCalendarEvent {
+    id: string | number;
+    remittance_id: string | number;
+    date: string; // YYYY-MM-DD
+    agency: 'BIR' | 'SSS' | 'PhilHealth' | 'Pag-IBIG';
+    status: 'pending' | 'paid' | 'overdue';
+    amount: number;
+    report_type: string;
+}

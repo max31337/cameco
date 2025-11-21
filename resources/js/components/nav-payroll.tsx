@@ -102,7 +102,7 @@ export function NavPayroll() {
             title: 'Remittances',
             icon: CreditCard,
             href: '/payroll/government/remittances',
-            enabled: false,
+            enabled: true,
         },
     ];
 
