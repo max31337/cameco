@@ -14,6 +14,7 @@ use App\Http\Controllers\Payroll\EmployeePayroll\SalaryComponentController;
 use App\Http\Controllers\Payroll\EmployeePayroll\AllowancesDeductionsController;
 use App\Http\Controllers\Payroll\Government\BIRController;
 use App\Http\Controllers\Payroll\Government\SSSController;
+use App\Http\Controllers\Payroll\Government\PhilHealthController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -105,5 +106,13 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::get('/government/sss/download-contributions/{periodId}', [SSSController::class, 'downloadContributions'])->name('sss.download-contributions');
         Route::get('/government/sss/download/{reportId}', [SSSController::class, 'download'])->name('sss.download');
         Route::post('/government/sss/submit/{reportId}', [SSSController::class, 'submit'])->name('sss.submit');
+
+        // PhilHealth Contributions - Phase 3.3
+        Route::get('/government/philhealth', [PhilHealthController::class, 'index'])->name('philhealth.index');
+        Route::post('/government/philhealth/generate-rf1/{periodId}', [PhilHealthController::class, 'generateRF1'])->name('philhealth.generate-rf1');
+        Route::get('/government/philhealth/download-rf1/{reportId}', [PhilHealthController::class, 'downloadRF1'])->name('philhealth.download-rf1');
+        Route::get('/government/philhealth/download-contributions/{periodId}', [PhilHealthController::class, 'downloadContributions'])->name('philhealth.download-contributions');
+        Route::get('/government/philhealth/download/{reportId}', [PhilHealthController::class, 'download'])->name('philhealth.download');
+        Route::post('/government/philhealth/submit/{reportId}', [PhilHealthController::class, 'submit'])->name('philhealth.submit');
     });
 });

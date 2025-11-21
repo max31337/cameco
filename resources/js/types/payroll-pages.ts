@@ -805,3 +805,153 @@ export interface SSSContributionFormData {
     is_exempted?: boolean;
     exemption_reason?: string;
 }
+
+// ============================================================================
+// Phase 3.3: PHILHEALTH CONTRIBUTIONS
+// ============================================================================
+
+/**
+ * PhilHealth Contributions Page Props
+ * Main page data for PhilHealth contributions management
+ */
+export interface PhilHealthPageProps {
+    contributions: PhilHealthContribution[];
+    periods: PhilHealthPeriod[];
+    summary: PhilHealthSummary;
+    remittances: PhilHealthRemittance[];
+    rf1_reports: PhilHealthRF1Report[];
+}
+
+/**
+ * PhilHealth Period (monthly period for contributions)
+ */
+export interface PhilHealthPeriod {
+    id: string | number;
+    name: string;
+    month: string; // YYYY-MM
+    start_date: string;
+    end_date: string;
+    status: string; // draft, pending, submitted, completed
+}
+
+/**
+ * PhilHealth Summary Metrics
+ */
+export interface PhilHealthSummary {
+    total_employees: number;
+    total_monthly_basic: number;
+    total_employee_premium: number; // 2.5%
+    total_employer_premium: number; // 2.5%
+    total_premium: number; // 5%
+    last_remittance_date: string | null;
+    next_due_date: string;
+    pending_remittances: number;
+    indigent_members: number;
+}
+
+/**
+ * Individual employee PhilHealth contribution record
+ * PhilHealth Rate: 5% of monthly basic (2.5% each, max 5,000)
+ * Indigent: Fully sponsored by government, no deduction
+ */
+export interface PhilHealthContribution {
+    id: string | number;
+    employee_id: string | number;
+    employee_name: string;
+    employee_number: string;
+    philhealth_number: string;
+    period_id: string | number;
+    month: string; // YYYY-MM
+
+    // Base Information
+    monthly_basic: number; // Monthly basic salary
+
+    // Premium Calculation (5% total)
+    employee_premium: number; // 2.5% deduction
+    employer_premium: number; // 2.5% company cost
+    total_premium: number; // 5% total
+
+    // Status & Settings
+    is_processed: boolean;
+    is_remitted: boolean;
+    is_indigent: boolean; // Government-sponsored member
+    indigent_reason?: string;
+
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * PhilHealth RF1 Report (monthly contribution report)
+ * Format: CSV for PhilHealth EPRS (Electronic Payroll Remittance System)
+ */
+export interface PhilHealthRF1Report {
+    id: string | number;
+    period_id: string | number;
+    month: string; // YYYY-MM
+    file_name: string;
+    file_path: string;
+    file_size: number;
+
+    // Summary
+    total_employees: number;
+    total_basic_salary: number;
+    total_employee_premium: number;
+    total_employer_premium: number;
+    total_premium: number;
+    indigent_count: number;
+
+    // Status
+    status: 'draft' | 'ready' | 'submitted' | 'accepted' | 'rejected';
+    submission_status: string;
+    submission_date: string | null;
+    rejection_reason: string | null;
+
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * PhilHealth Remittance Tracking
+ * Tracks monthly premium payment to PhilHealth
+ */
+export interface PhilHealthRemittance {
+    id: string | number;
+    period_id: string | number;
+    month: string; // YYYY-MM
+
+    // Remittance Details
+    remittance_amount: number; // Total premium to remit
+    due_date: string; // YYYY-MM-DD
+    payment_date: string | null; // YYYY-MM-DD
+    payment_reference: string | null;
+
+    // Status
+    status: 'pending' | 'paid' | 'partially_paid' | 'overdue';
+
+    // Penalty (if applicable)
+    has_penalty: boolean;
+    penalty_amount: number;
+    penalty_reason?: string;
+
+    // Breakdown
+    contributions: {
+        employee_share: number;
+        employer_share: number;
+    };
+
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * PhilHealth Contribution Form Data (for creation/update)
+ */
+export interface PhilHealthContributionFormData {
+    employee_id: string | number;
+    period_id: string | number;
+    monthly_basic: number;
+    philhealth_number?: string;
+    is_indigent?: boolean;
+    indigent_reason?: string;
+}

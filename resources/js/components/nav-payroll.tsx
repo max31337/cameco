@@ -90,7 +90,7 @@ export function NavPayroll() {
             title: 'PhilHealth',
             icon: Building2,
             href: '/payroll/government/philhealth',
-            enabled: false,
+            enabled: true,
         },
         {
             title: 'Pag-IBIG',
