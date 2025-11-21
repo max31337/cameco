@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertCircle, Home } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import PagIbigContributionsTable from "@/components/payroll/government/pagibig-contributions-table";
 import PagIbigMCRFGenerator from "@/components/payroll/government/pagibig-mcrf-generator";
@@ -129,7 +129,6 @@ export default function PagIbigIndex({
                 {/* Header */}
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <Home className="w-6 h-6 text-blue-600" />
                         <h1 className="text-3xl font-bold">Pag-IBIG Contributions</h1>
                     </div>
                     <p className="text-muted-foreground">
