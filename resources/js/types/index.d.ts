@@ -51,6 +51,13 @@ export interface User {
 export * from './ats-pages';
 
 // ============================================================================
+// PAYROLL MODULE TYPES
+// ============================================================================
+
+// Export all Payroll types for use across the application
+export * from './payroll-pages';
+
+// ============================================================================
 // WORKFORCE MANAGEMENT MODULE TYPES
 // ============================================================================
 

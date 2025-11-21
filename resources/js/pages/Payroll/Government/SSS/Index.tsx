@@ -23,20 +23,65 @@ import AppLayout from '@/layouts/app-layout';
 import { SSSContributionsTable } from '@/components/payroll/sss-contributions-table';
 import { SSSR3Generator } from '@/components/payroll/sss-r3-generator';
 import { SSSRemittanceTracker } from '@/components/payroll/sss-remittance-tracker';
-import type { SSSPageProps, BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem } from '@/types';
 
 /**
  * SSS Contributions Page
  * Main interface for Social Security System (SSS) contribution management
  * Supports: Contributions tracking, R3 report generation, remittance tracking
  */
+interface SSSIndexProps {
+    contributions: Array<{
+        id: string | number;
+        employee_id: string | number;
+        employee_name: string;
+        employee_number: string;
+        sss_number: string;
+        period_id: string | number;
+        month: string;
+        monthly_compensation: number;
+        sss_bracket: string;
+        sss_bracket_range: { min: number; max: number };
+        employee_contribution: number;
+        employer_contribution: number;
+        ec_contribution: number;
+        total_contribution: number;
+        is_processed: boolean;
+        is_remitted: boolean;
+        is_exempted: boolean;
+        created_at: string;
+        updated_at: string;
+    }>;
+    periods: Array<{
+        id: string | number;
+        name: string;
+        month: string;
+        start_date: string;
+        end_date: string;
+        status: string;
+    }>;
+    summary: {
+        total_employees: number;
+        total_monthly_compensation: number;
+        total_employee_contribution: number;
+        total_employer_contribution: number;
+        total_ec_contribution: number;
+        total_contribution: number;
+        last_remittance_date: string | null;
+        next_due_date: string;
+        pending_remittances: number;
+    };
+    remittances: any[];
+    r3_reports: any[];
+}
+
 export default function SSSIndex({
     contributions,
     periods,
     summary,
     remittances,
     r3_reports,
-}: SSSPageProps) {
+}: SSSIndexProps) {
     const [selectedPeriod, setSelectedPeriod] = useState<string>(
         periods.length > 0 ? String(periods[0].id) : ''
     );
@@ -211,7 +256,7 @@ export default function SSSIndex({
                                         <SelectValue placeholder="Select a period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {periods.map((period) => (
+                                        {periods.map((period: any) => (
                                             <SelectItem key={period.id} value={String(period.id)}>
                                                 {period.name} ({period.month})
                                             </SelectItem>
