@@ -955,3 +955,183 @@ export interface PhilHealthContributionFormData {
     is_indigent?: boolean;
     indigent_reason?: string;
 }
+
+// ============================================================================
+// Phase 3.4: PAG-IBIG CONTRIBUTIONS
+// ============================================================================
+
+/**
+ * Pag-IBIG Contributions Page Props
+ * Main page data for Pag-IBIG contributions management
+ */
+export interface PagIbigPageProps {
+    contributions: PagIbigContribution[];
+    periods: PagIbigPeriod[];
+    summary: PagIbigSummary;
+    remittances: PagIbigRemittance[];
+    mcrf_reports: PagIbigMCRFReport[];
+    loan_deductions: PagIbigLoanDeduction[];
+}
+
+/**
+ * Pag-IBIG Period (monthly period for contributions)
+ */
+export interface PagIbigPeriod {
+    id: string | number;
+    name: string;
+    month: string; // YYYY-MM
+    start_date: string;
+    end_date: string;
+    status: string; // draft, pending, submitted, completed
+}
+
+/**
+ * Pag-IBIG Summary Metrics
+ */
+export interface PagIbigSummary {
+    total_employees: number;
+    total_monthly_compensation: number;
+    total_employee_contribution: number; // 1% or 2%
+    total_employer_contribution: number; // 2%
+    total_contribution: number; // 3-4% total
+    total_loan_deductions: number;
+    last_remittance_date: string | null;
+    next_due_date: string;
+    pending_remittances: number;
+}
+
+/**
+ * Individual employee Pag-IBIG contribution record
+ * Pag-IBIG Rate: 3-4% of monthly compensation
+ * Employee: 1% or 2% (based on contribution type)
+ * Employer: 2%
+ * Maximum contribution: ₱100 per month (employee), ₱100 (employer)
+ */
+export interface PagIbigContribution {
+    id: string | number;
+    employee_id: string | number;
+    employee_name: string;
+    employee_number: string;
+    pagibig_number: string;
+    period_id: string | number;
+    month: string; // YYYY-MM
+
+    // Base Information
+    monthly_compensation: number;
+
+    // Contribution Calculation
+    employee_rate: number; // 1% or 2%
+    employee_contribution: number;
+    employer_contribution: number; // Fixed 2%
+    total_contribution: number;
+
+    // Status & Settings
+    is_processed: boolean;
+    is_remitted: boolean;
+    has_active_loan: boolean;
+
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Pag-IBIG MCRF Report (monthly contribution remittance form)
+ * Format: CSV for Pag-IBIG eSRS (Electronic Savings and Remittance System)
+ */
+export interface PagIbigMCRFReport {
+    id: string | number;
+    period_id: string | number;
+    month: string; // YYYY-MM
+    file_name: string;
+    file_path: string;
+    file_size: number;
+
+    // Summary
+    total_employees: number;
+    total_employee_contribution: number;
+    total_employer_contribution: number;
+    total_contribution: number;
+    employees_with_loans: number;
+
+    // Status
+    status: 'draft' | 'ready' | 'submitted' | 'accepted' | 'rejected';
+    submission_status: string;
+    submission_date: string | null;
+    rejection_reason: string | null;
+
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Pag-IBIG Remittance Tracking
+ * Tracks monthly contribution payment to Pag-IBIG
+ */
+export interface PagIbigRemittance {
+    id: string | number;
+    period_id: string | number;
+    month: string; // YYYY-MM
+
+    // Remittance Details
+    remittance_amount: number;
+    due_date: string; // YYYY-MM-DD
+    payment_date: string | null; // YYYY-MM-DD
+    payment_reference: string | null;
+
+    // Status
+    status: 'pending' | 'paid' | 'partially_paid' | 'overdue';
+
+    // Penalty (if applicable)
+    has_penalty: boolean;
+    penalty_amount: number;
+    penalty_reason?: string;
+
+    // Breakdown
+    contributions: {
+        employee_share: number;
+        employer_share: number;
+    };
+
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Pag-IBIG Loan Deduction
+ * Tracks active Pag-IBIG loans and monthly deductions
+ */
+export interface PagIbigLoanDeduction {
+    id: string | number;
+    employee_id: string | number;
+    employee_name: string;
+    employee_number: string;
+
+    // Loan Details
+    loan_number: string;
+    loan_type: 'calamity' | 'housing' | 'educational' | 'other';
+    loan_amount: number;
+    disbursement_date: string;
+
+    // Amortization
+    monthly_deduction: number;
+    months_remaining: number;
+    total_deducted_to_date: number;
+
+    // Status
+    is_active: boolean;
+    maturity_date: string;
+
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Pag-IBIG Contribution Form Data (for creation/update)
+ */
+export interface PagIbigContributionFormData {
+    employee_id: string | number;
+    period_id: string | number;
+    monthly_compensation: number;
+    pagibig_number?: string;
+    employee_rate?: number; // 1 or 2
+}

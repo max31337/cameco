@@ -96,7 +96,7 @@ export function NavPayroll() {
             title: 'Pag-IBIG',
             icon: Building2,
             href: '/payroll/government/pagibig',
-            enabled: false,
+            enabled: true,
         },
         {
             title: 'Remittances',

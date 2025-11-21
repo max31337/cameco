@@ -15,6 +15,7 @@ use App\Http\Controllers\Payroll\EmployeePayroll\AllowancesDeductionsController;
 use App\Http\Controllers\Payroll\Government\BIRController;
 use App\Http\Controllers\Payroll\Government\SSSController;
 use App\Http\Controllers\Payroll\Government\PhilHealthController;
+use App\Http\Controllers\Payroll\Government\PagIbigController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -114,5 +115,13 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::get('/government/philhealth/download-contributions/{periodId}', [PhilHealthController::class, 'downloadContributions'])->name('philhealth.download-contributions');
         Route::get('/government/philhealth/download/{reportId}', [PhilHealthController::class, 'download'])->name('philhealth.download');
         Route::post('/government/philhealth/submit/{reportId}', [PhilHealthController::class, 'submit'])->name('philhealth.submit');
+
+        // Pag-IBIG Contributions - Phase 3.4
+        Route::get('/government/pagibig', [PagIbigController::class, 'index'])->name('pagibig.index');
+        Route::post('/government/pagibig/generate-mcrf/{periodId}', [PagIbigController::class, 'generateMCRF'])->name('pagibig.generate-mcrf');
+        Route::get('/government/pagibig/download-mcrf/{reportId}', [PagIbigController::class, 'downloadMCRF'])->name('pagibig.download-mcrf');
+        Route::get('/government/pagibig/download-contributions/{periodId}', [PagIbigController::class, 'downloadContributions'])->name('pagibig.download-contributions');
+        Route::get('/government/pagibig/download/{reportId}', [PagIbigController::class, 'download'])->name('pagibig.download');
+        Route::post('/government/pagibig/submit/{reportId}', [PagIbigController::class, 'submit'])->name('pagibig.submit');
     });
 });
