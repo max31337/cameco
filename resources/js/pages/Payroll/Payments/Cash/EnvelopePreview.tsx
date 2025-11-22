@@ -47,6 +47,7 @@ export default function EnvelopePreview({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Envelope Preview" />
+            <style>{`@media print { nav { display: none !important; } }`}</style>
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6 print:p-0 print:gap-0">
                 {/* Header */}
                 <div className="flex items-center justify-between print:hidden">

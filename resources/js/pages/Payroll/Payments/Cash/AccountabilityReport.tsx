@@ -51,9 +51,10 @@ export default function AccountabilityReport({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Accountability Report" />
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6 print:p-4">
+            <style>{`@media print { nav { display: none !important; } }`}</style>
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6 print:p-2 print:gap-3 print:rounded-none">
                 {/* Header */}
-                <div className="flex items-center justify-between print:mb-4">
+                <div className="flex items-center justify-between print:mb-2 print:hidden">
                     <div className="space-y-2">
                         <h1 className="text-3xl font-bold tracking-tight">Cash Payment Accountability Report</h1>
                         <p className="text-muted-foreground">Period: {report.period_id}</p>
@@ -74,8 +75,14 @@ export default function AccountabilityReport({
                     </div>
                 </div>
 
+                {/* Print Title */}
+                <div className="hidden print:block print:mb-2">
+                    <h1 className="text-lg font-bold">Cash Payment Accountability Report</h1>
+                    <p className="text-sm text-gray-600">Period: {report.period_id}</p>
+                </div>
+
                 {/* Summary Cards */}
-                <div className="grid gap-4 md:grid-cols-4 print:gap-2">
+                <div className="grid gap-4 md:grid-cols-4 print:hidden">
                     <Card className="print:shadow-none print:border-gray-300">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 print:pb-1">
                             <CardTitle className="text-sm font-medium print:text-xs">Total Employees</CardTitle>
@@ -126,11 +133,11 @@ export default function AccountabilityReport({
                 </div>
 
                 {/* Distribution Summary Table */}
-                <Card className="print:shadow-none print:border-gray-300">
-                    <CardHeader>
+                <Card className="print:shadow-none print:border-gray-300 print:border print:break-inside-avoid">
+                    <CardHeader className="print:pb-2 print:mb-2">
                         <CardTitle className="text-base print:text-sm">Distribution Summary</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="print:pt-0">
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm border-collapse print:text-xs">
                                 <thead>
@@ -193,13 +200,13 @@ export default function AccountabilityReport({
 
                 {/* Distributed Employees */}
                 {distributedEmployees.length > 0 && (
-                    <Card className="print:shadow-none print:border-gray-300">
-                        <CardHeader>
+                    <Card className="print:shadow-none print:border-gray-300 print:border print:break-inside-avoid">
+                        <CardHeader className="print:pb-2 print:mb-2">
                             <CardTitle className="text-base print:text-sm">
                                 Distributed Employees ({distributedEmployees.length})
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="print:pt-0">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm border-collapse print:text-xs">
                                     <thead>
@@ -236,13 +243,13 @@ export default function AccountabilityReport({
 
                 {/* Unclaimed Employees */}
                 {unclaimedEmployees.length > 0 && (
-                    <Card className="border-red-200 print:shadow-none print:border-gray-300">
-                        <CardHeader>
+                    <Card className="border-red-200 print:shadow-none print:border-gray-300 print:border-red-200 print:border print:break-inside-avoid">
+                        <CardHeader className="print:pb-2 print:mb-2">
                             <CardTitle className="text-base print:text-sm text-red-600">
                                 Unclaimed Employees ({unclaimedEmployees.length})
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="print:pt-0">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm border-collapse print:text-xs">
                                     <thead>
@@ -276,17 +283,17 @@ export default function AccountabilityReport({
                 )}
 
                 {/* Report Footer */}
-                <Card className="bg-gray-50 print:bg-white print:shadow-none print:border-gray-300">
-                    <CardContent className="pt-6 text-xs text-gray-600 space-y-1 print:text-xs">
-                        <p>Generated on: {new Date().toLocaleDateString('en-US', {
+                <Card className="bg-gray-50 print:bg-white print:shadow-none print:border-gray-300 print:text-xs print:break-inside-avoid">
+                    <CardContent className="pt-6 text-xs text-gray-600 space-y-1 print:pt-2 print:pb-2">
+                        <p className="print:text-xs">Generated on: {new Date().toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
                             hour: '2-digit',
                             minute: '2-digit',
                         })}</p>
-                        <p>This report provides a summary of cash payment distribution for accounting and reconciliation purposes.</p>
-                        <p>All amounts are in Philippine Pesos (₱)</p>
+                        <p className="print:text-xs">This report provides a summary of cash payment distribution for accounting and reconciliation purposes.</p>
+                        <p className="print:text-xs">All amounts are in Philippine Pesos (₱)</p>
                     </CardContent>
                 </Card>
             </div>
