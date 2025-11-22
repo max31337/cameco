@@ -108,12 +108,12 @@ export function AdvancesFilter({ onFilter, isExpanded = false }: AdvancesFilterP
 
                 <div className="space-y-2">
                     <Label htmlFor="status_filter">Status</Label>
-                    <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
+                    <Select value={filters.status || 'all'} onValueChange={(value) => handleFilterChange('status', value === 'all' ? '' : value)}>
                         <SelectTrigger id="status_filter">
                             <SelectValue placeholder="All Statuses" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">All Statuses</SelectItem>
+                            <SelectItem value="all">All Statuses</SelectItem>
                             {STATUS_OPTIONS.map((option) => (
                                 <SelectItem key={option.value} value={option.value}>
                                     {option.label}
@@ -125,12 +125,12 @@ export function AdvancesFilter({ onFilter, isExpanded = false }: AdvancesFilterP
 
                 <div className="space-y-2">
                     <Label htmlFor="department_filter">Department</Label>
-                    <Select value={filters.department} onValueChange={(value) => handleFilterChange('department', value)}>
+                    <Select value={filters.department || 'all'} onValueChange={(value) => handleFilterChange('department', value === 'all' ? '' : value)}>
                         <SelectTrigger id="department_filter">
                             <SelectValue placeholder="All Departments" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">All Departments</SelectItem>
+                            <SelectItem value="all">All Departments</SelectItem>
                             {DEPARTMENT_OPTIONS.map((option) => (
                                 <SelectItem key={option.value} value={option.value}>
                                     {option.label}

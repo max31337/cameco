@@ -163,11 +163,11 @@ export function LoansFilter({
                     <div className="space-y-2">
                         <p className="text-xs font-semibold text-muted-foreground">Department</p>
                         <Select
-                            value={filters.department_id || ''}
+                            value={filters.department_id || 'all'}
                             onValueChange={(value) =>
                                 onFiltersChange({
                                     ...filters,
-                                    department_id: value || undefined,
+                                    department_id: value === 'all' ? undefined : value,
                                 })
                             }
                         >
@@ -175,7 +175,7 @@ export function LoansFilter({
                                 <SelectValue placeholder="All departments" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All Departments</SelectItem>
+                                <SelectItem value="all">All Departments</SelectItem>
                                 {departments.map((dept) => (
                                     <SelectItem key={dept.id} value={dept.id.toString()}>
                                         {dept.name}
