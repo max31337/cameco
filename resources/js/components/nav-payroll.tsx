@@ -150,7 +150,7 @@ export function NavPayroll() {
             title: 'Analytics',
             icon: BarChart3,
             href: '/payroll/reports/analytics',
-            enabled: false,
+            enabled: true,
         },
     ];
 

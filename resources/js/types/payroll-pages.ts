@@ -2147,3 +2147,146 @@ export interface AgencyComplianceStatus {
     last_submission_date: string | null;
     next_due_date: string | null;
 }
+
+// ============================================================
+// PHASE 5.3: LABOR COST ANALYTICS
+// ============================================================
+
+export interface LaborCostAnalyticsPageProps {
+    cost_trend_data: MonthlyLaborCostTrend[];
+    department_comparisons: DepartmentCostComparison[];
+    component_breakdown: ComponentCostBreakdown[];
+    yoy_comparisons: YearOverYearComparison[];
+    employee_cost_analysis: EmployeeCostAnalysis[];
+    budget_variance_data: BudgetVarianceData[];
+    forecast_projections: ForecastProjection[];
+    analytics_summary: AnalyticsSummary;
+    selected_period: string;
+    available_periods: string[];
+    available_departments: Department[];
+}
+
+export interface MonthlyLaborCostTrend {
+    month: string;
+    month_label: string;
+    total_labor_cost: number;
+    total_basic_salary: number;
+    total_allowances: number;
+    total_overtime: number;
+    total_benefits: number;
+    total_contributions: number;
+    total_taxes: number;
+    employee_count: number;
+    cost_per_employee: number;
+}
+
+export interface DepartmentCostComparison {
+    department_id: number;
+    department_name: string;
+    total_employees: number;
+    total_labor_cost: number;
+    basic_salary_cost: number;
+    allowances_cost: number;
+    overtime_cost: number;
+    benefits_cost: number;
+    contributions_cost: number;
+    tax_cost: number;
+    cost_percentage: number;
+    average_cost_per_employee: number;
+    trend: 'up' | 'down' | 'stable';
+    trend_percentage: number;
+}
+
+export interface ComponentCostBreakdown {
+    component_id: number;
+    component_name: string;
+    component_code: string;
+    component_type: 'earning' | 'deduction' | 'benefit' | 'tax' | 'contribution';
+    total_amount: number;
+    percentage_of_gross: number;
+    affected_employees: number;
+    average_per_employee: number;
+    trend: 'up' | 'down' | 'stable';
+    trend_percentage: number;
+}
+
+export interface YearOverYearComparison {
+    month: string;
+    current_year_cost: number;
+    previous_year_cost: number;
+    difference: number;
+    percentage_change: number;
+    current_year_employees: number;
+    previous_year_employees: number;
+    cost_per_employee_current: number;
+    cost_per_employee_previous: number;
+}
+
+export interface EmployeeCostAnalysis {
+    employee_id: number;
+    employee_name: string;
+    employee_code: string;
+    department_id: number;
+    department_name: string;
+    position: string;
+    basic_salary: number;
+    total_gross_pay: number;
+    total_deductions: number;
+    net_pay: number;
+    cost_to_company: number;
+    component_breakdown: EmployeeComponentBreakdown[];
+    vs_department_average: number;
+    vs_position_average: number;
+}
+
+export interface EmployeeComponentBreakdown {
+    component_name: string;
+    component_type: string;
+    amount: number;
+}
+
+export interface BudgetVarianceData {
+    department_id: number;
+    department_name: string;
+    component_name: string;
+    budgeted_amount: number;
+    actual_amount: number;
+    variance: number;
+    variance_percentage: number;
+    variance_status: 'favorable' | 'unfavorable' | 'on_target';
+    remaining_budget: number;
+}
+
+export interface ForecastProjection {
+    month: string;
+    month_label: string;
+    projected_labor_cost: number;
+    projected_basic_salary: number;
+    projected_allowances: number;
+    projected_overtime: number;
+    projected_benefits: number;
+    projected_contributions: number;
+    projected_taxes: number;
+    projected_employee_count: number;
+    confidence_level: 'high' | 'medium' | 'low';
+}
+
+export interface AnalyticsSummary {
+    current_period: string;
+    total_labor_cost: number;
+    average_monthly_cost: number;
+    total_employees: number;
+    average_cost_per_employee: number;
+    largest_cost_component: string;
+    largest_cost_component_amount: number;
+    largest_cost_component_percentage: number;
+    highest_cost_department: string;
+    highest_cost_department_amount: number;
+    trend_vs_last_period: number;
+    trend_vs_last_year: number;
+}
+
+export interface Department {
+    id: number;
+    name: string;
+}
