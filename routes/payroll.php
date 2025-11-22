@@ -21,6 +21,7 @@ use App\Http\Controllers\Payroll\Payments\BankFilesController;
 use App\Http\Controllers\Payroll\Payments\PayslipsController;
 use App\Http\Controllers\Payroll\Payments\PaymentTrackingController;
 use App\Http\Controllers\Payroll\Payments\CashPaymentController;
+use App\Http\Controllers\Payroll\Reports\PayrollRegisterController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -167,5 +168,8 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::post('/payments/cash/mark-claimed', [CashPaymentController::class, 'markClaimed'])->name('payments.cash.mark-claimed');
         Route::post('/payments/cash/record-contact-attempt', [CashPaymentController::class, 'recordContactAttempt'])->name('payments.cash.record-contact-attempt');
         Route::get('/payments/cash/accountability-report', [CashPaymentController::class, 'generateAccountabilityReport'])->name('payments.cash.accountability-report');
+
+        // Payroll Register Reports - Phase 5.1
+        Route::get('/reports/register', [PayrollRegisterController::class, 'index'])->name('reports.register.index');
     });
 });

@@ -1870,3 +1870,118 @@ export interface UnclaimedCash {
     
     notes: string;
 }
+
+// ============================================================================
+// PHASE 5: REPORTS & ANALYTICS - Payroll Register
+// ============================================================================
+
+/**
+ * Payroll Register Employee Record
+ * Detailed employee payroll information for reporting
+ */
+export interface PayrollRegisterEmployee {
+    id: number;
+    employee_id: number;
+    period_id: number;
+    employee_number: string;
+    full_name: string;
+    department_id: number;
+    department_name: string;
+    position: string;
+    status: 'active' | 'inactive' | 'on_leave';
+    
+    // Earnings
+    basic_salary: number;
+    overtime: number;
+    rice_allowance: number;
+    cola: number;
+    gross_pay: number;
+    
+    // Deductions
+    sss: number;
+    philhealth: number;
+    pagibig: number;
+    withholding_tax: number;
+    total_deductions: number;
+    
+    // Net Pay
+    net_pay: number;
+    
+    // Components breakdown
+    components: Array<{
+        code: string;
+        name: string;
+        type: 'earning' | 'deduction' | 'benefit' | 'tax' | 'allowance';
+        amount: number;
+    }>;
+}
+
+/**
+ * Payroll Register Summary
+ * Overall summary statistics
+ */
+export interface PayrollRegisterSummary {
+    total_employees: number;
+    total_gross_pay: number;
+    total_deductions: number;
+    total_net_pay: number;
+    formatted_total_gross_pay: string;
+    formatted_total_deductions: string;
+    formatted_total_net_pay: string;
+}
+
+/**
+ * Department Breakdown Record
+ * Department-level payroll summary
+ */
+export interface DepartmentBreakdown {
+    department_id: number;
+    department_name: string;
+    employee_count: number;
+    total_gross_pay: number;
+    total_deductions: number;
+    total_net_pay: number;
+    average_net_pay: number;
+    formatted_gross_pay: string;
+    formatted_deductions: string;
+    formatted_net_pay: string;
+    formatted_average_net_pay: string;
+}
+
+/**
+ * Payroll Register Report Page Props
+ */
+export interface PayrollRegisterPageProps {
+    register_data: PayrollRegisterEmployee[];
+    summary: PayrollRegisterSummary;
+    department_breakdown: DepartmentBreakdown[];
+    periods: Array<{
+        id: number;
+        name: string;
+        period_type: string;
+        start_date: string;
+        end_date: string;
+        pay_date: string;
+    }>;
+    departments: Array<{
+        id: number;
+        name: string;
+    }>;
+    employee_statuses: Array<{
+        id: string;
+        label: string;
+    }>;
+    salary_components: Array<{
+        id: number;
+        code: string;
+        name: string;
+        type: string;
+    }>;
+    filters: {
+        period_id: string;
+        department_id: string;
+        employee_status: string;
+        component_filter: string;
+        search: string;
+    };
+}

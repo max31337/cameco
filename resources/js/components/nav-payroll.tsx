@@ -138,7 +138,7 @@ export function NavPayroll() {
             title: 'Payroll Register',
             icon: ClipboardList,
             href: '/payroll/reports/register',
-            enabled: false,
+            enabled: true,
         },
         {
             title: 'Government Reports',
