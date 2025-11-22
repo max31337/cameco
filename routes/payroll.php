@@ -18,6 +18,7 @@ use App\Http\Controllers\Payroll\Government\PhilHealthController;
 use App\Http\Controllers\Payroll\Government\PagIbigController;
 use App\Http\Controllers\Payroll\Government\GovernmentRemittancesController;
 use App\Http\Controllers\Payroll\Payments\BankFilesController;
+use App\Http\Controllers\Payroll\Payments\PayslipsController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -138,5 +139,16 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::post('/bank-files/{id}/upload', [BankFilesController::class, 'uploadFile'])->name('bank-files.upload');
         Route::get('/bank-files/{id}/download', [BankFilesController::class, 'downloadFile'])->name('bank-files.download');
         Route::post('/bank-files/{id}/regenerate', [BankFilesController::class, 'regenerateFile'])->name('bank-files.regenerate');
+
+        // Payslips - Phase 4.2
+        Route::get('/payslips', [PayslipsController::class, 'index'])->name('payslips.index');
+        Route::post('/payslips/generate', [PayslipsController::class, 'generate'])->name('payslips.generate');
+        Route::post('/payslips/distribute', [PayslipsController::class, 'distribute'])->name('payslips.distribute');
+        Route::get('/payslips/{id}/preview', [PayslipsController::class, 'preview'])->name('payslips.preview');
+        Route::get('/payslips/{id}/download', [PayslipsController::class, 'download'])->name('payslips.download');
+        Route::post('/payslips/{id}/email', [PayslipsController::class, 'email'])->name('payslips.email');
+        Route::get('/payslips/{id}/print', [PayslipsController::class, 'print'])->name('payslips.print');
+        Route::post('/payslips/bulk-download', [PayslipsController::class, 'bulkDownload'])->name('payslips.bulk-download');
+        Route::post('/payslips/bulk-email', [PayslipsController::class, 'bulkEmail'])->name('payslips.bulk-email');
     });
 });

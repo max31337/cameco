@@ -1359,3 +1359,232 @@ export interface BankFileGenerationResponse {
         message: string;
     }>;
 }
+
+/**
+ * ============================================================================
+ * PAYSLIPS MANAGEMENT - Phase 4.2
+ * ============================================================================
+ */
+
+/**
+ * Payslip (DOLE-Compliant)
+ * Contains detailed breakdown of employee earnings, deductions, and net pay
+ */
+export interface Payslip {
+    id: string | number;
+    payslip_number: string; // PS-2025-10-00123
+    payroll_calculation_id: string | number;
+    employee_id: string | number;
+    payroll_period_id: string | number;
+
+    // Employee Information
+    employee_number: string;
+    employee_name: string;
+    position: string;
+    department: string;
+
+    // Period Information
+    period_name: string;
+    period_start: string; // YYYY-MM-DD
+    period_end: string; // YYYY-MM-DD
+    pay_date: string; // YYYY-MM-DD
+
+    // Earnings Breakdown
+    basic_salary: number;
+    overtime_pay: number;
+    night_differential: number;
+    holiday_pay: number;
+    allowances: number;
+    other_earnings: number;
+    gross_pay: number;
+
+    // Deductions Breakdown
+    sss_contribution: number;
+    philhealth_contribution: number;
+    pagibig_contribution: number;
+    withholding_tax: number;
+    loans: number;
+    other_deductions: number;
+    total_deductions: number;
+
+    // Net Pay
+    net_pay: number;
+
+    // YTD (Year-to-Date) Totals
+    ytd_gross: number;
+    ytd_deductions: number;
+    ytd_net: number;
+
+    // File Information
+    pdf_file_path: string | null;
+    pdf_file_size: number | null;
+    pdf_hash: string | null;
+
+    // Distribution
+    distribution_method: 'email' | 'portal' | 'printed';
+    email_sent: boolean;
+    email_sent_at: string | null;
+    email_address: string | null;
+    downloaded_by_employee: boolean;
+    downloaded_at: string | null;
+    printed: boolean;
+    printed_at: string | null;
+    printed_by: string | null;
+
+    // Acknowledgment
+    acknowledged_by_employee: boolean;
+    acknowledged_at: string | null;
+
+    // Generation Status
+    status: 'pending' | 'generated' | 'sent' | 'acknowledged' | 'failed';
+    status_label: string;
+    status_color: string;
+
+    generated_at: string;
+    generated_by: string | null;
+    generated_by_name: string | null;
+
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Payslips Page Props
+ */
+export interface PayslipsPageProps {
+    payslips: Payslip[];
+    summary: PayslipsSummary;
+    filters: PayslipsFilters;
+    periods: Array<{
+        id: number;
+        name: string;
+        start_date: string;
+        end_date: string;
+        pay_date: string;
+    }>;
+    departments: Array<{
+        id: number;
+        name: string;
+    }>;
+    distributionMethods: Array<{
+        id: string;
+        name: string;
+    }>;
+}
+
+/**
+ * Payslips Summary Metrics
+ */
+export interface PayslipsSummary {
+    total_payslips: number;
+    generated: number;
+    pending: number;
+    sent: number;
+    acknowledged: number;
+    failed: number;
+    total_distribution_email: number;
+    total_distribution_portal: number;
+    total_distribution_printed: number;
+}
+
+/**
+ * Payslips Filters
+ */
+export interface PayslipsFilters {
+    search: string;
+    period_id: number | null;
+    department_id: number | null;
+    status: string; // 'all' | 'pending' | 'generated' | 'sent' | 'acknowledged' | 'failed'
+    distribution_method: string; // 'all' | 'email' | 'portal' | 'printed'
+    date_from: string | null;
+    date_to: string | null;
+}
+
+/**
+ * Payslip Generation Request
+ */
+export interface PayslipGenerationRequest {
+    period_id: number;
+    employee_ids?: number[]; // If empty, generate for all employees
+    regenerate?: boolean; // Force regenerate existing payslips
+    distribution_method: 'email' | 'portal' | 'printed';
+}
+
+/**
+ * Payslip Generation Response
+ */
+export interface PayslipGenerationResponse {
+    success: boolean;
+    message: string;
+    generated_count: number;
+    failed_count: number;
+    payslips?: Payslip[];
+    errors?: Array<{
+        employee_id: number;
+        employee_name: string;
+        message: string;
+    }>;
+}
+
+/**
+ * Payslip Distribution Request
+ */
+export interface PayslipDistributionRequest {
+    payslip_ids: number[];
+    distribution_method: 'email' | 'portal' | 'printed';
+    email_subject?: string;
+    email_message?: string;
+}
+
+/**
+ * Payslip Distribution Response
+ */
+export interface PayslipDistributionResponse {
+    success: boolean;
+    message: string;
+    sent_count: number;
+    failed_count: number;
+    errors?: Array<{
+        payslip_id: number;
+        employee_name: string;
+        message: string;
+    }>;
+}
+
+/**
+ * Payslip Preview Data (For modal preview before generation)
+ */
+export interface PayslipPreviewData {
+    employee_id: number;
+    employee_number: string;
+    employee_name: string;
+    position: string;
+    department: string;
+
+    period_name: string;
+    period_start: string;
+    period_end: string;
+    pay_date: string;
+
+    // Earnings
+    earnings: Array<{
+        name: string;
+        amount: number;
+    }>;
+    gross_pay: number;
+
+    // Deductions
+    deductions: Array<{
+        name: string;
+        amount: number;
+    }>;
+    total_deductions: number;
+
+    // Net Pay
+    net_pay: number;
+
+    // YTD
+    ytd_gross: number;
+    ytd_deductions: number;
+    ytd_net: number;
+}
