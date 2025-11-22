@@ -1707,3 +1707,166 @@ export interface FailedPayment {
     // Memo/Notes
     notes?: string;
 }
+
+// ============================================================================
+// CASH PAYMENTS PAGE TYPES
+// ============================================================================
+
+/**
+ * Cash Payments Page Props
+ * Passed from CashPaymentController@index() via Inertia
+ */
+export interface CashPaymentPageProps {
+    cash_employees: CashEmployee[];
+    summary: CashPaymentSummary;
+    payroll_periods: PayrollPeriod[];
+    distributions: CashDistribution[];
+    unclaimed_cash: UnclaimedCash[];
+}
+
+/**
+ * Cash Payment Summary (Overview Cards)
+ */
+export interface CashPaymentSummary {
+    total_cash_employees: number;
+    total_cash_amount: number;
+    formatted_total_cash: string;
+    envelopes_printed: number;
+    envelopes_pending: number;
+    distributed_count: number;
+    pending_distribution: number;
+    unclaimed_count: number;
+    formatted_unclaimed_amount: string;
+}
+
+/**
+ * Employee eligible for cash payment
+ */
+export interface CashEmployee {
+    id: number;
+    employee_id: number;
+    employee_number: string;
+    employee_name: string;
+    department: string;
+    position: string;
+    
+    payroll_period_id: number;
+    period_name: string;
+    
+    net_pay: number;
+    formatted_net_pay: string;
+    
+    payment_method: 'cash';
+    payment_method_label: string;
+    
+    // Envelope Status
+    envelope_status: 'pending' | 'printed' | 'prepared' | 'distributed' | 'unclaimed';
+    envelope_status_label: string;
+    envelope_status_color: 'gray' | 'yellow' | 'blue' | 'green' | 'red';
+    
+    envelope_printed_at?: string;
+    envelope_printed_by?: string;
+    
+    // Distribution Status
+    distribution_status: 'pending' | 'distributed' | 'unclaimed' | 'claimed';
+    distribution_status_label: string;
+    
+    distributed_at?: string;
+    distributed_by?: string;
+    claimed_at?: string;
+    claimed_by?: string;
+    
+    // Accountability
+    signature_capture_url?: string;  // Path to signature image
+    distribution_notes?: string;
+    contact_number?: string;
+    email?: string;
+}
+
+/**
+ * Envelope Data for Printing
+ */
+export interface EnvelopeData {
+    id: number;
+    employee_id: number;
+    employee_number: string;
+    employee_name: string;
+    position: string;
+    
+    period_name: string;
+    period_start_date: string;
+    period_end_date: string;
+    
+    net_pay: number;
+    formatted_net_pay: string;
+    
+    barcode: string;  // Unique barcode/reference
+    qr_code: string;  // QR code data URL
+    
+    department: string;
+    print_date: string;
+    page_number: number;
+    total_pages: number;
+}
+
+/**
+ * Cash Distribution Tracking Record
+ */
+export interface CashDistribution {
+    id: number;
+    cash_employee_id: number;
+    
+    distribution_date: string;
+    distribution_time: string;
+    
+    distributed_by: string;
+    distributed_by_employee_id: number;
+    
+    received_by?: string;                 // Employee or representative
+    recipient_contact_number?: string;
+    
+    signature_file_path?: string;
+    signature_captured_at?: string;
+    
+    amount: number;
+    formatted_amount: string;
+    
+    status: 'distributed' | 'unclaimed' | 'claimed' | 'returned';
+    status_label: string;
+    
+    notes: string;
+    
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Unclaimed Cash Tracking
+ */
+export interface UnclaimedCash {
+    id: number;
+    cash_employee_id: number;
+    employee_id: number;
+    employee_number: string;
+    employee_name: string;
+    
+    period_name: string;
+    
+    amount: number;
+    formatted_amount: string;
+    
+    days_unclaimed: number;
+    days_until_returned: number;           // Days until money must be returned to company
+    
+    envelope_prepared_at: string;
+    distribution_scheduled_for: string;
+    
+    contact_attempts: number;
+    last_contact_attempt: string;
+    
+    status: 'pending_distribution' | 'pending_collection' | 'escalated' | 'returned';
+    status_label: string;
+    status_color: string;
+    
+    notes: string;
+}

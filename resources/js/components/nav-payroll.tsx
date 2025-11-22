@@ -125,6 +125,12 @@ export function NavPayroll() {
             href: '/payroll/payments/tracking',
             enabled: true,
         },
+        {
+            title: 'Cash Management',
+            icon: DollarSign,
+            href: '/payroll/payments/cash',
+            enabled: true,
+        },
     ];
 
     const reportsItems = [
