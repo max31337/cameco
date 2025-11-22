@@ -9,6 +9,7 @@ import { AdvanceApprovalModal } from '@/components/payroll/advance-approval-moda
 import { AdvanceDeductionTracker } from '@/components/payroll/advance-deduction-tracker';
 import { AdvancesFilter, FilterValues } from '@/components/payroll/advances-filter';
 import { formatCurrency } from '@/lib/utils';
+import AppLayout from '@/layouts/app-layout';
 
 interface Employee {
     id: number;
@@ -37,6 +38,11 @@ export default function AdvancesIndex({ advances, initialFilters, employees: pro
         amountFrom: null,
         amountTo: null,
     });
+
+    const breadcrumb = [
+        { title: 'Payroll', href: '/payroll' },
+        { title: 'Cash Advances', href: '/payroll/advances' },
+    ];
 
     // Calculate summary metrics
     const summaryMetrics = useMemo(() => {
@@ -131,140 +137,135 @@ export default function AdvancesIndex({ advances, initialFilters, employees: pro
         setIsRequestFormOpen(false);
     };
 
-    const employees: Employee[] = propEmployees || [
-        { id: 1, name: 'Juan dela Cruz', employee_number: 'EMP-2023-001', department: 'Engineering' },
-        { id: 2, name: 'Maria Santos', employee_number: 'EMP-2023-002', department: 'Finance' },
-        { id: 3, name: 'Carlos Reyes', employee_number: 'EMP-2023-003', department: 'Operations' },
-        { id: 4, name: 'Ana Garcia', employee_number: 'EMP-2023-004', department: 'Sales' },
-        { id: 5, name: 'Miguel Torres', employee_number: 'EMP-2023-005', department: 'Engineering' },
-        { id: 6, name: 'Rosa Mendoza', employee_number: 'EMP-2023-006', department: 'Marketing' },
-        { id: 7, name: 'Luis Fernandez', employee_number: 'EMP-2023-007', department: 'Finance' },
-        { id: 8, name: 'Patricia Diaz', employee_number: 'EMP-2023-008', department: 'Human Resources' },
-    ];
+    const employees: Employee[] = propEmployees || [];
 
     return (
-        <div className="space-y-6 p-6">
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Cash Advances</h1>
-                    <p className="text-muted-foreground mt-1">Manage employee cash advances and deduction schedules</p>
-                </div>
-                <Button onClick={() => setIsRequestFormOpen(true)} className="gap-2" size="lg">
-                    <Plus className="h-4 w-4" />
-                    Request Advance
-                </Button>
-            </div>
+        <AppLayout breadcrumbs={breadcrumb}>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="p-6 space-y-2 border-l-4 border-l-blue-500">
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground font-medium">Total Advances</p>
-                        <TrendingUp className="h-5 w-5 text-blue-500" />
-                    </div>
-                    <p className="text-3xl font-bold">{summaryMetrics.totalAdvances}</p>
-                </Card>
-
-                <Card className="p-6 space-y-2 border-l-4 border-l-orange-500">
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground font-medium">Total Balance</p>
-                        <AlertCircle className="h-5 w-5 text-orange-500" />
-                    </div>
-                    <p className="text-3xl font-bold">{formatCurrency(summaryMetrics.totalBalance)}</p>
-                </Card>
-
-                <Card className="p-6 space-y-2 border-l-4 border-l-green-500">
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground font-medium">Monthly Deductions</p>
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    </div>
-                    <p className="text-3xl font-bold">{formatCurrency(summaryMetrics.monthlyDeductions)}</p>
-                </Card>
-
-                <Card className="p-6 space-y-2 border-l-4 border-l-purple-500">
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground font-medium">Approval Rate</p>
-                        <Clock className="h-5 w-5 text-purple-500" />
-                    </div>
-                    <p className="text-3xl font-bold">{summaryMetrics.approvalRate}%</p>
-                    <p className="text-xs text-muted-foreground">{summaryMetrics.pendingApprovals} pending</p>
-                </Card>
-            </div>
-
-            {/* Filters and Table */}
-            <Card className="p-6 space-y-4">
+            <div className="space-y-6 p-6">
+                {/* Page Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <h2 className="text-lg font-semibold">All Advances</h2>
-                    <AdvancesFilter onFilter={setFilters} />
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Cash Advances</h1>
+                        <p className="text-muted-foreground mt-1">Manage employee cash advances and deduction schedules</p>
+                    </div>
+                    <Button onClick={() => setIsRequestFormOpen(true)} className="gap-2" size="lg">
+                        <Plus className="h-4 w-4" />
+                        Request Advance
+                    </Button>
                 </div>
 
-                <AdvancesListTable
-                    advances={filteredAdvances}
-                    onView={(advance) => {
-                        setSelectedAdvance(advance);
-                        setIsDetailsOpen(true);
-                    }}
-                    onApprove={(advance) => {
-                        setSelectedAdvance(advance);
-                        setIsApprovalModalOpen(true);
-                    }}
-                    onReject={(advance) => {
-                        setSelectedAdvance(advance);
-                        setIsApprovalModalOpen(true);
-                    }}
-                    onEdit={(advance) => {
-                        setSelectedAdvance(advance);
-                        setIsRequestFormOpen(true);
-                    }}
-                    onComplete={(advance) => {
-                        console.log('Mark completed:', advance.id);
-                    }}
-                />
-            </Card>
-
-            {/* Request Form Modal */}
-            {isRequestFormOpen && (
-                <AdvanceRequestForm
-                    isOpen={isRequestFormOpen}
-                    onClose={() => setIsRequestFormOpen(false)}
-                    onSubmit={handleSubmitRequest}
-                    employees={employees}
-                />
-            )}
-
-            {/* Approval Modal */}
-            {isApprovalModalOpen && selectedAdvance && (
-                <AdvanceApprovalModal
-                    isOpen={isApprovalModalOpen}
-                    onClose={() => setIsApprovalModalOpen(false)}
-                    advance={selectedAdvance}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                />
-            )}
-
-            {/* Details Modal with Deduction Tracker */}
-            {isDetailsOpen && selectedAdvance && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 className="text-2xl font-bold">{selectedAdvance.employee_name}</h2>
-                                <p className="text-muted-foreground">Advance ID: {selectedAdvance.id}</p>
-                            </div>
-                            <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
-                                Close
-                            </Button>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="p-6 space-y-2 border-l-4 border-l-blue-500">
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-muted-foreground font-medium">Total Advances</p>
+                            <TrendingUp className="h-5 w-5 text-blue-500" />
                         </div>
+                        <p className="text-3xl font-bold">{summaryMetrics.totalAdvances}</p>
+                    </Card>
 
-                        <AdvanceDeductionTracker
-                            advance={selectedAdvance}
-                            deductions={[]}
-                        />
+                    <Card className="p-6 space-y-2 border-l-4 border-l-orange-500">
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-muted-foreground font-medium">Total Balance</p>
+                            <AlertCircle className="h-5 w-5 text-orange-500" />
+                        </div>
+                        <p className="text-3xl font-bold">{formatCurrency(summaryMetrics.totalBalance)}</p>
+                    </Card>
+
+                    <Card className="p-6 space-y-2 border-l-4 border-l-green-500">
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-muted-foreground font-medium">Monthly Deductions</p>
+                            <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        </div>
+                        <p className="text-3xl font-bold">{formatCurrency(summaryMetrics.monthlyDeductions)}</p>
+                    </Card>
+
+                    <Card className="p-6 space-y-2 border-l-4 border-l-purple-500">
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-muted-foreground font-medium">Approval Rate</p>
+                            <Clock className="h-5 w-5 text-purple-500" />
+                        </div>
+                        <p className="text-3xl font-bold">{summaryMetrics.approvalRate}%</p>
+                        <p className="text-xs text-muted-foreground">{summaryMetrics.pendingApprovals} pending</p>
                     </Card>
                 </div>
-            )}
-        </div>
+
+                {/* Filters and Table */}
+                <Card className="p-6 space-y-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <h2 className="text-lg font-semibold">All Advances</h2>
+                        <AdvancesFilter onFilter={setFilters} />
+                    </div>
+
+                    <AdvancesListTable
+                        advances={filteredAdvances}
+                        onView={(advance) => {
+                            setSelectedAdvance(advance);
+                            setIsDetailsOpen(true);
+                        }}
+                        onApprove={(advance) => {
+                            setSelectedAdvance(advance);
+                            setIsApprovalModalOpen(true);
+                        }}
+                        onReject={(advance) => {
+                            setSelectedAdvance(advance);
+                            setIsApprovalModalOpen(true);
+                        }}
+                        onEdit={(advance) => {
+                            setSelectedAdvance(advance);
+                            setIsRequestFormOpen(true);
+                        }}
+                        onComplete={(advance) => {
+                            console.log('Mark completed:', advance.id);
+                        }}
+                    />
+                </Card>
+
+                {/* Request Form Modal */}
+                {isRequestFormOpen && (
+                    <AdvanceRequestForm
+                        isOpen={isRequestFormOpen}
+                        onClose={() => setIsRequestFormOpen(false)}
+                        onSubmit={handleSubmitRequest}
+                        employees={employees}
+                    />
+                )}
+
+                {/* Approval Modal */}
+                {isApprovalModalOpen && selectedAdvance && (
+                    <AdvanceApprovalModal
+                        isOpen={isApprovalModalOpen}
+                        onClose={() => setIsApprovalModalOpen(false)}
+                        advance={selectedAdvance}
+                        onApprove={handleApprove}
+                        onReject={handleReject}
+                    />
+                )}
+
+                {/* Details Modal with Deduction Tracker */}
+                {isDetailsOpen && selectedAdvance && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                        <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold">{selectedAdvance.employee_name}</h2>
+                                    <p className="text-muted-foreground">Advance ID: {selectedAdvance.id}</p>
+                                </div>
+                                <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
+                                    Close
+                                </Button>
+                            </div>
+
+                            <AdvanceDeductionTracker
+                                advance={selectedAdvance}
+                                deductions={[]}
+                            />
+                        </Card>
+                    </div>
+                )}
+            </div>
+
+    </AppLayout>
     );
 }
