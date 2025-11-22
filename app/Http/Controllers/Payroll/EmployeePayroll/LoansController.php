@@ -14,9 +14,15 @@ class LoansController extends Controller
     public function index()
     {
         $loans = $this->getLoansWithMockData();
+        $employees = $this->getEmployeesList();
+        $approvers = $this->getApproversList();
+        $departments = $this->getDepartmentsList();
 
         return Inertia::render('Payroll/EmployeePayroll/Loans/Index', [
             'loans' => $loans,
+            'employees' => $employees,
+            'approvers' => $approvers,
+            'departments' => $departments,
             'filters' => [
                 'loan_type' => [],
                 'status' => [],
@@ -148,5 +154,47 @@ class LoansController extends Controller
             'restructured' => 'bg-yellow-100 text-yellow-800',
             default => 'bg-gray-100 text-gray-800',
         };
+    }
+
+    /**
+     * Get list of employees
+     */
+    private function getEmployeesList()
+    {
+        return [
+            ['id' => 1, 'name' => 'Juan Dela Cruz', 'employee_number' => 'E001', 'department' => 'Sales'],
+            ['id' => 2, 'name' => 'Maria Santos', 'employee_number' => 'E002', 'department' => 'HR'],
+            ['id' => 3, 'name' => 'Pedro Garcia', 'employee_number' => 'E003', 'department' => 'Operations'],
+            ['id' => 4, 'name' => 'Rosa Reyes', 'employee_number' => 'E004', 'department' => 'Sales'],
+            ['id' => 5, 'name' => 'Andres Lopez', 'employee_number' => 'E005', 'department' => 'Accounting'],
+            ['id' => 6, 'name' => 'Carmen Diaz', 'employee_number' => 'E006', 'department' => 'Operations'],
+            ['id' => 7, 'name' => 'Diego Torres', 'employee_number' => 'E007', 'department' => 'HR'],
+            ['id' => 8, 'name' => 'Elena Morales', 'employee_number' => 'E008', 'department' => 'Sales'],
+        ];
+    }
+
+    /**
+     * Get list of approvers
+     */
+    private function getApproversList()
+    {
+        return [
+            ['id' => 1, 'name' => 'HR Manager'],
+            ['id' => 2, 'name' => 'Finance Manager'],
+            ['id' => 3, 'name' => 'Department Head'],
+        ];
+    }
+
+    /**
+     * Get list of departments
+     */
+    private function getDepartmentsList()
+    {
+        return [
+            ['id' => 1, 'name' => 'Sales'],
+            ['id' => 2, 'name' => 'HR'],
+            ['id' => 3, 'name' => 'Operations'],
+            ['id' => 4, 'name' => 'Accounting'],
+        ];
     }
 }

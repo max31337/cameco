@@ -26,30 +26,16 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Mock employees and approvers for form
-const mockEmployees = [
-    { id: 1, name: 'Juan Dela Cruz', employee_number: 'E001', department: 'Sales' },
-    { id: 2, name: 'Maria Santos', employee_number: 'E002', department: 'HR' },
-    { id: 3, name: 'Pedro Garcia', employee_number: 'E003', department: 'Operations' },
-];
-
-const mockApprovers = [
-    { id: 1, name: 'HR Manager' },
-    { id: 2, name: 'Finance Manager' },
-    { id: 3, name: 'Department Head' },
-];
-
-const mockDepartments = [
-    { id: 1, name: 'Sales' },
-    { id: 2, name: 'HR' },
-    { id: 3, name: 'Operations' },
-    { id: 4, name: 'Accounting' },
-];
-
 export default function LoansPage({
     loans,
-    filters: initialFilters,
-}: PayrollLoansPageProps) {
+    employees = [],
+    approvers = [],
+    departments = [],
+}: PayrollLoansPageProps & {
+    employees?: Array<{ id: number; name: string; employee_number: string; department: string }>;
+    approvers?: Array<{ id: number; name: string }>;
+    departments?: Array<{ id: number; name: string }>;
+}) {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedLoan, setSelectedLoan] = useState<EmployeeLoan | null>(null);
@@ -126,10 +112,6 @@ export default function LoansPage({
     // Mock payment history generator
     const getPaymentHistory = (loan: EmployeeLoan): LoanPayment[] => {
         const payments: LoanPayment[] = [];
-        const monthsBetween = Math.floor(
-            (new Date(loan.maturity_date).getTime() - new Date(loan.start_date).getTime()) /
-            (1000 * 60 * 60 * 24 * 30)
-        );
 
         for (let i = 0; i < Math.min(loan.installments_paid + 3, loan.number_of_installments); i++) {
             const paymentDate = new Date(loan.start_date);
@@ -163,13 +145,15 @@ export default function LoansPage({
         setIsDetailsOpen(true);
     };
 
-    const handleEditLoan = (loan: EmployeeLoan) => {
-        setSelectedLoan(loan);
-        setIsFormOpen(true);
+    const handleEditLoan = (loan: EmployeeLoan | undefined) => {
+        if (loan) {
+            setSelectedLoan(loan);
+            setIsFormOpen(true);
+        }
     };
 
-    const handleDeleteLoan = (loan: EmployeeLoan) => {
-        if (window.confirm(`Are you sure you want to cancel this loan? (${loan.loan_number})`)) {
+    const handleDeleteLoan = (loan: EmployeeLoan | undefined) => {
+        if (loan && window.confirm(`Are you sure you want to cancel this loan? (${loan.loan_number})`)) {
             // In a real app, this would call an API
             console.log('Cancel loan:', loan);
         }
@@ -239,7 +223,7 @@ export default function LoansPage({
                 <LoansFilter
                     filters={filters}
                     onFiltersChange={setFilters}
-                    departments={mockDepartments}
+                    departments={departments}
                 />
 
                 {/* Loans Table */}
@@ -258,9 +242,9 @@ export default function LoansPage({
                         setSelectedLoan(null);
                     }}
                     onSubmit={handleFormSubmit}
-                    loan={selectedLoan}
-                    employees={mockEmployees}
-                    approvers={mockApprovers}
+                    loan={selectedLoan || undefined}
+                    employees={employees}
+                    approvers={approvers}
                 />
 
                 <LoanDetailsModal
