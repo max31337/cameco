@@ -72,8 +72,9 @@ class CashPaymentController extends Controller
         // Get cash employees for selected period
         $cashEmployees = $this->getMockCashEmployees();
         $filteredEmployees = array_filter($cashEmployees, function ($emp) use ($periodId, $employeeIds) {
-            return $emp['payroll_period_id'] == $periodId && 
-                   (empty($employeeIds) || in_array($emp['employee_id'], $employeeIds));
+            $periodMatches = $periodId === 'all' || $emp['payroll_period_id'] == $periodId;
+            $employeeMatches = empty($employeeIds) || in_array($emp['employee_id'], $employeeIds);
+            return $periodMatches && $employeeMatches;
         });
 
         // Generate envelope data
@@ -164,7 +165,7 @@ class CashPaymentController extends Controller
 
         $cashEmployees = $this->getMockCashEmployees();
         $distributions = $this->getMockDistributions();
-        $filteredEmployees = array_filter($cashEmployees, fn ($e) => $e['payroll_period_id'] == $periodId);
+        $filteredEmployees = array_filter($cashEmployees, fn ($e) => $periodId === 'all' || $e['payroll_period_id'] == $periodId);
 
         $totalCash = array_sum(array_map(fn ($e) => $e['net_pay'], $filteredEmployees));
         $distributed = array_sum(array_map(fn ($e) => $e['distribution_status'] === 'distributed' ? $e['net_pay'] : 0, $filteredEmployees));
