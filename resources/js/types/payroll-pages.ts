@@ -2290,3 +2290,93 @@ export interface Department {
     id: number;
     name: string;
 }
+
+// ============================================================================
+// AUDIT TRAIL & HISTORY PAGE TYPES (Phase 5.4)
+// ============================================================================
+
+/**
+ * Main Audit Trail Page Props
+ * Passed from PayrollAuditController@index() via Inertia
+ */
+export interface PayrollAuditPageProps {
+    auditLogs: PayrollAuditLog[];
+    changeHistory: ChangeHistory[];
+    filters: AuditFilters;
+}
+
+/**
+ * Audit Log Entry - Comprehensive action tracking
+ * Based on payroll_audit_logs table schema
+ */
+export interface PayrollAuditLog {
+    id: number;
+    action: string;                                // "created", "calculated", "adjusted", "approved", "finalized"
+    action_label: string;                          // Formatted label for display
+    action_color: 'blue' | 'green' | 'yellow' | 'red' | 'purple';
+    entity_type: string;                           // "PayrollPeriod", "PayrollCalculation", "PayrollAdjustment"
+    entity_id: number;
+    entity_name: string;                           // Display name of entity (period name, etc.)
+    user_id: number;
+    user_name: string;                             // Full name of user who performed action
+    user_email: string;
+    timestamp: string;                             // ISO datetime
+    formatted_date: string;                        // "November 22, 2025"
+    formatted_time: string;                        // "2:30 PM"
+    relative_time: string;                         // "2 hours ago"
+    changes_summary: string | null;                // "Basic salary: ₱25,000 → ₱26,500"
+    old_values: Record<string, any> | null;       // Previous field values
+    new_values: Record<string, any> | null;       // New field values
+    ip_address: string | null;
+    has_changes: boolean;                          // Whether old_values and new_values are populated
+}
+
+/**
+ * Change History - Detailed record of all modifications
+ * Used for drill-down and comparison views
+ */
+export interface ChangeHistory {
+    id: number;
+    log_id: number;                                // Reference to PayrollAuditLog
+    entity_type: string;                           // "PayrollPeriod", "PayrollCalculation", etc.
+    entity_id: number;
+    field_name: string;                            // "status", "total_gross_pay", "approved_by"
+    field_label: string;                           // "Status", "Total Gross Pay", "Approved By"
+    old_value: string | number | boolean | null;
+    new_value: string | number | boolean | null;
+    formatted_old_value: string;                   // Formatted for display
+    formatted_new_value: string;                   // Formatted for display
+    value_type: 'string' | 'number' | 'currency' | 'date' | 'boolean';
+    user_id: number;
+    user_name: string;
+    timestamp: string;                             // ISO datetime
+    formatted_timestamp: string;                   // "November 22, 2025 2:30 PM"
+}
+
+/**
+ * Audit Filters - Used for filtering audit logs
+ */
+export interface AuditFilters {
+    action?: string[];                             // Filter by action types
+    entity_type?: string[];                        // Filter by entity types (period, calculation, adjustment)
+    user_id?: number[];                            // Filter by user IDs
+    date_range?: {
+        from: string;
+        to: string;
+    };
+    search?: string;                               // Search in entity names, users, changes summary
+}
+
+/**
+ * Audit Summary Statistics
+ */
+export interface AuditSummary {
+    total_logs: number;
+    total_changes: number;
+    logs_today: number;
+    logs_this_week: number;
+    logs_this_month: number;
+    most_active_user: string;
+    most_modified_entity: string;
+}
+

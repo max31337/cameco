@@ -24,6 +24,7 @@ use App\Http\Controllers\Payroll\Payments\CashPaymentController;
 use App\Http\Controllers\Payroll\Reports\PayrollRegisterController;
 use App\Http\Controllers\Payroll\Reports\PayrollGovernmentReportsController;
 use App\Http\Controllers\Payroll\Reports\PayrollAnalyticsController;
+use App\Http\Controllers\Payroll\Reports\PayrollAuditController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -177,5 +178,8 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         // Government Reports Summary - Phase 5.2
         Route::get('/reports/government', [PayrollGovernmentReportsController::class, 'index'])->name('reports.government.index');
         Route::get('/reports/analytics', [PayrollAnalyticsController::class, 'index'])->name('reports.analytics.index');
+
+        // Audit Trail & History - Phase 5.4
+        Route::get('/reports/audit', [PayrollAuditController::class, 'index'])->name('reports.audit.index');
     });
 });

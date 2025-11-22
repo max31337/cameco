@@ -152,6 +152,12 @@ export function NavPayroll() {
             href: '/payroll/reports/analytics',
             enabled: true,
         },
+        {
+            title: 'Audit Trail',
+            icon: BarChart3,
+            href: '/payroll/reports/audit',
+            enabled: true,
+        },
     ];
 
     const isPayrollPeriodsActive = page.url.startsWith('/payroll/periods') || page.url.startsWith('/payroll/calculations') || page.url.startsWith('/payroll/adjustments') || page.url.startsWith('/payroll/review');
