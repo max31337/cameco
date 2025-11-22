@@ -19,6 +19,7 @@ use App\Http\Controllers\Payroll\Government\PagIbigController;
 use App\Http\Controllers\Payroll\Government\GovernmentRemittancesController;
 use App\Http\Controllers\Payroll\Payments\BankFilesController;
 use App\Http\Controllers\Payroll\Payments\PayslipsController;
+use App\Http\Controllers\Payroll\Payments\PaymentTrackingController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -150,5 +151,12 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::get('/payslips/{id}/print', [PayslipsController::class, 'print'])->name('payslips.print');
         Route::post('/payslips/bulk-download', [PayslipsController::class, 'bulkDownload'])->name('payslips.bulk-download');
         Route::post('/payslips/bulk-email', [PayslipsController::class, 'bulkEmail'])->name('payslips.bulk-email');
+
+        // Payment Tracking - Phase 4.3
+        Route::get('/payments/tracking', [PaymentTrackingController::class, 'index'])->name('payments.tracking.index');
+        Route::post('/payments/tracking/confirm', [PaymentTrackingController::class, 'confirm'])->name('payments.tracking.confirm');
+        Route::post('/payments/tracking/mark-paid', [PaymentTrackingController::class, 'markPaid'])->name('payments.tracking.mark-paid');
+        Route::post('/payments/tracking/retry', [PaymentTrackingController::class, 'retry'])->name('payments.tracking.retry');
+        Route::post('/payments/tracking/change-method', [PaymentTrackingController::class, 'changeMethod'])->name('payments.tracking.change-method');
     });
 });

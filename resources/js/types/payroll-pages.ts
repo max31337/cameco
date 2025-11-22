@@ -1588,3 +1588,122 @@ export interface PayslipPreviewData {
     ytd_deductions: number;
     ytd_net: number;
 }
+
+// ============================================================================
+// PAYMENT TRACKING PAGE TYPES (PHASE 4.3)
+// ============================================================================
+
+/**
+ * Payment Tracking Index Page Props
+ */
+export interface PaymentTrackingPageProps {
+    payments: PaymentTracking[];
+    summary: PaymentStatusSummary;
+    payroll_periods: PayrollPeriod[];
+    departments: Array<{ id: number; name: string }>;
+    payment_methods: string[];
+    payment_statuses: string[];
+    failed_payments: FailedPayment[];
+}
+
+/**
+ * Payment Status Summary (4 cards: total, paid, pending, failed)
+ */
+export interface PaymentStatusSummary {
+    total_employees: number;              // All employees in payroll
+    paid_count: number;                   // Successfully paid
+    pending_count: number;                // Not yet paid
+    failed_count: number;                 // Failed transactions
+    total_amount: number;                 // Total net pay to be disbursed
+    total_paid_amount: number;            // Total amount already paid
+    total_pending_amount: number;         // Total amount pending
+    total_failed_amount: number;          // Total amount in failed payments
+    formatted_total: string;              // "₱4,250,000.00"
+    formatted_paid: string;               // "₱3,200,000.00"
+    formatted_pending: string;            // "₱800,000.00"
+    formatted_failed: string;             // "₱250,000.00"
+    paid_percentage: number;              // 0-100
+    pending_percentage: number;           // 0-100
+    failed_percentage: number;            // 0-100
+}
+
+/**
+ * Payment Tracking Record (table row)
+ */
+export interface PaymentTracking {
+    id: number;
+    employee_id: number;
+    employee_number: string;
+    employee_name: string;
+    department: string;
+    position: string;
+    
+    // Payment Details
+    payroll_period_id: number;
+    period_name: string;
+    net_pay: number;
+    formatted_net_pay: string;            // "₱25,000.00"
+    
+    // Payment Method and Status
+    payment_method: 'bank_transfer' | 'cash' | 'check';
+    payment_method_label: string;         // "Bank Transfer"
+    payment_method_icon: string;          // 'bank', 'cash', 'check'
+    
+    payment_status: 'pending' | 'processing' | 'paid' | 'failed';
+    payment_status_label: string;         // "Pending", "Processing", "Paid", "Failed"
+    payment_status_color: string;         // 'yellow', 'blue', 'green', 'red'
+    
+    // Bank Details (if applicable)
+    bank_name?: string;                   // "BPI", "BDO"
+    account_number?: string;              // Last 4 digits: "****5678"
+    
+    // Payment Tracking
+    payment_date?: string;                // ISO date, nullable
+    payment_reference?: string;           // Transaction ID / Check number
+    payment_confirmation_file?: string;   // File path to confirmation/receipt
+    
+    // Failure Information
+    failure_reason?: string;              // Why payment failed
+    
+    // UI Actions
+    can_mark_paid: boolean;
+    can_retry: boolean;
+    can_confirm: boolean;
+}
+
+/**
+ * Failed Payment Details
+ */
+export interface FailedPayment {
+    id: number;
+    employee_id: number;
+    employee_number: string;
+    employee_name: string;
+    
+    payroll_period_id: number;
+    period_name: string;
+    
+    net_pay: number;
+    formatted_net_pay: string;
+    
+    current_payment_method: 'bank_transfer' | 'cash' | 'check';
+    payment_method_label: string;
+    
+    failure_reason: string;               // "Insufficient balance", "Invalid account", etc.
+    failure_code: string;                 // Error code from bank
+    failure_timestamp: string;            // ISO datetime
+    
+    retry_count: number;                  // Number of retry attempts
+    max_retries: number;                  // Maximum allowed retries
+    next_retry_date?: string;             // ISO date for next automatic retry
+    
+    // Alternative Actions
+    alternative_methods: Array<{
+        method: 'bank_transfer' | 'cash' | 'check';
+        label: string;
+        available: boolean;
+    }>;
+    
+    // Memo/Notes
+    notes?: string;
+}

@@ -122,8 +122,8 @@ export function NavPayroll() {
         {
             title: 'Payment Tracking',
             icon: TrendingUp,
-            href: '/payroll/payments',
-            enabled: false,
+            href: '/payroll/payments/tracking',
+            enabled: true,
         },
     ];
 
