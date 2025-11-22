@@ -22,6 +22,7 @@ use App\Http\Controllers\Payroll\Payments\PayslipsController;
 use App\Http\Controllers\Payroll\Payments\PaymentTrackingController;
 use App\Http\Controllers\Payroll\Payments\CashPaymentController;
 use App\Http\Controllers\Payroll\Reports\PayrollRegisterController;
+use App\Http\Controllers\Payroll\Reports\PayrollGovernmentReportsController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -171,5 +172,8 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
 
         // Payroll Register Reports - Phase 5.1
         Route::get('/reports/register', [PayrollRegisterController::class, 'index'])->name('reports.register.index');
+
+        // Government Reports Summary - Phase 5.2
+        Route::get('/reports/government', [PayrollGovernmentReportsController::class, 'index'])->name('reports.government.index');
     });
 });

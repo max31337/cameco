@@ -1985,3 +1985,165 @@ export interface PayrollRegisterPageProps {
         search: string;
     };
 }
+
+// ============================================================================
+// GOVERNMENT REPORTS PAGE TYPES
+// ============================================================================
+
+/**
+ * Government Reports Summary Page Props
+ * Displays all government reports (SSS, PhilHealth, Pag-IBIG, BIR) in one view
+ */
+export interface GovernmentReportsPageProps {
+    reports_summary: GovernmentReportsSummary;
+    sss_reports: SSSReportCard[];
+    philhealth_reports: PhilHealthReportCard[];
+    pagibig_reports: PagIbigReportCard[];
+    bir_reports: BIRReportCard[];
+    upcoming_deadlines: GovernmentReportDeadline[];
+    compliance_status: GovernmentReportCompliance;
+}
+
+export interface GovernmentReportsSummary {
+    total_reports_generated: number;
+    total_reports_submitted: number;
+    reports_pending_submission: number;
+    total_contributions: number;
+    next_deadline: string | null;
+    overdue_reports: number;
+}
+
+export interface SSSReportCard {
+    id: number;
+    report_type: 'R3' | 'Monthly';
+    period_id: number;
+    period_name: string;
+    month: string;
+    year: number;
+    total_employees: number;
+    total_compensation: number;
+    employee_share: number;
+    employer_share: number;
+    ec_share: number;
+    total_contribution: number;
+    status: 'draft' | 'ready' | 'submitted' | 'accepted' | 'rejected';
+    status_label: string;
+    status_color: 'blue' | 'yellow' | 'green' | 'red';
+    submission_date: string | null;
+    due_date: string;
+    is_overdue: boolean;
+    file_name: string | null;
+    file_path: string | null;
+    action_required: boolean;
+    error_message: string | null;
+}
+
+export interface PhilHealthReportCard {
+    id: number;
+    report_type: 'RF1' | 'Monthly';
+    period_id: number;
+    period_name: string;
+    month: string;
+    year: number;
+    total_employees: number;
+    total_compensation: number;
+    employee_share: number;
+    employer_share: number;
+    total_contribution: number;
+    status: 'draft' | 'ready' | 'submitted' | 'accepted' | 'rejected';
+    status_label: string;
+    status_color: 'blue' | 'yellow' | 'green' | 'red';
+    submission_date: string | null;
+    due_date: string;
+    is_overdue: boolean;
+    file_name: string | null;
+    file_path: string | null;
+    action_required: boolean;
+    error_message: string | null;
+}
+
+export interface PagIbigReportCard {
+    id: number;
+    report_type: 'MCRF' | 'Monthly';
+    period_id: number;
+    period_name: string;
+    month: string;
+    year: number;
+    total_employees: number;
+    total_compensation: number;
+    employee_share: number;
+    employer_share: number;
+    total_contribution: number;
+    status: 'draft' | 'ready' | 'submitted' | 'accepted' | 'rejected';
+    status_label: string;
+    status_color: 'blue' | 'yellow' | 'green' | 'red';
+    submission_date: string | null;
+    due_date: string;
+    is_overdue: boolean;
+    file_name: string | null;
+    file_path: string | null;
+    action_required: boolean;
+    error_message: string | null;
+}
+
+export interface BIRReportCard {
+    id: number;
+    report_type: '1601C' | '2316' | 'Alphalist' | 'Monthly';
+    period_id: number;
+    period_name: string;
+    month: string;
+    year: number;
+    total_employees: number;
+    total_compensation: number;
+    total_tax_withheld: number;
+    status: 'draft' | 'ready' | 'submitted' | 'accepted' | 'rejected';
+    status_label: string;
+    status_color: 'blue' | 'yellow' | 'green' | 'red';
+    submission_date: string | null;
+    due_date: string;
+    is_overdue: boolean;
+    file_name: string | null;
+    file_path: string | null;
+    action_required: boolean;
+    error_message: string | null;
+}
+
+export interface GovernmentReportDeadline {
+    id: number;
+    report_type: string;
+    agency: 'SSS' | 'PhilHealth' | 'Pag-IBIG' | 'BIR';
+    agency_label: string;
+    due_date: string;
+    days_until_due: number;
+    is_overdue: boolean;
+    related_period_id: number;
+    related_period_name: string;
+    action_url: string;
+}
+
+export interface GovernmentReportCompliance {
+    total_required_reports: number;
+    total_submitted_reports: number;
+    submission_percentage: number;
+    submission_status: 'on_track' | 'at_risk' | 'non_compliant';
+    submission_status_label: string;
+    last_submission_date: string | null;
+    next_due_date: string | null;
+    agencies: {
+        sss: AgencyComplianceStatus;
+        philhealth: AgencyComplianceStatus;
+        pagibig: AgencyComplianceStatus;
+        bir: AgencyComplianceStatus;
+    };
+}
+
+export interface AgencyComplianceStatus {
+    agency: string;
+    total_reports_required: number;
+    total_reports_submitted: number;
+    submission_percentage: number;
+    compliance_status: 'compliant' | 'at_risk' | 'non_compliant';
+    compliance_status_label: string;
+    last_submission_date: string | null;
+    next_due_date: string | null;
+}

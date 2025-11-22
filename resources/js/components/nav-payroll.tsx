@@ -144,7 +144,7 @@ export function NavPayroll() {
             title: 'Government Reports',
             icon: Building2,
             href: '/payroll/reports/government',
-            enabled: false,
+            enabled: true,
         },
         {
             title: 'Analytics',
