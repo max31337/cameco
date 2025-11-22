@@ -27,9 +27,14 @@ export default function EnvelopePreview({
     count,
 }: EnvelopePreviewProps) {
     const [selectedEnvelope, setSelectedEnvelope] = useState<number | null>(null);
+    const [printMode, setPrintMode] = useState(false);
 
     const handlePrint = () => {
-        window.print();
+        setPrintMode(true);
+        setTimeout(() => {
+            window.print();
+            setPrintMode(false);
+        }, 100);
     };
 
     const handleDownloadPDF = () => {
@@ -42,9 +47,9 @@ export default function EnvelopePreview({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Envelope Preview" />
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6 print:p-0 print:gap-0">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between print:hidden">
                     <div className="space-y-2">
                         <h1 className="text-3xl font-bold tracking-tight">Envelope Preview</h1>
                         <p className="text-muted-foreground">
@@ -62,7 +67,7 @@ export default function EnvelopePreview({
                 </div>
 
                 {/* Summary */}
-                <Card>
+                <Card className="print:hidden">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
                         <CardTitle className="text-base">Summary</CardTitle>
                         <div className="flex gap-2">
@@ -95,36 +100,123 @@ export default function EnvelopePreview({
                 </Card>
 
                 {/* Main Preview and List */}
-                <div className="grid gap-6 md:grid-cols-4">
-                    {/* Envelope List */}
-                    <Card className="md:col-span-1">
-                        <CardHeader>
-                            <CardTitle className="text-sm">Envelopes ({count})</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-                            {envelopes.map((env) => (
-                                <button
-                                    key={env.id}
-                                    onClick={() => setSelectedEnvelope(env.id)}
-                                    className={`w-full text-left p-2 rounded text-sm transition ${
-                                        selectedEnvelope === env.id
-                                            ? 'bg-blue-100 border-blue-500 border'
-                                            : 'hover:bg-gray-100 border border-transparent'
-                                    }`}
-                                >
-                                    <p className="font-semibold text-gray-900">{env.employee_name}</p>
-                                    <p className="text-xs text-gray-600">{env.employee_number}</p>
-                                    <p className="text-xs font-semibold text-green-600 mt-1">
-                                        {env.formatted_net_pay}
-                                    </p>
-                                </button>
-                            ))}
-                        </CardContent>
-                    </Card>
+                <div className={printMode ? '' : 'grid gap-6 md:grid-cols-4'}>
+                    {/* Envelope List - Hide on print */}
+                    {!printMode && (
+                        <Card className="md:col-span-1">
+                            <CardHeader>
+                                <CardTitle className="text-sm">Envelopes ({count})</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+                                {envelopes.map((env) => (
+                                    <button
+                                        key={env.id}
+                                        onClick={() => setSelectedEnvelope(env.id)}
+                                        className={`w-full text-left p-2 rounded text-sm transition ${
+                                            selectedEnvelope === env.id
+                                                ? 'bg-blue-100 border-blue-500 border'
+                                                : 'hover:bg-gray-100 border border-transparent'
+                                        }`}
+                                    >
+                                        <p className="font-semibold text-gray-900">{env.employee_name}</p>
+                                        <p className="text-xs text-gray-600">{env.employee_number}</p>
+                                        <p className="text-xs font-semibold text-green-600 mt-1">
+                                            {env.formatted_net_pay}
+                                        </p>
+                                    </button>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Envelope Preview */}
-                    <div className="md:col-span-3">
-                        {selectedData && (
+                    <div className={printMode ? 'w-full space-y-0' : 'md:col-span-3 space-y-4'}>
+                        {printMode ? (
+                            // Print view: Show all envelopes
+                            <div className="space-y-6 print:space-y-4">
+                                {envelopes.map((envelope, index) => (
+                                    <div
+                                        key={envelope.id}
+                                        className="bg-white border-4 border-dashed border-gray-300 p-8 rounded space-y-4 print:border-2 print:p-4 print:break-inside-avoid"
+                                    >
+                                        {/* Header */}
+                                        <div className="border-b-2 border-gray-200 pb-4">
+                                            <p className="text-xs font-semibold text-gray-600">CASH PAYMENT ENVELOPE</p>
+                                            <p className="text-lg font-bold text-gray-900">
+                                                {envelope.employee_name}
+                                            </p>
+                                        </div>
+
+                                        {/* Employee Info */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-600">EMPLOYEE NUMBER</p>
+                                                <p className="text-sm font-bold text-gray-900">
+                                                    {envelope.employee_number}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-600">POSITION</p>
+                                                <p className="text-sm text-gray-900">{envelope.position}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-600">DEPARTMENT</p>
+                                                <p className="text-sm text-gray-900">{envelope.department}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-600">PERIOD</p>
+                                                <p className="text-sm text-gray-900">{envelope.period_name}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Period Dates */}
+                                        <div className="flex gap-4 border-t-2 border-b-2 border-gray-200 py-3">
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-600">FROM</p>
+                                                <p className="text-sm text-gray-900">{envelope.period_start_date}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-600">TO</p>
+                                                <p className="text-sm text-gray-900">{envelope.period_end_date}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Amount */}
+                                        <div className="bg-green-50 p-4 rounded border-2 border-green-200">
+                                            <p className="text-xs font-semibold text-gray-600">NET PAY</p>
+                                            <p className="text-3xl font-bold text-green-600">
+                                                {envelope.formatted_net_pay}
+                                            </p>
+                                        </div>
+
+                                        {/* Barcode & QR Code */}
+                                        <div className="grid grid-cols-2 gap-4 border-t-2 border-gray-200 pt-4">
+                                            <div className="text-center">
+                                                <p className="text-xs font-semibold text-gray-600 mb-2">BARCODE</p>
+                                                <div className="bg-gray-100 p-2 rounded text-xs font-mono text-center">
+                                                    {envelope.barcode}
+                                                </div>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-xs font-semibold text-gray-600 mb-2">QR CODE</p>
+                                                <div className="bg-gray-100 p-4 rounded flex items-center justify-center min-h-16">
+                                                    <span className="text-xs text-gray-400">[QR Code]</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Footer */}
+                                        <div className="border-t-2 border-gray-200 pt-3 flex justify-between items-center text-xs text-gray-600">
+                                            <p>Printed: {envelope.print_date}</p>
+                                            <p>
+                                                Envelope {index + 1} of {envelopes.length}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : selectedData ? (
+                            // Preview view: Show selected envelope
                             <div className="space-y-4">
                                 {/* Large Preview */}
                                 <Card className="print:break-inside-avoid">
@@ -241,12 +333,12 @@ export default function EnvelopePreview({
                                     </CardContent>
                                 </Card>
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 </div>
 
                 {/* Instructions */}
-                <Card className="bg-blue-50 border-blue-200">
+                <Card className="bg-blue-50 border-blue-200 print:hidden">
                     <CardHeader>
                         <CardTitle className="text-sm">Printing Instructions</CardTitle>
                     </CardHeader>
