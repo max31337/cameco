@@ -29,8 +29,6 @@ export default function LaborCostAnalytics({
     budget_variance_data,
     forecast_projections,
     analytics_summary,
-    selected_period,
-    available_periods,
 }: LaborCostAnalyticsPageProps) {
     const [activeTab, setActiveTab] = useState<'overview' | 'cost_trends' | 'budget' | 'employees'>('overview');
 
@@ -67,30 +65,6 @@ export default function LaborCostAnalytics({
                     </div>
                 </div>
 
-                {/* Period Selector */}
-                <div className="flex items-center gap-4">
-                    <div className="w-64">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Select Period
-                        </label>
-                        <select 
-                            value={selected_period} 
-                            onChange={(e) => {
-                                const url = new URL('/payroll/reports/analytics', window.location.origin);
-                                url.searchParams.append('period', e.target.value);
-                                window.location.href = url.toString();
-                            }}
-                            className="w-full rounded-md border border-gray-300 px-3 py-2"
-                        >
-                            {available_periods.map((period) => (
-                                <option key={period} value={period}>
-                                    {period}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
                     <div className="rounded-lg border border-gray-200 bg-white p-4">
@@ -98,7 +72,7 @@ export default function LaborCostAnalytics({
                         <p className="mt-2 text-2xl font-bold text-gray-900">
                             {formatCurrency(analytics_summary.total_labor_cost)}
                         </p>
-                        <p className="mt-1 text-xs text-gray-500">{selected_period}</p>
+                        <p className="mt-1 text-xs text-gray-500">Current period</p>
                     </div>
 
                     <div className="rounded-lg border border-gray-200 bg-white p-4">
