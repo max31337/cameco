@@ -73,9 +73,15 @@ export function NavPayroll() {
             enabled: true,
         },
         {
-            title: 'Loans & Advances',
+            title: 'Loans',
             icon: Landmark,
             href: '/payroll/loans',
+            enabled: true,
+        },
+        {
+            title: 'Advances',
+            icon: Landmark,
+            href: '/payroll/advances',
             enabled: true,
         },
     ];
@@ -168,7 +174,7 @@ export function NavPayroll() {
     ];
 
     const isPayrollPeriodsActive = page.url.startsWith('/payroll/periods') || page.url.startsWith('/payroll/calculations') || page.url.startsWith('/payroll/adjustments') || page.url.startsWith('/payroll/review');
-    const isEmployeePayrollActive = page.url.startsWith('/payroll/employee-payroll-info') || page.url.startsWith('/payroll/components') || page.url.startsWith('/payroll/allowances');
+    const isEmployeePayrollActive = page.url.startsWith('/payroll/employee-payroll-info') || page.url.startsWith('/payroll/components') || page.url.startsWith('/payroll/allowances') || page.url.startsWith('/payroll/loans') || page.url.startsWith('/payroll/advances');
     const isGovernmentComplianceActive = page.url.startsWith('/payroll/government');
     const isPaymentsActive = page.url.startsWith('/payroll/bank-files') || page.url.startsWith('/payroll/payslips') || page.url.startsWith('/payroll/payments');
     const isReportsActive = page.url.startsWith('/payroll/reports');

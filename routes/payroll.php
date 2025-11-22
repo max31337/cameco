@@ -26,6 +26,7 @@ use App\Http\Controllers\Payroll\Reports\PayrollGovernmentReportsController;
 use App\Http\Controllers\Payroll\Reports\PayrollAnalyticsController;
 use App\Http\Controllers\Payroll\Reports\PayrollAuditController;
 use App\Http\Controllers\Payroll\EmployeePayroll\LoansController;
+use App\Http\Controllers\Payroll\AdvancesController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -92,6 +93,10 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
 
         // Loans & Advances - Phase 1.5 & 1.5b
         Route::get('/loans', [LoansController::class, 'index'])->name('loans.index');
+        Route::get('/advances', [AdvancesController::class, 'index'])->name('advances.index');
+        Route::post('/advances', [AdvancesController::class, 'store'])->name('advances.store');
+        Route::post('/advances/{id}/approve', [AdvancesController::class, 'approve'])->name('advances.approve');
+        Route::post('/advances/{id}/reject', [AdvancesController::class, 'reject'])->name('advances.reject');
 
         // Payroll Review & Approval - Phase 2.4
         Route::get('/review', [PayrollReviewController::class, 'index'])->name('review.index');
