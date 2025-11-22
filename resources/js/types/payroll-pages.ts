@@ -2325,8 +2325,8 @@ export interface PayrollAuditLog {
     formatted_time: string;                        // "2:30 PM"
     relative_time: string;                         // "2 hours ago"
     changes_summary: string | null;                // "Basic salary: ₱25,000 → ₱26,500"
-    old_values: Record<string, any> | null;       // Previous field values
-    new_values: Record<string, any> | null;       // New field values
+    old_values: Record<string, string | number | boolean> | null;       // Previous field values
+    new_values: Record<string, string | number | boolean> | null;       // New field values
     ip_address: string | null;
     has_changes: boolean;                          // Whether old_values and new_values are populated
 }
@@ -2378,5 +2378,196 @@ export interface AuditSummary {
     logs_this_month: number;
     most_active_user: string;
     most_modified_entity: string;
+}
+
+// ============================================================================
+// LOANS & ADVANCES PAGE TYPES (Phase 1.5 & 1.5b)
+// ============================================================================
+
+/**
+ * Employee Loan - Structured loan product for employees
+ * Loan types: SSS, Pag-IBIG (government), Company, Cash Advance
+ * Based on employee_loans table schema
+ */
+export interface EmployeeLoan {
+    id: number;
+    employee_id: number;
+    employee_name: string;
+    employee_number: string;
+    department_id: number;
+    department_name: string;
+    loan_type: 'sss' | 'pagibig' | 'company' | 'cash_advance';
+    loan_type_label: string;                       // "SSS Loan", "Pag-IBIG Loan", etc.
+    loan_type_color: string;                       // Badge color
+    loan_number: string;                           // Unique identifier
+    principal_amount: number;
+    interest_rate: number | null;                  // Nullable for government loans
+    total_amount: number;                          // Principal + interest
+    monthly_amortization: number;
+    number_of_installments: number;
+    installments_paid: number;
+    remaining_balance: number;
+    loan_date: string;                             // ISO date
+    start_date: string;                            // ISO date (when deductions start)
+    maturity_date: string;                         // ISO date (calculated)
+    status: 'active' | 'completed' | 'cancelled' | 'restructured';
+    status_label: string;
+    status_color: 'green' | 'blue' | 'red' | 'yellow';
+    is_active: boolean;
+    approved_by: string | null;
+    approved_at: string | null;
+    created_by: string;
+    created_at: string;
+    updated_by: string | null;
+    updated_at: string;
+}
+
+/**
+ * Employee Loan Form Data
+ */
+export interface EmployeeLoanFormData {
+    employee_id: number;
+    loan_type: 'sss' | 'pagibig' | 'company' | 'cash_advance';
+    principal_amount: number;
+    interest_rate?: number;
+    monthly_amortization: number;
+    number_of_installments: number;
+    loan_date: string;
+    start_date: string;
+    approved_by?: number;
+}
+
+/**
+ * Loan Payment - Individual payment record
+ * Tracks each deduction made against a loan
+ */
+export interface LoanPayment {
+    id: number;
+    employee_loan_id: number;
+    payroll_calculation_id: number;
+    payroll_period_id: number;
+    payroll_period_name: string;
+    payment_amount: number;
+    principal_payment: number;
+    interest_payment: number;
+    balance_after_payment: number;
+    created_at: string;
+    is_paid: boolean;
+}
+
+/**
+ * Loans Page Props
+ */
+export interface PayrollLoansPageProps {
+    loans: EmployeeLoan[];
+    filters: {
+        loan_type?: string[];
+        status?: string[];
+        employee_id?: number;
+        department_id?: number;
+    };
+}
+
+/**
+ * Cash Advance - Short-term advance on paycheck
+ * Based on employee_loans table (with advance-specific fields)
+ */
+export interface CashAdvance {
+    id: number;
+    employee_id: number;
+    employee_name: string;
+    employee_number: string;
+    department_id: number;
+    department_name: string;
+    advance_type: string;                          // "cash_advance", "equipment", etc.
+    amount_requested: number;
+    amount_approved: number | null;
+    approval_status: 'pending' | 'approved' | 'rejected';
+    approval_status_label: string;
+    approval_status_color: string;
+    approved_by: string | null;
+    approved_at: string | null;
+    approval_notes: string | null;
+    deduction_status: 'active' | 'completed' | 'cancelled';
+    deduction_status_label: string;
+    remaining_balance: number;
+    deduction_schedule: 'single_period' | 'installments' | 'custom';
+    deduction_schedule_label: string;
+    number_of_installments: number;
+    installments_completed: number;
+    requested_date: string;
+    purpose: string;
+    priority_level: 'normal' | 'urgent';
+    supporting_documents?: string[];              // File paths or URLs
+    created_by: string;
+    created_at: string;
+    updated_by: string | null;
+    updated_at: string;
+}
+
+/**
+ * Cash Advance Form Data
+ */
+export interface CashAdvanceFormData {
+    employee_id: number;
+    advance_type: string;
+    amount_requested: number;
+    purpose: string;
+    requested_date: string;
+    priority_level: 'normal' | 'urgent';
+    supporting_documents?: File[];
+}
+
+/**
+ * Cash Advance Approval Data
+ */
+export interface CashAdvanceApprovalData {
+    advance_id: number;
+    approval_status: 'approved' | 'rejected';
+    amount_approved?: number;                      // If approved but for less amount
+    deduction_schedule: 'single_period' | 'installments' | 'custom';
+    number_of_installments?: number;
+    approval_notes: string;
+}
+
+/**
+ * Advance Deduction - Individual deduction per payroll period
+ */
+export interface AdvanceDeduction {
+    id: number;
+    cash_advance_id: number;
+    payroll_period_id: number;
+    payroll_period_name: string;
+    deduction_amount: number;
+    remaining_balance_after: number;
+    is_deducted: boolean;
+    deducted_at?: string;
+}
+
+/**
+ * Advances Page Props
+ */
+export interface PayrollAdvancesPageProps {
+    advances: CashAdvance[];
+    filters: {
+        approval_status?: string[];
+        deduction_status?: string[];
+        employee_id?: number;
+        department_id?: number;
+    };
+}
+
+/**
+ * Loans & Advances Summary Dashboard
+ */
+export interface LoansAdvancesSummary {
+    total_active_loans: number;
+    total_loan_balance: number;
+    total_loan_deductions_this_period: number;
+    total_pending_advances: number;
+    total_approved_advances: number;
+    total_advance_deductions_this_period: number;
+    highest_borrower_balance: number;
+    highest_borrower_name: string;
 }
 

@@ -25,6 +25,7 @@ use App\Http\Controllers\Payroll\Reports\PayrollRegisterController;
 use App\Http\Controllers\Payroll\Reports\PayrollGovernmentReportsController;
 use App\Http\Controllers\Payroll\Reports\PayrollAnalyticsController;
 use App\Http\Controllers\Payroll\Reports\PayrollAuditController;
+use App\Http\Controllers\Payroll\EmployeePayroll\LoansController;
 
 Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::class])->group(function () {
     Route::name('payroll.')->group(function () {
@@ -88,6 +89,9 @@ Route::prefix('payroll')->middleware(['auth', 'verified', EnsurePayrollOfficer::
         Route::put('/allowances-deductions/{id}', [AllowancesDeductionsController::class, 'update'])->name('allowances-deductions.update');
         Route::delete('/allowances-deductions/{id}', [AllowancesDeductionsController::class, 'destroy'])->name('allowances-deductions.destroy');
         Route::get('/allowances-deductions/{employeeId}/history', [AllowancesDeductionsController::class, 'history'])->name('allowances-deductions.history');
+
+        // Loans & Advances - Phase 1.5 & 1.5b
+        Route::get('/loans', [LoansController::class, 'index'])->name('loans.index');
 
         // Payroll Review & Approval - Phase 2.4
         Route::get('/review', [PayrollReviewController::class, 'index'])->name('review.index');

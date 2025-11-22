@@ -11,6 +11,7 @@ import {
     ClipboardList,
     BarChart3,
     ChevronRight,
+    Landmark,
 } from 'lucide-react';
 import {
     Collapsible,
@@ -69,6 +70,12 @@ export function NavPayroll() {
             title: 'Allowances & Deductions',
             icon: ClipboardList,
             href: '/payroll/allowances-deductions',
+            enabled: true,
+        },
+        {
+            title: 'Loans & Advances',
+            icon: Landmark,
+            href: '/payroll/loans',
             enabled: true,
         },
     ];
